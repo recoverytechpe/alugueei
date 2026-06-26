@@ -28,7 +28,7 @@ import {
   Link as LinkIcon, MessageSquare, Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UnlockGate } from "@/components/UnlockGate";
+import { UnlockGate, useUnlockStatus, isUnlocked } from "@/components/UnlockGate";
 
 type GuaranteeType = "fiador" | "seguro_fianca" | "caucao" | "titulo_capitalizacao";
 const GUARANTEE_LABEL: Record<GuaranteeType, string> = {
@@ -83,6 +83,15 @@ function PropertyDetail() {
 
   const userId = data?.userId ?? null;
   const isTenant = data?.userRole === "locatario";
+  const { data: unlockRow } = useUnlockStatus(data?.id ?? "", userId);
+  const unlocked = Boolean(data?.isOwner) || isUnlocked(unlockRow);
+
+  function requireUnlock(): boolean {
+    if (unlocked) return true;
+    toast.error("Desbloqueie o imóvel para continuar (R$ 29,90)");
+    document.getElementById("unlock-gate")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return false;
+  }
 
   // Track in recents (localStorage) on load
   useEffect(() => {
@@ -200,6 +209,7 @@ function PropertyDetail() {
   const preapproved = preapproval?.status === "approved" && Number(preapproval.max_rent) >= rent;
 
   async function contactAgent() {
+    if (!requireUnlock()) return;
     try {
       setContacting(true);
       const cid = await getOrCreateConversation({ propertyId: data!.id, otherUserId: data!.owner_id });
@@ -302,16 +312,18 @@ function PropertyDetail() {
             <span className="flex items-center gap-1.5"><Car className="size-4 text-muted-foreground" /> {data.parking_spots} Vaga{data.parking_spots === 1 ? "" : "s"}</span>
           </div>
 
-          <UnlockGate
-            propertyId={data.id}
-            userId={userId}
-            isOwner={data.isOwner}
-            neighborhood={data.neighborhood ?? null}
-            city={data.city ?? null}
-            state={data.state ?? null}
-            cep={data.cep ?? null}
-            full={[data.street, data.number, data.neighborhood, data.city, data.state].filter(Boolean).join(", ")}
-          />
+          <div id="unlock-gate">
+            <UnlockGate
+              propertyId={data.id}
+              userId={userId}
+              isOwner={data.isOwner}
+              neighborhood={data.neighborhood ?? null}
+              city={data.city ?? null}
+              state={data.state ?? null}
+              cep={data.cep ?? null}
+              full={[data.street, data.number, data.neighborhood, data.city, data.state].filter(Boolean).join(", ")}
+            />
+          </div>
 
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
@@ -365,10 +377,14 @@ function PropertyDetail() {
 
           <div className="flex flex-wrap gap-2 pt-1">
             {!data.isOwner && (isTenant || data.userRole === "agente") && (
-              <VisitDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} userRole={data.userRole!} />
+              unlocked
+                ? <VisitDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} userRole={data.userRole!} />
+                : <Button size="sm" variant="outline" onClick={requireUnlock}>🔒 Agendar visita</Button>
             )}
             {!data.isOwner && isTenant && (
-              <ProposalDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} rentSuggestion={rent} preapproval={preapproval ?? null} />
+              unlocked
+                ? <ProposalDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} rentSuggestion={rent} preapproval={preapproval ?? null} />
+                : <Button size="sm" onClick={requireUnlock}>🔒 Enviar proposta</Button>
             )}
 
             {data.isOwner && (

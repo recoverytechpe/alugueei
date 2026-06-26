@@ -104,6 +104,7 @@ function NegotiationsPage() {
         <VisitsSection visits={data.visits} userId={data.userId} setVisitStatus={setVisitStatus} />
         <ProposalsSection
           proposals={data.proposals}
+          counters={data.counters}
           userId={data.userId}
           setProposalStatus={setProposalStatus}
         />

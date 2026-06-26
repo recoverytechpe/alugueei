@@ -47,10 +47,13 @@ function Dashboard() {
         supabase.from("profiles").select("*").eq("id", userData.user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userData.user.id),
       ]);
+      const allRoles = (roles ?? []).map((r) => r.role as string);
+      const primary = (allRoles.find((r) => r !== "admin") ?? "locatario") as Role;
       return {
         email: userData.user.email,
         profile,
-        role: (roles?.[0]?.role ?? "locatario") as Role,
+        role: primary,
+        isAdmin: allRoles.includes("admin"),
       };
     },
   });

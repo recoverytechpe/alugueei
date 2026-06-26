@@ -211,26 +211,71 @@ function brl(n: number | null | undefined) {
 }
 
 function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullName: string; avatarUrl: string | null }) {
+  const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["owner-dash", userId],
     queryFn: async () => {
       const [props, proposals, contracts, visits] = await Promise.all([
         supabase.from("properties").select("id, title, city, state, street, number, bedrooms, bathrooms, area_m2, rent_value, status, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
-        supabase.from("proposals").select("id, status, rent_offer, term_months, start_date, created_at, tenant_preapproval_income, tenant_preapproval_max_rent, tenant_preapproval_guarantee, property:properties(id,title,city,neighborhood)").eq("owner_id", userId).order("created_at", { ascending: false }),
-        supabase.from("rental_contracts").select("id, status, rent_value, start_date, term_months, created_at, property:properties(title), tenant:profiles!rental_contracts_tenant_id_fkey(full_name)").eq("owner_id", userId).order("created_at", { ascending: false }),
+        supabase.from("proposals").select("id, status, rent_offer, term_months, start_date, created_at, tenant_preapproval_income, tenant_preapproval_max_rent, tenant_preapproval_guarantee, property_id, property:properties(id,title,city,neighborhood)").eq("owner_id", userId).order("created_at", { ascending: false }),
+        supabase.from("rental_contracts").select("id, status, rent_value, start_date, term_months, created_at, property_id, tenant_id, agent_id, property:properties(title), tenant:profiles!rental_contracts_tenant_id_fkey(full_name)").eq("owner_id", userId).order("created_at", { ascending: false }),
         supabase.from("visits").select("id, status, scheduled_at, notes, property:properties(title)").eq("owner_id", userId).order("scheduled_at", { ascending: true }),
       ]);
+
+      const propIds = (props.data ?? []).map((p) => p.id);
+      const metrics: Record<string, { favorites: number; proposals: number; conversations: number }> = {};
+      for (const id of propIds) metrics[id] = { favorites: 0, proposals: 0, conversations: 0 };
+      if (propIds.length > 0) {
+        const [favs, propAgg, convs] = await Promise.all([
+          supabase.from("favorites").select("property_id").in("property_id", propIds),
+          supabase.from("proposals").select("property_id").in("property_id", propIds),
+          supabase.from("conversations").select("property_id").in("property_id", propIds),
+        ]);
+        for (const r of favs.data ?? []) if (metrics[r.property_id]) metrics[r.property_id].favorites++;
+        for (const r of propAgg.data ?? []) if (metrics[r.property_id]) metrics[r.property_id].proposals++;
+        for (const r of convs.data ?? []) if (r.property_id && metrics[r.property_id]) metrics[r.property_id].conversations++;
+      }
 
       return {
         properties: props.data ?? [],
         proposals: proposals.data ?? [],
         contracts: contracts.data ?? [],
         visits: visits.data ?? [],
+        metrics,
       };
     },
     staleTime: 60_000,
     placeholderData: (prev) => prev,
   });
+
+  async function togglePause(id: string, current: string | null) {
+    const next = current === "inactive" ? "available" : "inactive";
+    const { error } = await supabase.from("properties").update({ status: next }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(next === "inactive" ? "Imóvel pausado" : "Imóvel reativado");
+    qc.invalidateQueries({ queryKey: ["owner-dash", userId] });
+  }
+
+  async function renewContract(c: { property_id: string; tenant_id: string; agent_id: string | null; rent_value: number; term_months: number; start_date: string }) {
+    const prevStart = new Date(c.start_date);
+    const newStart = new Date(prevStart.getFullYear(), prevStart.getMonth() + c.term_months, prevStart.getDate());
+    if (!confirm(`Renovar contrato por mais ${c.term_months} meses a partir de ${newStart.toLocaleDateString("pt-BR")}?`)) return;
+    const { error } = await supabase.from("rental_contracts").insert({
+      property_id: c.property_id,
+      owner_id: userId,
+      tenant_id: c.tenant_id,
+      agent_id: c.agent_id,
+      status: "active",
+      rent_value: c.rent_value,
+      term_months: c.term_months,
+      start_date: newStart.toISOString().slice(0, 10),
+      contract_text: `RENOVAÇÃO DE CONTRATO\n\nValor mensal: R$ ${Number(c.rent_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\nPrazo: ${c.term_months} meses\nInício: ${newStart.toLocaleDateString("pt-BR")}\n\nAs partes confirmam a renovação nas mesmas condições do contrato anterior, salvo reajustes legais aplicáveis.`,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Contrato renovado");
+    qc.invalidateQueries({ queryKey: ["owner-dash", userId] });
+  }
+
 
 
   useRealtimeNotifications({
@@ -353,6 +398,8 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           <div className="space-y-3">
             {data.properties.slice(0, 5).map((p) => {
               const dot = propStatusDot(p.status);
+              const m = data.metrics[p.id] ?? { favorites: 0, proposals: 0, conversations: 0 };
+              const isPaused = p.status === "inactive";
               return (
                 <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-3 flex flex-col sm:flex-row gap-3">
@@ -365,9 +412,14 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {p.bedrooms ?? 0} quartos · {p.bathrooms ?? 0} banh. · {p.area_m2 ?? 0} m²
                       </p>
-                      <div className={`mt-1 flex items-center gap-1.5 text-xs font-medium ${dot.text}`}>
-                        <span className={`h-2 w-2 rounded-full ${dot.cls}`} />
-                        {dot.label}
+                      <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className={`inline-flex items-center gap-1 font-medium ${dot.text}`}>
+                          <span className={`h-2 w-2 rounded-full ${dot.cls}`} />
+                          {isPaused ? "Pausado" : dot.label}
+                        </span>
+                        <span title="Favoritos">❤ {m.favorites}</span>
+                        <span title="Propostas">📩 {m.proposals}</span>
+                        <span title="Conversas">💬 {m.conversations}</span>
                       </div>
                     </div>
                     <div className="flex sm:flex-col gap-2 sm:w-40">
@@ -377,17 +429,15 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
                           Gerenciar
                         </Link>
                       </Button>
-                      <Button asChild size="sm" variant="outline" className="flex-1">
-                        <Link to="/negotiations">
-                          <Users className="h-4 w-4 mr-1.5" />
-                          Leads
-                        </Link>
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => togglePause(p.id, p.status)}>
+                        {isPaused ? "Reativar" : "Pausar"}
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               );
             })}
+
           </div>
         )}
       </section>
@@ -412,23 +462,42 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
               const end = start && c.term_months ? new Date(start.getFullYear(), start.getMonth() + c.term_months, start.getDate()) : null;
               const fmt = (d: Date | null) => d ? d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
               return (
-                <Link key={c.id} to="/contracts/$id" params={{ id: c.id }} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0 hover:bg-muted/30 -mx-1 px-1 rounded">
-                  <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <FileText className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
-                    <p className="text-xs text-muted-foreground truncate">{tenant?.full_name ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground">{fmt(start)} – {fmt(end)}</p>
-                  </div>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${pill.cls}`}>
-                    {pill.label}
-                  </span>
-                </Link>
+                <div key={c.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0">
+                  <Link to="/contracts/$id" params={{ id: c.id }} className="flex flex-1 items-center gap-3 min-w-0 hover:bg-muted/30 -mx-1 px-1 rounded">
+                    <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{tenant?.full_name ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground">{fmt(start)} – {fmt(end)}</p>
+                    </div>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${pill.cls}`}>
+                      {pill.label}
+                    </span>
+                  </Link>
+                  {(c.status === "closed" || c.status === "active") && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => renewContract({
+                        property_id: (c as unknown as { property_id: string }).property_id,
+                        tenant_id: (c as unknown as { tenant_id: string }).tenant_id,
+                        agent_id: (c as unknown as { agent_id: string | null }).agent_id,
+                        rent_value: Number(c.rent_value),
+                        term_months: Number(c.term_months),
+                        start_date: c.start_date as unknown as string,
+                      })}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-1" />Renovar
+                    </Button>
+                  )}
+                </div>
               );
             })}
           </CardContent>
         </Card>
+
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">

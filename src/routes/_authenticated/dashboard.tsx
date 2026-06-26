@@ -104,7 +104,21 @@ function Dashboard() {
             <Button asChild variant="outline"><Link to="/contracts">Meus contratos</Link></Button>
             <Button asChild variant="outline"><Link to="/chat">Conversas</Link></Button>
             <Button asChild variant="outline"><Link to="/negotiations">Negociações</Link></Button>
+            {data.isAdmin && (
+              <Button asChild variant="secondary"><Link to="/admin">Painel de Moderação</Link></Button>
+            )}
           </CardContent>
+        </Card>
+
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-base">Benefícios exclusivos da plataforma</CardTitle>
+            <CardDescription>
+              Seguro fiança, garantia de recebimento e proteção em caso de inadimplência
+              estão disponíveis <strong>somente para transações concluídas integralmente
+              pela plataforma</strong>. Negociações fora do sistema perdem esses benefícios.
+            </CardDescription>
+          </CardHeader>
         </Card>
 
         <div className="grid gap-4 md:grid-cols-3">

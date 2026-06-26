@@ -15,9 +15,13 @@ export type UnlockCheckoutResult =
   | { ok: true; initPoint: string; preferenceId: string }
   | {
       ok: false;
-      reason: "not_configured" | "validation" | "already_paid" | "provider_error";
+      reason: "not_configured" | "validation" | "already_paid" | "provider_error" | "rate_limited";
       message: string;
     };
+
+const RATE_LIMIT_WINDOW_MIN = 10;
+const RATE_LIMIT_MAX = 5;
+
 
 /**
  * Cria preferência no Mercado Pago para desbloqueio de imóvel (R$ 29,90).
@@ -32,6 +36,22 @@ export const createUnlockCheckout = createServerFn({ method: "POST" })
     if (!data.termsAccepted || !data.lgpdAccepted) {
       return { ok: false, reason: "validation", message: "Aceite os termos e a LGPD." };
     }
+
+    // Rate limit: max RATE_LIMIT_MAX checkouts per RATE_LIMIT_WINDOW_MIN min por usuário
+    const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MIN * 60 * 1000).toISOString();
+    const { count: recentCount } = await supabase
+      .from("property_unlocks")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("updated_at", windowStart);
+    if ((recentCount ?? 0) >= RATE_LIMIT_MAX) {
+      return {
+        ok: false,
+        reason: "rate_limited",
+        message: `Muitas tentativas de desbloqueio. Aguarde alguns minutos e tente novamente.`,
+      };
+    }
+
 
     const { data: property } = await supabase
       .from("properties")

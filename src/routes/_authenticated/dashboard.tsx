@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import {
   Wallet, Users, Clock, RefreshCw, CheckCircle2,
   Award, TrendingUp, ShieldCheck, Star, ChevronRight, BadgeCheck, Calendar,
+  Home, Settings, Bell, FileText,
 } from "lucide-react";
 
 /**

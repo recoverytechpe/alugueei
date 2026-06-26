@@ -47,6 +47,8 @@ function PropertiesList() {
         .limit(60);
 
       if (filters.city.trim()) q = q.ilike("city", `%${filters.city.trim()}%`);
+      if (filters.neighborhood.trim()) q = q.ilike("neighborhood", `%${filters.neighborhood.trim()}%`);
+
       if (filters.type !== "all") q = q.eq("property_type", filters.type as "casa" | "apartamento");
       if (filters.bedrooms !== "any") q = q.gte("bedrooms", Number(filters.bedrooms));
       if (filters.max && !Number.isNaN(Number(filters.max))) q = q.lte("rent_value", Number(filters.max));

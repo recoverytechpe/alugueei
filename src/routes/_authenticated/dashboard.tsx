@@ -846,12 +846,12 @@ function TenantDashboard({ userId }: { userId: string }) {
         </div>
       </section>
 
-      {/* Stats minimalistas */}
+      {/* Stats minimalistas — perspectiva do locatário (quem aluga o imóvel) */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <Stat label="Propostas enviadas" value={data.proposals.length} />
-        <Stat label="Visitas agendadas" value={data.visits.length} />
-        <Stat label="Contratos ativos" value={activeContracts} />
-        <Stat label="Contratos fechados" value={data.contracts.filter((c) => c.status === "closed").length} />
+        <Stat label="Propostas que enviei" value={data.proposals.length} hint="Ofertas feitas a proprietários" />
+        <Stat label="Visitas marcadas" value={data.visits.length} hint="Imóveis para conhecer" />
+        <Stat label="Aluguéis em andamento" value={activeContracts} hint="Contratos como locatário" />
+        <Stat label="Aluguéis concluídos" value={data.contracts.filter((c) => c.status === "closed").length} hint="Histórico de locações" />
       </div>
 
       {/* Imóveis na região */}
@@ -922,9 +922,14 @@ function TenantDashboard({ userId }: { userId: string }) {
                     <span>·</span>
                     <span>{Number(p.area_m2 ?? 0)} m²</span>
                   </div>
-                  <Badge variant="secondary" className="mt-1 gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
-                    <BadgeCheck className="h-3.5 w-3.5" /> Verificado
-                  </Badge>
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <Badge variant="secondary" className="gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
+                      <BadgeCheck className="h-3.5 w-3.5" /> Verificado
+                    </Badge>
+                    <span className="text-xs font-semibold text-primary inline-flex items-center gap-1 group-hover:underline">
+                      Quero alugar <ChevronRight className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}

@@ -345,8 +345,9 @@ function PropertyDetail() {
               <VisitDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} userRole={data.userRole!} />
             )}
             {!data.isOwner && isTenant && (
-              <ProposalDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} rentSuggestion={rent} />
+              <ProposalDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} rentSuggestion={rent} preapproval={preapproval ?? null} />
             )}
+
             {data.isOwner && (
               <Button variant="destructive" size="sm" onClick={handleDelete}>Remover imóvel</Button>
             )}
@@ -629,13 +630,18 @@ function VisitDialog({ propertyId, ownerId, userId, userRole }: { propertyId: st
   );
 }
 
-function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion }: { propertyId: string; ownerId: string; userId: string; rentSuggestion: number }) {
+function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion, preapproval }: {
+  propertyId: string; ownerId: string; userId: string; rentSuggestion: number;
+  preapproval: { monthly_income: number; guarantee_type: GuaranteeType; max_rent: number; status: string } | null;
+}) {
   const [open, setOpen] = useState(false);
   const [rent, setRent] = useState(String(rentSuggestion));
   const [term, setTerm] = useState("12");
   const [start, setStart] = useState("");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+
+  const attachPreapproval = preapproval?.status === "approved";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -648,6 +654,11 @@ function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion }: { prope
     const { error } = await supabase.from("proposals").insert({
       property_id: propertyId, owner_id: ownerId, tenant_id: userId,
       rent_offer: rentN, term_months: termN, start_date: start, message: msg,
+      ...(attachPreapproval && preapproval ? {
+        tenant_preapproval_income: preapproval.monthly_income,
+        tenant_preapproval_max_rent: preapproval.max_rent,
+        tenant_preapproval_guarantee: preapproval.guarantee_type,
+      } : {}),
     });
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -664,6 +675,15 @@ function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion }: { prope
           <DialogDescription>O proprietário poderá aceitar ou recusar.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
+          {attachPreapproval && preapproval && (
+            <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-800 flex items-start gap-2">
+              <ShieldCheck className="size-4 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">Sua pré-aprovação será anexada</p>
+                <p className="text-xs">Até {formatBRL(preapproval.max_rent)} · Garantia: {GUARANTEE_LABEL[preapproval.guarantee_type]}</p>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="rent">Aluguel (R$)</Label>
@@ -690,3 +710,4 @@ function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion }: { prope
     </Dialog>
   );
 }
+

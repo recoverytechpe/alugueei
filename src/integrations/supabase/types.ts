@@ -401,6 +401,9 @@ export type Database = {
           start_date: string
           status: string
           tenant_id: string
+          tenant_preapproval_guarantee: string | null
+          tenant_preapproval_income: number | null
+          tenant_preapproval_max_rent: number | null
           term_months: number
           updated_at: string
         }
@@ -415,6 +418,9 @@ export type Database = {
           start_date: string
           status?: string
           tenant_id: string
+          tenant_preapproval_guarantee?: string | null
+          tenant_preapproval_income?: number | null
+          tenant_preapproval_max_rent?: number | null
           term_months?: number
           updated_at?: string
         }
@@ -429,6 +435,9 @@ export type Database = {
           start_date?: string
           status?: string
           tenant_id?: string
+          tenant_preapproval_guarantee?: string | null
+          tenant_preapproval_income?: number | null
+          tenant_preapproval_max_rent?: number | null
           term_months?: number
           updated_at?: string
         }

@@ -7,7 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { formatBRL } from "@/lib/property-helpers";
+import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/_authenticated/negotiations")({
   head: () => ({ meta: [{ title: "Negociações | Plataforma de Aluguel" }] }),
@@ -26,7 +28,11 @@ type Proposal = {
   id: string; property_id: string; owner_id: string; tenant_id: string; agent_id: string | null;
   rent_offer: number; term_months: number; start_date: string; message: string; status: string;
   properties: PropertyRef;
+  tenant_preapproval_income: number | null;
+  tenant_preapproval_max_rent: number | null;
+  tenant_preapproval_guarantee: string | null;
 };
+
 
 function NegotiationsPage() {
   const qc = useQueryClient();
@@ -123,7 +129,19 @@ function NegotiationsPage() {
                 <Badge variant="secondary" className="capitalize">{p.status}</Badge>
               </CardHeader>
               {p.message && <CardContent className="text-sm whitespace-pre-wrap">{p.message}</CardContent>}
+              {data.userId === p.owner_id && p.tenant_preapproval_max_rent != null && (
+                <CardContent className="pt-0">
+                  <div className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
+                    <ShieldCheck className="size-4 shrink-0" />
+                    <span>
+                      Locatário <strong>pré-aprovado</strong> até {formatBRL(Number(p.tenant_preapproval_max_rent))}
+                      {p.tenant_preapproval_income ? ` · renda ${formatBRL(Number(p.tenant_preapproval_income))}` : ""}
+                    </span>
+                  </div>
+                </CardContent>
+              )}
               <CardContent className="flex gap-2 flex-wrap">
+
                 {p.status === "pending" && data.userId === p.owner_id && (
                   <>
                     <Button size="sm" onClick={() => setProposalStatus(p.id, "accepted")}>Aceitar</Button>

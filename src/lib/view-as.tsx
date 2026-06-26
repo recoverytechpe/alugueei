@@ -67,8 +67,11 @@ export function ViewAsProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
     if (role) window.localStorage.setItem(STORAGE_KEY, role);
     else window.localStorage.removeItem(STORAGE_KEY);
-    setOverride(role);
+    // Mark the role swap as a non-urgent update so the click stays snappy
+    // and React can interrupt the heavy panel re-render.
+    startTransition(() => setOverride(role));
   }, []);
+
 
   const value = useMemo<Ctx>(() => {
     const roles = data?.roles ?? [];

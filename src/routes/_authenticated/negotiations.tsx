@@ -473,5 +473,4 @@ function CounterForm({ proposal, userId, onDone }: { proposal: Proposal; userId:
     </div>
   );
 }
-  );
-}
+

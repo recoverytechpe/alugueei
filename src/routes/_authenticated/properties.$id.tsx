@@ -27,6 +27,8 @@ function PropertyDetail() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [activePhoto, setActivePhoto] = useState(0);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [contacting, setContacting] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["property", id],

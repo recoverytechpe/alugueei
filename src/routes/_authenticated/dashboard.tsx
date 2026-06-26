@@ -92,10 +92,11 @@ function Dashboard() {
             <CardTitle>Bem-vindo</CardTitle>
             <CardDescription>{meta.description}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Esta é a área inicial. Funcionalidades dos próximos módulos:
-            </p>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button asChild><Link to="/properties">Ver imóveis</Link></Button>
+            {data.role === "proprietario" && (
+              <Button asChild variant="outline"><Link to="/properties/new">Cadastrar imóvel</Link></Button>
+            )}
           </CardContent>
         </Card>
 

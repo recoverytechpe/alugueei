@@ -43,6 +43,21 @@ function ProfilePage() {
     },
   });
 
+  const { data: unlocks } = useQuery({
+    queryKey: ["me", "unlocks"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return [];
+      const { data } = await supabase
+        .from("property_unlocks")
+        .select("id, status, amount_cents, paid_at, expires_at, created_at, property_id, properties(title, city, state)")
+        .eq("user_id", u.user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return data ?? [];
+    },
+  });
+
   const [form, setForm] = useState({ full_name: "", phone: "", cpf_cnpj: "", bio: "" });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);

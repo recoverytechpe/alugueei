@@ -202,13 +202,13 @@ function ProposalsSection({
 
               <CardContent className="flex gap-2 flex-wrap">
 
-                {p.status === "pending" && data.userId === p.owner_id && (
+                {p.status === "pending" && userId === p.owner_id && (
                   <>
                     <Button size="sm" onClick={() => setProposalStatus(p.id, "accepted")}>Aceitar</Button>
                     <Button size="sm" variant="outline" onClick={() => setProposalStatus(p.id, "rejected")}>Recusar</Button>
                   </>
                 )}
-                {p.status === "pending" && data.userId === p.tenant_id && (
+                {p.status === "pending" && userId === p.tenant_id && (
                   <Button size="sm" variant="ghost" onClick={() => setProposalStatus(p.id, "withdrawn")}>Retirar</Button>
                 )}
                 {p.status === "accepted" && (
@@ -217,8 +217,6 @@ function ProposalsSection({
               </CardContent>
             </Card>
           ))}
-        </section>
-      </main>
-    </div>
+    </section>
   );
 }

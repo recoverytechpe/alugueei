@@ -41,7 +41,7 @@ export function ViewAsBar() {
 
         <Select
           value={value}
-          onValueChange={(v) => setViewAs(v === REAL_VALUE ? null : (v as Role))}
+          onValueChange={handleChange}
         >
           <SelectTrigger className="h-8 w-[220px] bg-background">
             <SelectValue />

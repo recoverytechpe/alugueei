@@ -377,10 +377,14 @@ function PropertyDetail() {
 
           <div className="flex flex-wrap gap-2 pt-1">
             {!data.isOwner && (isTenant || data.userRole === "agente") && (
-              <VisitDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} userRole={data.userRole!} />
+              unlocked
+                ? <VisitDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} userRole={data.userRole!} />
+                : <Button size="sm" variant="outline" onClick={requireUnlock}>🔒 Agendar visita</Button>
             )}
             {!data.isOwner && isTenant && (
-              <ProposalDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} rentSuggestion={rent} preapproval={preapproval ?? null} />
+              unlocked
+                ? <ProposalDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} rentSuggestion={rent} preapproval={preapproval ?? null} />
+                : <Button size="sm" onClick={requireUnlock}>🔒 Enviar proposta</Button>
             )}
 
             {data.isOwner && (

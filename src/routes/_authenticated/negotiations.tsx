@@ -190,9 +190,9 @@ function ProposalsSection({
                   <div className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
                     <ShieldCheck className="size-4 shrink-0" />
                     <span>
-                      {data.userId === p.tenant_id ? "Sua pré-aprovação anexada" : "Locatário pré-aprovado"}
+                      {userId === p.tenant_id ? "Sua pré-aprovação anexada" : "Locatário pré-aprovado"}
                       {" "}até <strong>{formatBRL(Number(p.tenant_preapproval_max_rent))}</strong>
-                      {p.tenant_preapproval_income && data.userId !== p.tenant_id
+                      {p.tenant_preapproval_income && userId !== p.tenant_id
                         ? ` · renda ${formatBRL(Number(p.tenant_preapproval_income))}`
                         : ""}
                     </span>

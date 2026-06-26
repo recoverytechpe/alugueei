@@ -32,8 +32,11 @@ function useRealtimeNotifications(opts: {
     if (!opts.enabled) return;
     const channel = supabase.channel(opts.channelName);
     for (const sub of opts.subscriptions) {
-      channel.on(
-        // @ts-expect-error - supabase types don't expose postgres_changes signature well
+      (channel.on as unknown as (
+        type: string,
+        config: Record<string, unknown>,
+        cb: (p: { eventType: "INSERT" | "UPDATE" | "DELETE"; new: Record<string, unknown>; old: Record<string, unknown> }) => void,
+      ) => void)(
         "postgres_changes",
         { event: "*", schema: "public", table: sub.table, filter: sub.filter },
         (payload: {

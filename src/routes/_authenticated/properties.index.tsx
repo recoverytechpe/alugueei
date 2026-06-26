@@ -25,7 +25,7 @@ type Filters = { city: string; neighborhood: string; type: string; bedrooms: str
 
 function PropertiesList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<Filters>({ city: "", type: "all", bedrooms: "any", max: "" });
+  const [filters, setFilters] = useState<Filters>({ city: "", neighborhood: "", type: "all", bedrooms: "any", max: "" });
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {

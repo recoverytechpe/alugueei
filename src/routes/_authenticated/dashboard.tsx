@@ -911,9 +911,13 @@ function TenantDashboard({ userId }: { userId: string }) {
           <Link to="/favorites">❤️ Meus favoritos</Link>
         </Button>
         <Button asChild variant="outline" size="sm">
+          <Link to="/preapprovals">🛡️ Minhas pré-aprovações</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
           <Link to="/negotiations">Minhas propostas</Link>
         </Button>
       </div>
+
 
       {/* Stats minimalistas — perspectiva do locatário (quem aluga o imóvel) */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">

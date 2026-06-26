@@ -41,6 +41,7 @@ const searchSchema = z.object({
   minArea: fallback(z.string(), "").default(""),
   maxArea: fallback(z.string(), "").default(""),
   sort: fallback(z.enum(["newest", "price_asc", "price_desc", "area_desc"]), "newest").default("newest"),
+  unlocked: fallback(z.enum(["all", "mine"]), "all").default("all"),
 });
 
 export const Route = createFileRoute("/_authenticated/properties/")({

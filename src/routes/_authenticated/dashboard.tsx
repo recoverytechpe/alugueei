@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import {
   Wallet, Users, Clock, RefreshCw, CheckCircle2,
   Award, TrendingUp, ShieldCheck, Star, ChevronRight, BadgeCheck, Calendar,
+  Home, Settings, Bell, FileText,
 } from "lucide-react";
 
 /**
@@ -148,7 +149,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {me.role === "proprietario" && <OwnerDashboard userId={me.userId} />}
+        {me.role === "proprietario" && <OwnerDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Proprietário"} avatarUrl={me.profile?.avatar_url ?? null} />}
         {me.role === "agente" && <AgentDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Agente"} avatarUrl={me.profile?.avatar_url ?? null} />}
         {me.role === "locatario" && <TenantDashboard userId={me.userId} />}
 
@@ -183,15 +184,15 @@ function brl(n: number | null | undefined) {
   return (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function OwnerDashboard({ userId }: { userId: string }) {
+function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullName: string; avatarUrl: string | null }) {
   const { data, isLoading } = useQuery({
     queryKey: ["owner-dash", userId],
     queryFn: async () => {
       const [props, proposals, contracts, visits] = await Promise.all([
-        supabase.from("properties").select("id, title, city, rent_value, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
+        supabase.from("properties").select("id, title, city, state, street, number, bedrooms, bathrooms, area_m2, rent_value, status, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
         supabase.from("proposals").select("id, status, rent_offer, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
-        supabase.from("rental_contracts").select("id, status, rent_value, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
-        supabase.from("visits").select("id, status, scheduled_at").eq("owner_id", userId),
+        supabase.from("rental_contracts").select("id, status, rent_value, start_date, term_months, created_at, property:properties(title), tenant:profiles!rental_contracts_tenant_id_fkey(full_name)").eq("owner_id", userId).order("created_at", { ascending: false }),
+        supabase.from("visits").select("id, status, scheduled_at, notes, property:properties(title)").eq("owner_id", userId).order("scheduled_at", { ascending: true }),
       ]);
       return {
         properties: props.data ?? [],
@@ -207,79 +208,231 @@ function OwnerDashboard({ userId }: { userId: string }) {
     channelName: `owner-dash-${userId}`,
     invalidateKeys: [["owner-dash", userId]],
     subscriptions: [
-      {
-        table: "proposals",
-        filter: `owner_id=eq.${userId}`,
-        onEvent: (p) => {
-          if (p.eventType === "INSERT") toast.info("Nova proposta recebida");
-          else if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
-            toast.info(`Proposta atualizada: ${String(p.new.status)}`);
-        },
-      },
-      {
-        table: "visits",
-        filter: `owner_id=eq.${userId}`,
-        onEvent: (p) => {
-          if (p.eventType === "UPDATE" && p.new.status === "confirmed")
-            toast.success("Visita confirmada");
-          else if (p.eventType === "INSERT") toast.info("Nova visita agendada");
-        },
-      },
-      {
-        table: "rental_contracts",
-        filter: `owner_id=eq.${userId}`,
-        onEvent: (p) => {
-          if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
-            toast.success(`Contrato: ${String(p.new.status)}`);
-          else if (p.eventType === "INSERT") toast.success("Novo contrato gerado");
-        },
-      },
+      { table: "proposals", filter: `owner_id=eq.${userId}`, onEvent: (p) => {
+        if (p.eventType === "INSERT") toast.info("Nova proposta recebida");
+        else if (p.eventType === "UPDATE" && p.new.status !== p.old.status) toast.info(`Proposta: ${String(p.new.status)}`);
+      } },
+      { table: "visits", filter: `owner_id=eq.${userId}`, onEvent: (p) => {
+        if (p.eventType === "UPDATE" && p.new.status === "confirmed") toast.success("Visita confirmada");
+        else if (p.eventType === "INSERT") toast.info("Nova visita agendada");
+      } },
+      { table: "rental_contracts", filter: `owner_id=eq.${userId}`, onEvent: (p) => {
+        if (p.eventType === "UPDATE" && p.new.status !== p.old.status) toast.success(`Contrato: ${String(p.new.status)}`);
+        else if (p.eventType === "INSERT") toast.success("Novo contrato gerado");
+      } },
     ],
   });
 
-  if (isLoading || !data) return <Skeleton className="h-40 w-full" />;
+  if (isLoading || !data) return <Skeleton className="h-64 w-full" />;
 
+  // Next rent due: based on active/closed contracts, first day of next month
   const activeContracts = data.contracts.filter((c) => c.status === "active" || c.status === "closed");
-  const monthlyIncome = activeContracts
-    .filter((c) => c.status === "closed")
-    .reduce((sum, c) => sum + Number(c.rent_value ?? 0), 0);
-  const pendingProposals = data.proposals.filter((p) => p.status === "pending" || p.status === "negotiating").length;
+  const now = new Date();
+  const nextRent = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const nextRentLabel = nextRent.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+  const upcomingPayments = activeContracts.length;
+
+  const contractStatusPill = (s: string) => {
+    if (s === "closed") return { cls: "bg-emerald-100 text-emerald-700", label: "Assinado" };
+    if (s === "active") return { cls: "bg-blue-100 text-blue-700", label: "Em assinatura" };
+    return { cls: "bg-amber-100 text-amber-700", label: "Pendente" };
+  };
+  const visitStatusPill = (s: string) => {
+    if (s === "confirmed") return { cls: "bg-blue-100 text-blue-700", label: "Confirmada" };
+    if (s === "done") return { cls: "bg-emerald-100 text-emerald-700", label: "Realizada" };
+    if (s === "canceled") return { cls: "bg-muted text-muted-foreground", label: "Cancelada" };
+    return { cls: "bg-amber-100 text-amber-700", label: "Agendada" };
+  };
+  const propStatusDot = (s: string | null) => {
+    if (s === "rented") return { cls: "bg-emerald-500", text: "text-emerald-600", label: "Ocupado" };
+    if (s === "available") return { cls: "bg-amber-500", text: "text-amber-600", label: "Disponível" };
+    return { cls: "bg-muted-foreground", text: "text-muted-foreground", label: s ?? "—" };
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <Stat label="Imóveis anunciados" value={data.properties.length} />
-        <Stat label="Propostas pendentes" value={pendingProposals} />
-        <Stat label="Contratos ativos" value={activeContracts.length} />
-        <Stat label="Renda mensal estimada" value={brl(monthlyIncome)} />
+    <div className="space-y-6">
+      {/* Hero header */}
+      <div className="relative -mx-6 -mt-8 mb-2 bg-gradient-to-br from-blue-600 to-blue-700 px-6 pt-8 pb-16 text-white">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-white/15 flex items-center justify-center">
+              <Home className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold leading-tight">Proprietário</h2>
+              <p className="text-sm text-white/80">{fullName}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button type="button" className="relative h-10 w-10 rounded-full bg-white/15 flex items-center justify-center" aria-label="Notificações">
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
+            </button>
+            <div className="h-12 w-12 rounded-full bg-white overflow-hidden ring-2 ring-white/30">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold">
+                  {fullName.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
+      {/* Summary cards overlap hero */}
+      <div className="grid gap-4 sm:grid-cols-2 -mt-16 relative z-10">
+        <Card className="shadow-md">
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Home className="h-7 w-7 text-blue-600" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground font-medium">Meus imóveis</p>
+              <p className="text-3xl font-bold text-blue-700 leading-tight">{data.properties.length}</p>
+              <p className="text-xs text-muted-foreground">Total cadastrado</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-md">
+          <CardContent className="p-5 flex items-center gap-4">
+            <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Calendar className="h-7 w-7 text-blue-600" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground font-medium">Próximo aluguel</p>
+              <p className="text-3xl font-bold text-blue-700 leading-tight capitalize">{nextRentLabel}</p>
+              <p className="text-xs text-muted-foreground">{upcomingPayments} pagamento{upcomingPayments === 1 ? "" : "s"} a receber</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Properties list */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold">Meus imóveis</h3>
+          <Link to="/properties" className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1">
+            Ver todos <ChevronRight className="h-4 w-4" />
+          </Link>
+        </div>
+        {data.properties.length === 0 ? (
+          <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Nenhum imóvel cadastrado.</CardContent></Card>
+        ) : (
+          <div className="space-y-3">
+            {data.properties.slice(0, 5).map((p) => {
+              const dot = propStatusDot(p.status);
+              return (
+                <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <CardContent className="p-3 flex flex-col sm:flex-row gap-3">
+                    <div className="h-24 sm:h-20 sm:w-28 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{p.title}</p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {[p.street, p.number].filter(Boolean).join(", ")}{p.city ? ` · ${p.city}/${p.state ?? ""}` : ""}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {p.bedrooms ?? 0} quartos · {p.bathrooms ?? 0} banh. · {p.area_m2 ?? 0} m²
+                      </p>
+                      <div className={`mt-1 flex items-center gap-1.5 text-xs font-medium ${dot.text}`}>
+                        <span className={`h-2 w-2 rounded-full ${dot.cls}`} />
+                        {dot.label}
+                      </div>
+                    </div>
+                    <div className="flex sm:flex-col gap-2 sm:w-40">
+                      <Button asChild size="sm" className="flex-1">
+                        <Link to="/properties/$id" params={{ id: p.id }}>
+                          <Settings className="h-4 w-4 mr-1.5" />
+                          Gerenciar
+                        </Link>
+                      </Button>
+                      <Button asChild size="sm" variant="outline" className="flex-1">
+                        <Link to="/negotiations">
+                          <Users className="h-4 w-4 mr-1.5" />
+                          Leads
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* Recent contracts + Inspections */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-base">Meus imóveis</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {data.properties.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum imóvel cadastrado.</p>
-            ) : data.properties.slice(0, 5).map((p) => (
-              <Link key={p.id} to="/properties/$id" params={{ id: p.id }} className="flex items-center justify-between text-sm border-b pb-2 last:border-b-0 hover:text-primary">
-                <span className="truncate">{p.title} · {p.city}</span>
-                <span>{brl(Number(p.rent_value))}</span>
-              </Link>
-            ))}
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-lg">Contratos recentes</CardTitle>
+            <Link to="/contracts" className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1">
+              Ver todos <ChevronRight className="h-3 w-3" />
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {data.contracts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum contrato ainda.</p>
+            ) : data.contracts.slice(0, 3).map((c) => {
+              const pill = contractStatusPill(c.status);
+              const prop = (c as unknown as { property: { title: string } | null }).property;
+              const tenant = (c as unknown as { tenant: { full_name: string } | null }).tenant;
+              const start = c.start_date ? new Date(c.start_date) : null;
+              const end = start && c.term_months ? new Date(start.getFullYear(), start.getMonth() + c.term_months, start.getDate()) : null;
+              const fmt = (d: Date | null) => d ? d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+              return (
+                <Link key={c.id} to="/contracts/$id" params={{ id: c.id }} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0 hover:bg-muted/30 -mx-1 px-1 rounded">
+                  <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{tenant?.full_name ?? "—"}</p>
+                    <p className="text-xs text-muted-foreground">{fmt(start)} – {fmt(end)}</p>
+                  </div>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${pill.cls}`}>
+                    {pill.label}
+                  </span>
+                </Link>
+              );
+            })}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="text-base">Vistorias e visitas</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-lg">Vistorias</CardTitle>
+            <Link to="/negotiations" className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1">
+              Ver todas <ChevronRight className="h-3 w-3" />
+            </Link>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {data.visits.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma visita agendada.</p>
-            ) : data.visits.slice(0, 5).map((v) => (
-              <div key={v.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-b-0">
-                <span>{v.scheduled_at ? new Date(v.scheduled_at).toLocaleString("pt-BR") : "—"}</span>
-                <Badge variant="outline">{v.status}</Badge>
-              </div>
-            ))}
+              <p className="text-sm text-muted-foreground">Nenhuma vistoria agendada.</p>
+            ) : data.visits.slice(0, 3).map((v) => {
+              const pill = visitStatusPill(v.status);
+              const prop = (v as unknown as { property: { title: string } | null }).property;
+              const when = v.scheduled_at ? new Date(v.scheduled_at) : null;
+              return (
+                <div key={v.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0">
+                  <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{v.notes ?? "Vistoria"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {when ? when.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                      {when ? ` · ${when.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}
+                    </p>
+                  </div>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${pill.cls}`}>
+                    {pill.label}
+                  </span>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       </div>

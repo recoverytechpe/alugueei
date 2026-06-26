@@ -13,6 +13,7 @@ import {
   Home, Settings, Bell, FileText,
 } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
+import { useViewAs } from "@/lib/view-as";
 
 /**
  * Subscribes to realtime postgres_changes for the given table+filter and
@@ -78,40 +79,25 @@ type Role = "proprietario" | "locatario" | "agente";
 
 function Dashboard() {
   const navigate = useNavigate();
-  const qc = useQueryClient();
+  const viewAs = useViewAs();
 
   const { data: me, isLoading } = useQuery({
     queryKey: ["me"],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Sem sessão");
-      const [{ data: profile }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", userData.user.id).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", userData.user.id),
-      ]);
-      const all = (roles ?? []).map((r) => r.role as string);
-      const isAdmin = all.includes("admin");
-      const real = (all.find((r) => r !== "admin") ?? "locatario") as Role;
-      const override =
-        typeof window !== "undefined" ? (localStorage.getItem("admin_view_as") as Role | null) : null;
-      const role: Role = isAdmin && override && ["proprietario", "locatario", "agente"].includes(override)
-        ? override
-        : real;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userData.user.id)
+        .maybeSingle();
       return {
         userId: userData.user.id,
         email: userData.user.email,
         profile,
-        role,
-        realRole: real,
-        isAdmin,
       };
     },
   });
-
-  function switchView(r: Role) {
-    localStorage.setItem("admin_view_as", r);
-    qc.invalidateQueries({ queryKey: ["me"] });
-  }
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -128,14 +114,17 @@ function Dashboard() {
     );
   }
 
+  const role = viewAs.effectiveRole;
+  const isAdmin = viewAs.isAdmin;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-semibold">
-              {me.role === "proprietario" ? "Painel do Proprietário"
-                : me.role === "agente" ? "Painel do Agente"
+              {role === "proprietario" ? "Painel do Proprietário"
+                : role === "agente" ? "Painel do Agente"
                 : "Painel do Locatário"}
             </h1>
             <p className="text-sm text-muted-foreground">{me.profile?.full_name ?? me.email}</p>
@@ -145,22 +134,6 @@ function Dashboard() {
             <Button variant="outline" onClick={signOut}>Sair</Button>
           </div>
         </div>
-        {me.isAdmin && (
-          <div className="max-w-6xl mx-auto px-6 pb-3 flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Visualizar como:</span>
-            {(["proprietario", "locatario", "agente"] as Role[]).map((r) => (
-              <Button
-                key={r}
-                size="sm"
-                variant={me.role === r ? "default" : "outline"}
-                onClick={() => switchView(r)}
-              >
-                {r === "proprietario" ? "Proprietário" : r === "locatario" ? "Locatário" : "Agente"}
-              </Button>
-            ))}
-            <span className="ml-2 text-xs text-muted-foreground">(modo admin)</span>
-          </div>
-        )}
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
@@ -170,22 +143,22 @@ function Dashboard() {
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Button asChild><Link to="/properties">Ver imóveis</Link></Button>
-            {(me.role === "proprietario" || me.role === "agente") && (
+            {(role === "proprietario" || role === "agente") && (
               <Button asChild variant="outline"><Link to="/properties/new">Cadastrar imóvel</Link></Button>
             )}
             <Button asChild variant="outline"><Link to="/profile">Meu perfil</Link></Button>
             <Button asChild variant="outline"><Link to="/contracts">Contratos</Link></Button>
             <Button asChild variant="outline"><Link to="/chat">Conversas</Link></Button>
             <Button asChild variant="outline"><Link to="/negotiations">Negociações</Link></Button>
-            {me.isAdmin && (
+            {isAdmin && (
               <Button asChild variant="secondary"><Link to="/admin">Moderação</Link></Button>
             )}
           </CardContent>
         </Card>
 
-        {me.role === "proprietario" && <OwnerDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Proprietário"} avatarUrl={me.profile?.avatar_url ?? null} />}
-        {me.role === "agente" && <AgentDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Agente"} avatarUrl={me.profile?.avatar_url ?? null} />}
-        {me.role === "locatario" && <TenantDashboard userId={me.userId} />}
+        {role === "proprietario" && <OwnerDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Proprietário"} avatarUrl={me.profile?.avatar_url ?? null} />}
+        {role === "agente" && <AgentDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Agente"} avatarUrl={me.profile?.avatar_url ?? null} />}
+        {role === "locatario" && <TenantDashboard userId={me.userId} />}
 
         <Card className="border-primary/30 bg-primary/5">
           <CardHeader>

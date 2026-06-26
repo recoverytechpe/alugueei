@@ -275,49 +275,203 @@ function ProposalsSection({
       </div>
       {visible.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma proposta.</p>}
       {visible.map((p) => (
-            <Card key={p.id}>
-              <CardHeader className="flex flex-row items-start justify-between gap-2">
-                <div>
-                  <CardTitle className="text-base">{p.properties?.title ?? "Imóvel"}</CardTitle>
-                  <CardDescription>
-                    {formatBRL(p.rent_offer)} / mês · {p.term_months} meses · início {new Date(p.start_date).toLocaleDateString("pt-BR")}
-                  </CardDescription>
-                </div>
-                <Badge variant="secondary" className="capitalize">{p.status}</Badge>
-              </CardHeader>
-              {p.message && <CardContent className="text-sm whitespace-pre-wrap">{p.message}</CardContent>}
-              {p.tenant_preapproval_max_rent != null && (
-                <CardContent className="pt-0">
-                  <div className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
-                    <ShieldCheck className="size-4 shrink-0" />
-                    <span>
-                      {userId === p.tenant_id ? "Sua pré-aprovação anexada" : "Locatário pré-aprovado"}
-                      {" "}até <strong>{formatBRL(Number(p.tenant_preapproval_max_rent))}</strong>
-                      {p.tenant_preapproval_income && userId !== p.tenant_id
-                        ? ` · renda ${formatBRL(Number(p.tenant_preapproval_income))}`
-                        : ""}
-                    </span>
-                  </div>
-                </CardContent>
-              )}
-
-              <CardContent className="flex gap-2 flex-wrap">
-
-                {p.status === "pending" && userId === p.owner_id && (
-                  <>
-                    <Button size="sm" onClick={() => setProposalStatus(p.id, "accepted")}>Aceitar</Button>
-                    <Button size="sm" variant="outline" onClick={() => setProposalStatus(p.id, "rejected")}>Recusar</Button>
-                  </>
-                )}
-                {p.status === "pending" && userId === p.tenant_id && (
-                  <Button size="sm" variant="ghost" onClick={() => setProposalStatus(p.id, "withdrawn")}>Retirar</Button>
-                )}
-                {p.status === "accepted" && (
-                  <Button asChild size="sm" variant="outline"><Link to="/contracts">Ver contrato</Link></Button>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+        <ProposalCard
+          key={p.id}
+          proposal={p}
+          counters={countersByProposal.get(p.id) ?? []}
+          userId={userId}
+          setProposalStatus={setProposalStatus}
+        />
+      ))}
     </section>
+  );
+}
+
+function ProposalCard({
+  proposal: p,
+  counters,
+  userId,
+  setProposalStatus,
+}: {
+  proposal: Proposal;
+  counters: Counter[];
+  userId: string;
+  setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
+}) {
+  const isParticipant = userId === p.owner_id || userId === p.tenant_id;
+  const lastCounter = counters[counters.length - 1];
+  const canCounter =
+    p.status === "pending" &&
+    isParticipant &&
+    (!lastCounter || (lastCounter.status === "pending" && lastCounter.author_id !== userId));
+  const [showForm, setShowForm] = useState(false);
+
+  async function acceptCounter(c: Counter) {
+    const { error: e1 } = await supabase
+      .from("proposals")
+      .update({
+        rent_offer: c.rent_offer,
+        term_months: c.term_months,
+        start_date: c.start_date,
+        status: "accepted",
+      })
+      .eq("id", p.id);
+    if (e1) { toast.error(e1.message); return; }
+    await supabase.from("proposal_counters").update({ status: "superseded" }).eq("proposal_id", p.id).eq("status", "pending");
+    await supabase.from("proposal_counters").update({ status: "accepted" }).eq("id", c.id);
+    toast.success("Contraproposta aceita — contrato gerado");
+  }
+
+  async function rejectCounter(c: Counter) {
+    const { error } = await supabase.from("proposal_counters").update({ status: "rejected" }).eq("id", c.id);
+    if (error) toast.error(error.message); else toast.success("Contraproposta recusada");
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between gap-2">
+        <div>
+          <CardTitle className="text-base">{p.properties?.title ?? "Imóvel"}</CardTitle>
+          <CardDescription>
+            {formatBRL(p.rent_offer)} / mês · {p.term_months} meses · início {new Date(p.start_date).toLocaleDateString("pt-BR")}
+          </CardDescription>
+        </div>
+        <Badge variant="secondary" className="capitalize">{p.status}</Badge>
+      </CardHeader>
+      {p.message && <CardContent className="text-sm whitespace-pre-wrap">{p.message}</CardContent>}
+      {p.tenant_preapproval_max_rent != null && (
+        <CardContent className="pt-0">
+          <div className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
+            <ShieldCheck className="size-4 shrink-0" />
+            <span>
+              {userId === p.tenant_id ? "Sua pré-aprovação anexada" : "Locatário pré-aprovado"}
+              {" "}até <strong>{formatBRL(Number(p.tenant_preapproval_max_rent))}</strong>
+              {p.tenant_preapproval_income && userId !== p.tenant_id
+                ? ` · renda ${formatBRL(Number(p.tenant_preapproval_income))}`
+                : ""}
+            </span>
+          </div>
+        </CardContent>
+      )}
+
+      {counters.length > 0 && (
+        <CardContent className="pt-0 space-y-2">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">Histórico de contrapropostas</p>
+          {counters.map((c) => {
+            const mine = c.author_id === userId;
+            return (
+              <div key={c.id} className="rounded-lg border bg-muted/30 p-3 text-sm space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">
+                    {mine ? "Você" : c.author_id === p.owner_id ? "Proprietário" : "Locatário"}
+                    {" · "}{formatBRL(c.rent_offer)}/mês · {c.term_months} meses
+                  </span>
+                  <Badge variant="outline" className="capitalize text-xs">{c.status}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Início {new Date(c.start_date).toLocaleDateString("pt-BR")} · {new Date(c.created_at).toLocaleString("pt-BR")}
+                </p>
+                {c.message && <p className="text-sm whitespace-pre-wrap">{c.message}</p>}
+                {c.status === "pending" && !mine && p.status === "pending" && (
+                  <div className="flex gap-2 pt-1">
+                    <Button size="sm" onClick={() => acceptCounter(c)}>Aceitar contra</Button>
+                    <Button size="sm" variant="outline" onClick={() => rejectCounter(c)}>Recusar</Button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </CardContent>
+      )}
+
+      {showForm && canCounter && (
+        <CardContent className="pt-0">
+          <CounterForm proposal={p} userId={userId} onDone={() => setShowForm(false)} />
+        </CardContent>
+      )}
+
+      <CardContent className="flex gap-2 flex-wrap">
+        {p.status === "pending" && userId === p.owner_id && (
+          <>
+            <Button size="sm" onClick={() => setProposalStatus(p.id, "accepted")}>Aceitar</Button>
+            <Button size="sm" variant="outline" onClick={() => setProposalStatus(p.id, "rejected")}>Recusar</Button>
+          </>
+        )}
+        {p.status === "pending" && userId === p.tenant_id && (
+          <Button size="sm" variant="ghost" onClick={() => setProposalStatus(p.id, "withdrawn")}>Retirar</Button>
+        )}
+        {canCounter && (
+          <Button size="sm" variant="outline" onClick={() => setShowForm((s) => !s)}>
+            <MessageSquareReply className="size-4 mr-1" />
+            {showForm ? "Cancelar" : "Contrapropor"}
+          </Button>
+        )}
+        {p.status === "accepted" && (
+          <Button asChild size="sm" variant="outline"><Link to="/contracts">Ver contrato</Link></Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CounterForm({ proposal, userId, onDone }: { proposal: Proposal; userId: string; onDone: () => void }) {
+  const [rent, setRent] = useState(String(proposal.rent_offer));
+  const [term, setTerm] = useState(String(proposal.term_months));
+  const [start, setStart] = useState(proposal.start_date);
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function submit() {
+    const r = Number(rent);
+    const t = Number(term);
+    if (!r || r <= 0) { toast.error("Valor inválido"); return; }
+    if (!t || t <= 0) { toast.error("Prazo inválido"); return; }
+    if (!start) { toast.error("Data inválida"); return; }
+    setSaving(true);
+    await supabase
+      .from("proposal_counters")
+      .update({ status: "superseded" })
+      .eq("proposal_id", proposal.id)
+      .eq("status", "pending");
+    const { error } = await supabase.from("proposal_counters").insert({
+      proposal_id: proposal.id,
+      author_id: userId,
+      rent_offer: r,
+      term_months: t,
+      start_date: start,
+      message,
+    });
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else { toast.success("Contraproposta enviada"); onDone(); }
+  }
+
+  return (
+    <div className="rounded-lg border p-3 space-y-3 bg-muted/20">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs">Aluguel (R$)</Label>
+          <Input type="number" min="1" value={rent} onChange={(e) => setRent(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Prazo (meses)</Label>
+          <Input type="number" min="1" value={term} onChange={(e) => setTerm(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Início</Label>
+          <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label className="text-xs">Mensagem (opcional)</Label>
+        <Textarea rows={2} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Justifique sua contraproposta" />
+      </div>
+      <div className="flex gap-2">
+        <Button size="sm" onClick={submit} disabled={saving}>{saving ? "Enviando…" : "Enviar contraproposta"}</Button>
+        <Button size="sm" variant="ghost" onClick={onDone}>Cancelar</Button>
+      </div>
+    </div>
+  );
+}
   );
 }

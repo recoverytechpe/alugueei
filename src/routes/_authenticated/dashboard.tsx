@@ -198,6 +198,41 @@ function OwnerDashboard({ userId }: { userId: string }) {
     },
   });
 
+  useRealtimeNotifications({
+    enabled: true,
+    channelName: `owner-dash-${userId}`,
+    invalidateKeys: [["owner-dash", userId]],
+    subscriptions: [
+      {
+        table: "proposals",
+        filter: `owner_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "INSERT") toast.info("Nova proposta recebida");
+          else if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
+            toast.info(`Proposta atualizada: ${String(p.new.status)}`);
+        },
+      },
+      {
+        table: "visits",
+        filter: `owner_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status === "confirmed")
+            toast.success("Visita confirmada");
+          else if (p.eventType === "INSERT") toast.info("Nova visita agendada");
+        },
+      },
+      {
+        table: "rental_contracts",
+        filter: `owner_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
+            toast.success(`Contrato: ${String(p.new.status)}`);
+          else if (p.eventType === "INSERT") toast.success("Novo contrato gerado");
+        },
+      },
+    ],
+  });
+
   if (isLoading || !data) return <Skeleton className="h-40 w-full" />;
 
   const activeContracts = data.contracts.filter((c) => c.status === "active" || c.status === "closed");

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useViewAs } from "@/lib/view-as";
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedPhotoUrls, formatBRL } from "@/lib/property-helpers";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,15 @@ type Filters = { q: string; maxPrice: string; type: string; city: string };
 
 function Home() {
   const navigate = useNavigate();
+  const { isAdmin, override } = useViewAs();
+
+  // Admin alternando "visualizar como" deve ver o painel correspondente.
+  useEffect(() => {
+    if (isAdmin && override) {
+      navigate({ to: "/dashboard" });
+    }
+  }, [isAdmin, override, navigate]);
+
   const [filters, setFilters] = useState<Filters>({
     q: "",
     maxPrice: "any",

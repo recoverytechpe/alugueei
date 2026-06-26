@@ -90,16 +90,17 @@ function PropertiesList() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">← Dashboard</Link>
-          <h1 className="text-lg font-semibold">Imóveis disponíveis</h1>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-4 flex items-center justify-between gap-3">
+          <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground shrink-0">← Dashboard</Link>
+          <h1 className="text-lg md:text-xl font-semibold truncate">Imóveis disponíveis</h1>
           {isOwner ? (
             <Button asChild size="sm"><Link to="/properties/new">Cadastrar imóvel</Link></Button>
           ) : <div className="w-32" />}
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-10 space-y-6">
+
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base">Filtros</CardTitle></CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-5">

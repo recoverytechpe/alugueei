@@ -41,6 +41,113 @@ export type Database = {
         }
         Relationships: []
       }
+      properties: {
+        Row: {
+          area_m2: number
+          bathrooms: number
+          bedrooms: number
+          cep: string
+          city: string
+          complement: string | null
+          condo_value: number
+          created_at: string
+          description: string
+          id: string
+          iptu_value: number
+          neighborhood: string | null
+          number: string
+          owner_id: string
+          parking_spots: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          rent_value: number
+          state: string
+          status: Database["public"]["Enums"]["property_status"]
+          street: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          area_m2?: number
+          bathrooms?: number
+          bedrooms?: number
+          cep: string
+          city: string
+          complement?: string | null
+          condo_value?: number
+          created_at?: string
+          description?: string
+          id?: string
+          iptu_value?: number
+          neighborhood?: string | null
+          number: string
+          owner_id: string
+          parking_spots?: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          rent_value: number
+          state: string
+          status?: Database["public"]["Enums"]["property_status"]
+          street: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          area_m2?: number
+          bathrooms?: number
+          bedrooms?: number
+          cep?: string
+          city?: string
+          complement?: string | null
+          condo_value?: number
+          created_at?: string
+          description?: string
+          id?: string
+          iptu_value?: number
+          neighborhood?: string | null
+          number?: string
+          owner_id?: string
+          parking_spots?: number
+          property_type?: Database["public"]["Enums"]["property_type"]
+          rent_value?: number
+          state?: string
+          status?: Database["public"]["Enums"]["property_status"]
+          street?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      property_photos: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          property_id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          property_id: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          property_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_photos_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -77,6 +184,8 @@ export type Database = {
     }
     Enums: {
       app_role: "proprietario" | "locatario" | "agente"
+      property_status: "available" | "rented" | "inactive"
+      property_type: "casa" | "apartamento"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -205,6 +314,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["proprietario", "locatario", "agente"],
+      property_status: ["available", "rented", "inactive"],
+      property_type: ["casa", "apartamento"],
     },
   },
 } as const

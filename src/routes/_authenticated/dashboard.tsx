@@ -216,10 +216,11 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
     queryFn: async () => {
       const [props, proposals, contracts, visits] = await Promise.all([
         supabase.from("properties").select("id, title, city, state, street, number, bedrooms, bathrooms, area_m2, rent_value, status, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
-        supabase.from("proposals").select("id, status, rent_offer, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
+        supabase.from("proposals").select("id, status, rent_offer, term_months, start_date, created_at, tenant_preapproval_income, tenant_preapproval_max_rent, tenant_preapproval_guarantee, property:properties(id,title,city,neighborhood)").eq("owner_id", userId).order("created_at", { ascending: false }),
         supabase.from("rental_contracts").select("id, status, rent_value, start_date, term_months, created_at, property:properties(title), tenant:profiles!rental_contracts_tenant_id_fkey(full_name)").eq("owner_id", userId).order("created_at", { ascending: false }),
         supabase.from("visits").select("id, status, scheduled_at, notes, property:properties(title)").eq("owner_id", userId).order("scheduled_at", { ascending: true }),
       ]);
+
       return {
         properties: props.data ?? [],
         proposals: proposals.data ?? [],
@@ -465,9 +466,67 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           </CardContent>
         </Card>
       </div>
+
+      {/* Propostas recebidas */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold">Propostas recebidas</h3>
+          <Link to="/negotiations" className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1">
+            Ver todas <ChevronRight className="h-4 w-4" />
+          </Link>
+        </div>
+        {data.proposals.length === 0 ? (
+          <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Nenhuma proposta recebida ainda.</CardContent></Card>
+        ) : (
+          <div className="space-y-3">
+            {data.proposals.slice(0, 5).map((p) => {
+              const prop = (p as unknown as { property: { id: string; title: string; city: string | null; neighborhood: string | null } | null }).property;
+              const pp = p as unknown as {
+                tenant_preapproval_income: number | null;
+                tenant_preapproval_max_rent: number | null;
+                tenant_preapproval_guarantee: string | null;
+                term_months: number | null;
+                start_date: string | null;
+              };
+              const preapproved = pp.tenant_preapproval_max_rent != null;
+              const status = mapProposalStatus(p.status);
+              return (
+                <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-start gap-3">
+                      <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{prop?.title ?? "Imóvel"}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {[prop?.neighborhood, prop?.city].filter(Boolean).join(", ") || "—"}
+                        </p>
+                        <p className="text-sm mt-1">
+                          <strong>{brl(p.rent_offer)}</strong>
+                          <span className="text-muted-foreground"> /mês · {pp.term_months ?? "—"} meses</span>
+                        </p>
+                      </div>
+                      <StatusPill status={status} />
+                    </div>
+                    {preapproved && (
+                      <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
+                        <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
+                        <span>
+                          Locatário <strong>pré-aprovado</strong> até {brl(Number(pp.tenant_preapproval_max_rent))}
+                          {pp.tenant_preapproval_income ? ` · renda ${brl(Number(pp.tenant_preapproval_income))}` : ""}
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
+
 
 type ReferralStatus = "Pendente" | "Em Progresso" | "Concluído";
 
@@ -852,9 +911,13 @@ function TenantDashboard({ userId }: { userId: string }) {
           <Link to="/favorites">❤️ Meus favoritos</Link>
         </Button>
         <Button asChild variant="outline" size="sm">
+          <Link to="/preapprovals">🛡️ Minhas pré-aprovações</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
           <Link to="/negotiations">Minhas propostas</Link>
         </Button>
       </div>
+
 
       {/* Stats minimalistas — perspectiva do locatário (quem aluga o imóvel) */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">

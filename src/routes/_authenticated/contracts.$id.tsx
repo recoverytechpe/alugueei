@@ -229,3 +229,104 @@ function ContractDetail() {
     </div>
   );
 }
+
+type ContractRow = {
+  id: string;
+  rent_value: number | null;
+  deposit_value: number | null;
+  payment_status: string;
+  paid_at: string | null;
+  payment_id: string | null;
+  status: string;
+};
+
+function brl(v: number) {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function PaymentCard({
+  contract,
+  isTenant,
+  paying,
+  onPay,
+}: {
+  contract: ContractRow;
+  isTenant: boolean;
+  paying: boolean;
+  onPay: () => void;
+}) {
+  const rent = Number(contract.rent_value ?? 0);
+  const deposit = Number(contract.deposit_value ?? rent);
+  const total = rent + deposit;
+  const status = contract.payment_status ?? "pending";
+
+  const statusMeta: Record<string, { label: string; icon: typeof Clock; tone: string }> = {
+    pending: { label: "Aguardando pagamento", icon: Clock, tone: "bg-muted text-muted-foreground" },
+    processing: { label: "Processando", icon: Loader2, tone: "bg-amber-500/10 text-amber-700 dark:text-amber-400" },
+    paid: { label: "Pago", icon: CheckCircle2, tone: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
+    failed: { label: "Falhou", icon: AlertCircle, tone: "bg-destructive/10 text-destructive" },
+    refunded: { label: "Reembolsado", icon: AlertCircle, tone: "bg-muted text-muted-foreground" },
+  };
+  const meta = statusMeta[status] ?? statusMeta.pending;
+  const Icon = meta.icon;
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CreditCard className="size-4" /> Pagamento
+            </CardTitle>
+            <CardDescription>Caução + 1º aluguel via Mercado Pago</CardDescription>
+          </div>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${meta.tone}`}>
+            <Icon className={`size-3.5 ${status === "processing" ? "animate-spin" : ""}`} />
+            {meta.label}
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+          <div className="rounded-md border p-3">
+            <div className="text-xs text-muted-foreground">Caução</div>
+            <div className="font-semibold mt-1">{brl(deposit)}</div>
+          </div>
+          <div className="rounded-md border p-3">
+            <div className="text-xs text-muted-foreground">1º aluguel</div>
+            <div className="font-semibold mt-1">{brl(rent)}</div>
+          </div>
+          <div className="rounded-md border border-primary/40 bg-primary/5 p-3">
+            <div className="text-xs text-muted-foreground">Total</div>
+            <div className="font-semibold mt-1 text-primary">{brl(total)}</div>
+          </div>
+        </div>
+
+        {status === "paid" && contract.paid_at && (
+          <p className="text-xs text-muted-foreground">
+            Pago em {new Date(contract.paid_at).toLocaleString("pt-BR")}
+            {contract.payment_id ? ` · ID ${contract.payment_id}` : ""}
+          </p>
+        )}
+
+        {isTenant && status !== "paid" && contract.status !== "cancelled" && (
+          <Button onClick={onPay} disabled={paying || rent <= 0} className="w-full sm:w-auto">
+            {paying ? (
+              <><Loader2 className="size-4 mr-2 animate-spin" /> Redirecionando...</>
+            ) : (
+              <><CreditCard className="size-4 mr-2" /> Pagar {brl(total)}</>
+            )}
+          </Button>
+        )}
+        {!isTenant && status !== "paid" && (
+          <p className="text-xs text-muted-foreground">Apenas o inquilino pode iniciar o pagamento.</p>
+        )}
+        {rent <= 0 && (
+          <p className="text-xs text-amber-600 dark:text-amber-400">
+            Defina o valor do aluguel no contrato para habilitar o pagamento.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

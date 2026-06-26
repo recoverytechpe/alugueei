@@ -1,6 +1,5 @@
 import {
   createContext,
-  startTransition,
   useCallback,
   useContext,
   useEffect,
@@ -8,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,10 +67,11 @@ export function ViewAsProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
     if (role) window.localStorage.setItem(STORAGE_KEY, role);
     else window.localStorage.removeItem(STORAGE_KEY);
-    // Mark the role swap as a non-urgent update so the click stays snappy
-    // and React can interrupt the heavy panel re-render.
-    startTransition(() => setOverride(role));
+    // Update synchronously so the click feels instant; the panels are kept
+    // mounted (see Dashboard) so this is just a `hidden` toggle, not a remount.
+    setOverride(role);
   }, []);
+
 
 
   const value = useMemo<Ctx>(() => {

@@ -20,9 +20,16 @@ const REAL_VALUE = "__real__";
 
 export function ViewAsBar() {
   const { isAdmin, effectiveRole, realRole, override, setViewAs } = useViewAs();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (!isAdmin) return null;
 
   const value = override ?? REAL_VALUE;
+
+  function handleChange(v: string) {
+    setViewAs(v === REAL_VALUE ? null : (v as Role));
+    if (pathname !== "/dashboard") navigate({ to: "/dashboard" });
+  }
 
   return (
     <div className="sticky top-0 z-50 w-full border-b bg-amber-50 dark:bg-amber-950/40">

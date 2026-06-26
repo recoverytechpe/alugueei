@@ -211,26 +211,71 @@ function brl(n: number | null | undefined) {
 }
 
 function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullName: string; avatarUrl: string | null }) {
+  const qc = useQueryClient();
   const { data, isLoading } = useQuery({
     queryKey: ["owner-dash", userId],
     queryFn: async () => {
       const [props, proposals, contracts, visits] = await Promise.all([
         supabase.from("properties").select("id, title, city, state, street, number, bedrooms, bathrooms, area_m2, rent_value, status, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
-        supabase.from("proposals").select("id, status, rent_offer, term_months, start_date, created_at, tenant_preapproval_income, tenant_preapproval_max_rent, tenant_preapproval_guarantee, property:properties(id,title,city,neighborhood)").eq("owner_id", userId).order("created_at", { ascending: false }),
-        supabase.from("rental_contracts").select("id, status, rent_value, start_date, term_months, created_at, property:properties(title), tenant:profiles!rental_contracts_tenant_id_fkey(full_name)").eq("owner_id", userId).order("created_at", { ascending: false }),
+        supabase.from("proposals").select("id, status, rent_offer, term_months, start_date, created_at, tenant_preapproval_income, tenant_preapproval_max_rent, tenant_preapproval_guarantee, property_id, property:properties(id,title,city,neighborhood)").eq("owner_id", userId).order("created_at", { ascending: false }),
+        supabase.from("rental_contracts").select("id, status, rent_value, start_date, term_months, created_at, property_id, tenant_id, agent_id, property:properties(title), tenant:profiles!rental_contracts_tenant_id_fkey(full_name)").eq("owner_id", userId).order("created_at", { ascending: false }),
         supabase.from("visits").select("id, status, scheduled_at, notes, property:properties(title)").eq("owner_id", userId).order("scheduled_at", { ascending: true }),
       ]);
+
+      const propIds = (props.data ?? []).map((p) => p.id);
+      const metrics: Record<string, { favorites: number; proposals: number; conversations: number }> = {};
+      for (const id of propIds) metrics[id] = { favorites: 0, proposals: 0, conversations: 0 };
+      if (propIds.length > 0) {
+        const [favs, propAgg, convs] = await Promise.all([
+          supabase.from("favorites").select("property_id").in("property_id", propIds),
+          supabase.from("proposals").select("property_id").in("property_id", propIds),
+          supabase.from("conversations").select("property_id").in("property_id", propIds),
+        ]);
+        for (const r of favs.data ?? []) if (metrics[r.property_id]) metrics[r.property_id].favorites++;
+        for (const r of propAgg.data ?? []) if (metrics[r.property_id]) metrics[r.property_id].proposals++;
+        for (const r of convs.data ?? []) if (r.property_id && metrics[r.property_id]) metrics[r.property_id].conversations++;
+      }
 
       return {
         properties: props.data ?? [],
         proposals: proposals.data ?? [],
         contracts: contracts.data ?? [],
         visits: visits.data ?? [],
+        metrics,
       };
     },
     staleTime: 60_000,
     placeholderData: (prev) => prev,
   });
+
+  async function togglePause(id: string, current: string | null) {
+    const next = current === "inactive" ? "available" : "inactive";
+    const { error } = await supabase.from("properties").update({ status: next }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success(next === "inactive" ? "Imóvel pausado" : "Imóvel reativado");
+    qc.invalidateQueries({ queryKey: ["owner-dash", userId] });
+  }
+
+  async function renewContract(c: { property_id: string; tenant_id: string; agent_id: string | null; rent_value: number; term_months: number; start_date: string }) {
+    const prevStart = new Date(c.start_date);
+    const newStart = new Date(prevStart.getFullYear(), prevStart.getMonth() + c.term_months, prevStart.getDate());
+    if (!confirm(`Renovar contrato por mais ${c.term_months} meses a partir de ${newStart.toLocaleDateString("pt-BR")}?`)) return;
+    const { error } = await supabase.from("rental_contracts").insert({
+      property_id: c.property_id,
+      owner_id: userId,
+      tenant_id: c.tenant_id,
+      agent_id: c.agent_id,
+      status: "active",
+      rent_value: c.rent_value,
+      term_months: c.term_months,
+      start_date: newStart.toISOString().slice(0, 10),
+      contract_text: `RENOVAÇÃO DE CONTRATO\n\nValor mensal: R$ ${Number(c.rent_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}\nPrazo: ${c.term_months} meses\nInício: ${newStart.toLocaleDateString("pt-BR")}\n\nAs partes confirmam a renovação nas mesmas condições do contrato anterior, salvo reajustes legais aplicáveis.`,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Contrato renovado");
+    qc.invalidateQueries({ queryKey: ["owner-dash", userId] });
+  }
+
 
 
   useRealtimeNotifications({

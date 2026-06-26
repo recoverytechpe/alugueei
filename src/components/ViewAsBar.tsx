@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { useViewAs, ALL_ROLES, type Role } from "@/lib/view-as";
 import { Eye, RotateCcw } from "lucide-react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 
 const LABEL: Record<Role, string> = {
   proprietario: "Proprietário",
@@ -19,9 +20,16 @@ const REAL_VALUE = "__real__";
 
 export function ViewAsBar() {
   const { isAdmin, effectiveRole, realRole, override, setViewAs } = useViewAs();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (!isAdmin) return null;
 
   const value = override ?? REAL_VALUE;
+
+  function handleChange(v: string) {
+    setViewAs(v === REAL_VALUE ? null : (v as Role));
+    if (pathname !== "/dashboard") navigate({ to: "/dashboard" });
+  }
 
   return (
     <div className="sticky top-0 z-50 w-full border-b bg-amber-50 dark:bg-amber-950/40">
@@ -33,7 +41,7 @@ export function ViewAsBar() {
 
         <Select
           value={value}
-          onValueChange={(v) => setViewAs(v === REAL_VALUE ? null : (v as Role))}
+          onValueChange={handleChange}
         >
           <SelectTrigger className="h-8 w-[220px] bg-background">
             <SelectValue />

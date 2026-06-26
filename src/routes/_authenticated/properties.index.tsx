@@ -125,12 +125,35 @@ function PropertiesList() {
           <CardHeader className="pb-3"><CardTitle className="text-base">Filtros</CardTitle></CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-5">
             <div className="space-y-1.5">
-              <Label htmlFor="f-city">Cidade</Label>
-              <Input id="f-city" value={filters.city} onChange={(e) => setFilters({ ...filters, city: e.target.value })} placeholder="Ex: São Paulo" />
+              <Label>Cidade</Label>
+              <Select
+                value={filters.city}
+                onValueChange={(v) => setFilters({ ...filters, city: v, neighborhood: "all" })}
+              >
+                <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {locations?.map((l) => (
+                    <SelectItem key={l.city} value={l.city}>{l.city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="f-neigh">Bairro</Label>
-              <Input id="f-neigh" value={filters.neighborhood} onChange={(e) => setFilters({ ...filters, neighborhood: e.target.value })} placeholder="Ex: Vila Madalena" />
+              <Label>Bairro</Label>
+              <Select
+                value={filters.neighborhood}
+                onValueChange={(v) => setFilters({ ...filters, neighborhood: v })}
+                disabled={!neighborhoodOptions.length}
+              >
+                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {neighborhoodOptions.map((n) => (
+                    <SelectItem key={n} value={n}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">

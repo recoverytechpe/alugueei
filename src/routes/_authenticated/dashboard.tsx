@@ -216,10 +216,11 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
     queryFn: async () => {
       const [props, proposals, contracts, visits] = await Promise.all([
         supabase.from("properties").select("id, title, city, state, street, number, bedrooms, bathrooms, area_m2, rent_value, status, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
-        supabase.from("proposals").select("id, status, rent_offer, created_at").eq("owner_id", userId).order("created_at", { ascending: false }),
+        supabase.from("proposals").select("id, status, rent_offer, term_months, start_date, created_at, tenant_preapproval_income, tenant_preapproval_max_rent, tenant_preapproval_guarantee, property:properties(id,title,city,neighborhood), tenant:profiles!proposals_tenant_id_fkey(full_name)").eq("owner_id", userId).order("created_at", { ascending: false }),
         supabase.from("rental_contracts").select("id, status, rent_value, start_date, term_months, created_at, property:properties(title), tenant:profiles!rental_contracts_tenant_id_fkey(full_name)").eq("owner_id", userId).order("created_at", { ascending: false }),
         supabase.from("visits").select("id, status, scheduled_at, notes, property:properties(title)").eq("owner_id", userId).order("scheduled_at", { ascending: true }),
       ]);
+
       return {
         properties: props.data ?? [],
         proposals: proposals.data ?? [],

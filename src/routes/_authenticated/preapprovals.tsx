@@ -133,8 +133,15 @@ function PreapprovalsPage() {
                 <Row label="Renda mensal" value={formatBRL(Number(data.preapproval.monthly_income))} />
                 <Row label="Aluguel máximo" value={formatBRL(Number(data.preapproval.max_rent))} bold />
                 <Row label="Garantia" value={GUARANTEE_LABEL[data.preapproval.guarantee_type as GuaranteeType] ?? "—"} />
+                <div className="pt-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={revoke} disabled={busy}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 px-2">
+                    Revogar pré-aprovação
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+
           ) : (
             <Card className="border-dashed">
               <CardContent className="p-6 text-center space-y-2">

@@ -40,8 +40,15 @@ function PropertyDetail() {
       if (!row) return null;
       const photos = (row.property_photos ?? []).slice().sort((a, b) => a.position - b.position);
       const urls = await getSignedPhotoUrls(photos.map((p) => p.storage_path));
+      let userRole: string | undefined;
+      if (userData.user) {
+        const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", userData.user.id);
+        userRole = r?.[0]?.role;
+      }
       return {
         ...row,
+        userId: userData.user?.id ?? null,
+        userRole,
         isOwner: userData.user?.id === row.owner_id,
         photoUrls: photos.map((p) => urls[p.storage_path]).filter(Boolean),
       };

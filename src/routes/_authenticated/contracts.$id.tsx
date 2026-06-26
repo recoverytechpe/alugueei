@@ -22,6 +22,16 @@ export const Route = createFileRoute("/_authenticated/contracts/$id")({
 });
 
 type Signature = { id: string; signer_id: string; signer_role: string; signature_text: string; signed_at: string };
+type Payment = {
+  id: string;
+  amount: number;
+  kind: string;
+  status: string;
+  provider: string;
+  provider_payment_id: string | null;
+  preference_id: string | null;
+  created_at: string;
+};
 
 function ContractDetail() {
   const { id } = Route.useParams();

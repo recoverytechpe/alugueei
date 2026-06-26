@@ -145,6 +145,22 @@ function Dashboard() {
             <Button variant="outline" onClick={signOut}>Sair</Button>
           </div>
         </div>
+        {me.isAdmin && (
+          <div className="max-w-6xl mx-auto px-6 pb-3 flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Visualizar como:</span>
+            {(["proprietario", "locatario", "agente"] as Role[]).map((r) => (
+              <Button
+                key={r}
+                size="sm"
+                variant={me.role === r ? "default" : "outline"}
+                onClick={() => switchView(r)}
+              >
+                {r === "proprietario" ? "Proprietário" : r === "locatario" ? "Locatário" : "Agente"}
+              </Button>
+            ))}
+            <span className="ml-2 text-xs text-muted-foreground">(modo admin)</span>
+          </div>
+        )}
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">

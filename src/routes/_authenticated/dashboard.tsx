@@ -12,6 +12,7 @@ import {
   Award, TrendingUp, ShieldCheck, Star, ChevronRight, BadgeCheck, Calendar,
   Home, Settings, Bell, FileText,
 } from "lucide-react";
+import { PushToggle } from "@/components/PushToggle";
 
 /**
  * Subscribes to realtime postgres_changes for the given table+filter and
@@ -125,7 +126,10 @@ function Dashboard() {
             </h1>
             <p className="text-sm text-muted-foreground">{me.profile?.full_name ?? me.email}</p>
           </div>
-          <Button variant="outline" onClick={signOut}>Sair</Button>
+          <div className="flex items-center gap-2">
+            <PushToggle />
+            <Button variant="outline" onClick={signOut}>Sair</Button>
+          </div>
         </div>
       </header>
 

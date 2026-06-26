@@ -39,6 +39,11 @@ type Proposal = {
   tenant_preapproval_max_rent: number | null;
   tenant_preapproval_guarantee: string | null;
 };
+type Counter = {
+  id: string; proposal_id: string; author_id: string;
+  rent_offer: number; term_months: number; start_date: string;
+  message: string; status: string; created_at: string;
+};
 
 
 function NegotiationsPage() {

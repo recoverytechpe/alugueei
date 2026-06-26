@@ -94,18 +94,37 @@ function PropertiesList() {
   const hasFilters = useMemo(
     () => f.city !== "all" || f.neighborhood !== "all" || f.type !== "all"
       || f.bedrooms !== "any" || f.bathrooms !== "any" || f.parking !== "any"
-      || !!f.min || !!f.max || !!f.minArea || !!f.maxArea,
+      || !!f.min || !!f.max || !!f.minArea || !!f.maxArea
+      || f.unlocked !== "all",
     [f],
   );
 
   const { data, isLoading } = useQuery({
     queryKey: ["properties", f],
     queryFn: async () => {
+      let unlockedIds: string[] | null = null;
+      if (f.unlocked === "mine") {
+        const { data: u } = await supabase.auth.getUser();
+        if (!u.user) return [];
+        const nowIso = new Date().toISOString();
+        const { data: rows } = await supabase
+          .from("property_unlocks")
+          .select("property_id, expires_at")
+          .eq("user_id", u.user.id)
+          .eq("status", "paid");
+        unlockedIds = (rows ?? [])
+          .filter((r) => !r.expires_at || r.expires_at > nowIso)
+          .map((r) => r.property_id);
+        if (unlockedIds.length === 0) return [];
+      }
+
       let q = supabase
         .from("properties")
         .select("id,title,city,state,neighborhood,property_type,bedrooms,bathrooms,parking_spots,area_m2,rent_value,status,created_at,property_photos(storage_path,position)")
         .eq("status", "available")
         .limit(60);
+
+      if (unlockedIds) q = q.in("id", unlockedIds);
 
       if (f.sort === "newest") q = q.order("created_at", { ascending: false });
       if (f.sort === "price_asc") q = q.order("rent_value", { ascending: true });

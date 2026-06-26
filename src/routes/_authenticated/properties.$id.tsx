@@ -28,7 +28,7 @@ import {
   Link as LinkIcon, MessageSquare, Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UnlockGate } from "@/components/UnlockGate";
+import { UnlockGate, useUnlockStatus, isUnlocked } from "@/components/UnlockGate";
 
 type GuaranteeType = "fiador" | "seguro_fianca" | "caucao" | "titulo_capitalizacao";
 const GUARANTEE_LABEL: Record<GuaranteeType, string> = {
@@ -83,6 +83,15 @@ function PropertyDetail() {
 
   const userId = data?.userId ?? null;
   const isTenant = data?.userRole === "locatario";
+  const { data: unlockRow } = useUnlockStatus(data?.id ?? "", userId);
+  const unlocked = Boolean(data?.isOwner) || isUnlocked(unlockRow);
+
+  function requireUnlock(): boolean {
+    if (unlocked) return true;
+    toast.error("Desbloqueie o imóvel para continuar (R$ 29,90)");
+    document.getElementById("unlock-gate")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return false;
+  }
 
   // Track in recents (localStorage) on load
   useEffect(() => {

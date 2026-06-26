@@ -195,13 +195,24 @@ type ProposalSort = "date_desc" | "date_asc" | "value_desc" | "value_asc";
 
 function ProposalsSection({
   proposals,
+  counters,
   userId,
   setProposalStatus,
 }: {
   proposals: Proposal[];
+  counters: Counter[];
   userId: string;
   setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
 }) {
+  const countersByProposal = useMemo(() => {
+    const map = new Map<string, Counter[]>();
+    for (const c of counters) {
+      const arr = map.get(c.proposal_id) ?? [];
+      arr.push(c);
+      map.set(c.proposal_id, arr);
+    }
+    return map;
+  }, [counters]);
   const [filter, setFilter] = useState<ProposalFilter>("all");
   const [sort, setSort] = useState<ProposalSort>("date_desc");
   const counts = useMemo(() => ({

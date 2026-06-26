@@ -21,6 +21,7 @@ import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authentica
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
 import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
+import { Route as AuthenticatedContractsIdRouteImport } from './routes/_authenticated/contracts.$id'
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -87,6 +88,12 @@ const AuthenticatedPropertiesIdRoute =
     path: '/properties/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedContractsIdRoute =
+  AuthenticatedContractsIdRouteImport.update({
+    id: '/contracts/$id',
+    path: '/contracts/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedChatIdRoute = AuthenticatedChatIdRouteImport.update({
   id: '/chat/$id',
   path: '/chat/$id',
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/negotiations': typeof AuthenticatedNegotiationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
+  '/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
@@ -114,6 +122,7 @@ export interface FileRoutesByTo {
   '/negotiations': typeof AuthenticatedNegotiationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
+  '/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
@@ -130,6 +139,7 @@ export interface FileRoutesById {
   '/_authenticated/negotiations': typeof AuthenticatedNegotiationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
+  '/_authenticated/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRoute
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRoute
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/negotiations'
     | '/profile'
     | '/chat/$id'
+    | '/contracts/$id'
     | '/properties/$id'
     | '/properties/new'
     | '/users/$id'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/negotiations'
     | '/profile'
     | '/chat/$id'
+    | '/contracts/$id'
     | '/properties/$id'
     | '/properties/new'
     | '/users/$id'
@@ -175,6 +187,7 @@ export interface FileRouteTypes {
     | '/_authenticated/negotiations'
     | '/_authenticated/profile'
     | '/_authenticated/chat/$id'
+    | '/_authenticated/contracts/$id'
     | '/_authenticated/properties/$id'
     | '/_authenticated/properties/new'
     | '/_authenticated/users/$id'
@@ -275,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/contracts/$id': {
+      id: '/_authenticated/contracts/$id'
+      path: '/contracts/$id'
+      fullPath: '/contracts/$id'
+      preLoaderRoute: typeof AuthenticatedContractsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/chat/$id': {
       id: '/_authenticated/chat/$id'
       path: '/chat/$id'
@@ -290,6 +310,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNegotiationsRoute: typeof AuthenticatedNegotiationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
+  AuthenticatedContractsIdRoute: typeof AuthenticatedContractsIdRoute
   AuthenticatedPropertiesIdRoute: typeof AuthenticatedPropertiesIdRoute
   AuthenticatedPropertiesNewRoute: typeof AuthenticatedPropertiesNewRoute
   AuthenticatedUsersIdRoute: typeof AuthenticatedUsersIdRoute
@@ -303,6 +324,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNegotiationsRoute: AuthenticatedNegotiationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
+  AuthenticatedContractsIdRoute: AuthenticatedContractsIdRoute,
   AuthenticatedPropertiesIdRoute: AuthenticatedPropertiesIdRoute,
   AuthenticatedPropertiesNewRoute: AuthenticatedPropertiesNewRoute,
   AuthenticatedUsersIdRoute: AuthenticatedUsersIdRoute,

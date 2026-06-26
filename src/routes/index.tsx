@@ -45,6 +45,15 @@ type Filters = { q: string; maxPrice: string; type: string; city: string };
 
 function Home() {
   const navigate = useNavigate();
+  const { isAdmin, override } = useViewAs();
+
+  // Admin alternando "visualizar como" deve ver o painel correspondente.
+  useEffect(() => {
+    if (isAdmin && override) {
+      navigate({ to: "/dashboard" });
+    }
+  }, [isAdmin, override, navigate]);
+
   const [filters, setFilters] = useState<Filters>({
     q: "",
     maxPrice: "any",

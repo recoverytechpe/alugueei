@@ -93,6 +93,26 @@ function PropertyDetail() {
     return false;
   }
 
+  // Mercado Pago return handler — show toast based on ?unlock= param
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("unlock");
+    if (!status) return;
+    if (status === "success") {
+      toast.success("Pagamento confirmado!", { description: "Seu desbloqueio está ativo por 30 dias." });
+      qc.invalidateQueries({ queryKey: ["unlock-status", id] });
+    } else if (status === "pending") {
+      toast("Pagamento pendente", { description: "Assim que confirmado, liberaremos o acesso." });
+    } else if (status === "failure") {
+      toast.error("Pagamento não concluído", { description: "Tente novamente quando quiser." });
+    }
+    // Clean the URL to avoid re-triggering on refresh
+    params.delete("unlock");
+    const qs = params.toString();
+    window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
+  }, [id, qc]);
+
   // Track in recents (localStorage) on load
   useEffect(() => {
     if (!data) return;

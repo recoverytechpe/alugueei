@@ -247,12 +247,16 @@ function DocsCard({ userId, row, onSaved }: {
       .upload(path, file, { upsert: true, contentType: file.type });
     if (upErr) { setBusy(null); return toast.error(upErr.message); }
 
-    const next: Record<string, string | null> = { [DOC_FIELD[kind]]: path };
     const willBeComplete =
       (kind === "rg" || paths.rg) &&
       (kind === "cpf" || paths.cpf) &&
       (kind === "income" || paths.income);
-    if (willBeComplete) next.docs_uploaded_at = new Date().toISOString();
+    const next = {
+      rg_doc_path: kind === "rg" ? path : paths.rg,
+      cpf_doc_path: kind === "cpf" ? path : paths.cpf,
+      income_proof_path: kind === "income" ? path : paths.income,
+      docs_uploaded_at: willBeComplete ? new Date().toISOString() : ((row?.docs_uploaded_at as string | null) ?? null),
+    };
 
     const { error } = await supabase
       .from("tenant_preapprovals")

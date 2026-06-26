@@ -177,3 +177,111 @@ function Stat({ label, value }: { label: string; value: string }) {
 function Row({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between"><span className="text-muted-foreground">{label}</span><span>{value}</span></div>;
 }
+
+function VisitDialog({ propertyId, ownerId, userId, userRole }: { propertyId: string; ownerId: string; userId: string; userRole: string }) {
+  const [open, setOpen] = useState(false);
+  const [when, setWhen] = useState("");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!when) return toast.error("Selecione data e hora");
+    setBusy(true);
+    const payload = userRole === "agente"
+      ? { property_id: propertyId, owner_id: ownerId, tenant_id: userId, agent_id: userId, scheduled_at: new Date(when).toISOString(), notes }
+      : { property_id: propertyId, owner_id: ownerId, tenant_id: userId, scheduled_at: new Date(when).toISOString(), notes };
+    const { error } = await supabase.from("visits").insert(payload);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Visita solicitada");
+    setOpen(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild><Button size="sm">Agendar visita</Button></DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Agendar visita</DialogTitle>
+          <DialogDescription>Proponha um horário. O proprietário precisa confirmar.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <Label htmlFor="when">Data e hora</Label>
+            <Input id="when" type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} required />
+          </div>
+          <div>
+            <Label htmlFor="notes">Observações</Label>
+            <Textarea id="notes" rows={3} maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={busy}>{busy ? "Enviando..." : "Solicitar"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion }: { propertyId: string; ownerId: string; userId: string; rentSuggestion: number }) {
+  const [open, setOpen] = useState(false);
+  const [rent, setRent] = useState(String(rentSuggestion));
+  const [term, setTerm] = useState("12");
+  const [start, setStart] = useState("");
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    const rentN = Number(rent);
+    const termN = Number(term);
+    if (!rentN || rentN <= 0) return toast.error("Valor inválido");
+    if (!termN || termN < 1) return toast.error("Prazo inválido");
+    if (!start) return toast.error("Informe a data de início");
+    setBusy(true);
+    const { error } = await supabase.from("proposals").insert({
+      property_id: propertyId, owner_id: ownerId, tenant_id: userId,
+      rent_offer: rentN, term_months: termN, start_date: start, message: msg,
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Proposta enviada");
+    setOpen(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild><Button size="sm" variant="default">Enviar proposta</Button></DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Proposta de aluguel</DialogTitle>
+          <DialogDescription>O proprietário poderá aceitar ou recusar.</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="rent">Aluguel (R$)</Label>
+              <Input id="rent" type="number" min={1} step="0.01" value={rent} onChange={(e) => setRent(e.target.value)} required />
+            </div>
+            <div>
+              <Label htmlFor="term">Prazo (meses)</Label>
+              <Input id="term" type="number" min={1} max={120} value={term} onChange={(e) => setTerm(e.target.value)} required />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="start">Início</Label>
+            <Input id="start" type="date" value={start} onChange={(e) => setStart(e.target.value)} required />
+          </div>
+          <div>
+            <Label htmlFor="msg">Mensagem</Label>
+            <Textarea id="msg" rows={3} maxLength={1000} value={msg} onChange={(e) => setMsg(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={busy}>{busy ? "Enviando..." : "Enviar proposta"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

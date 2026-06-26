@@ -549,7 +549,7 @@ function OwnerProposals({ proposals }: { proposals: unknown[] }) {
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
-          {visible.map((p) => {
+          {visible.map((p: OwnerProposal) => {
             const preapproved = p.tenant_preapproval_max_rent != null;
             const status = mapProposalStatus(p.status);
             return (

@@ -17,6 +17,7 @@ import {
 import { PushToggle } from "@/components/PushToggle";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ExportReports } from "@/components/ExportReports";
+import { UnreadChatBadge } from "@/components/UnreadChatBadge";
 import { useViewAs } from "@/lib/view-as";
 
 /**
@@ -153,7 +154,7 @@ function Dashboard() {
             )}
             <Button asChild variant="outline"><Link to="/profile">Meu perfil</Link></Button>
             <Button asChild variant="outline"><Link to="/contracts">Contratos</Link></Button>
-            <Button asChild variant="outline"><Link to="/chat">Conversas</Link></Button>
+            <UnreadChatBadge />
             <Button asChild variant="outline"><Link to="/negotiations">Negociações</Link></Button>
             {isAdmin && (
               <Button asChild variant="secondary"><Link to="/admin">Moderação</Link></Button>

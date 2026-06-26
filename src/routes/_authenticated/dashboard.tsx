@@ -846,12 +846,12 @@ function TenantDashboard({ userId }: { userId: string }) {
         </div>
       </section>
 
-      {/* Stats minimalistas */}
+      {/* Stats minimalistas — perspectiva do locatário (quem aluga o imóvel) */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <Stat label="Propostas enviadas" value={data.proposals.length} />
-        <Stat label="Visitas agendadas" value={data.visits.length} />
-        <Stat label="Contratos ativos" value={activeContracts} />
-        <Stat label="Contratos fechados" value={data.contracts.filter((c) => c.status === "closed").length} />
+        <Stat label="Propostas que enviei" value={data.proposals.length} hint="Ofertas feitas a proprietários" />
+        <Stat label="Visitas marcadas" value={data.visits.length} hint="Imóveis para conhecer" />
+        <Stat label="Aluguéis em andamento" value={activeContracts} hint="Contratos como locatário" />
+        <Stat label="Aluguéis concluídos" value={data.contracts.filter((c) => c.status === "closed").length} hint="Histórico de locações" />
       </div>
 
       {/* Imóveis na região */}

@@ -25,7 +25,7 @@ type Filters = { city: string; neighborhood: string; type: string; bedrooms: str
 
 function PropertiesList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<Filters>({ city: "", neighborhood: "", type: "all", bedrooms: "any", max: "" });
+  const [filters, setFilters] = useState<Filters>({ city: "all", neighborhood: "all", type: "all", bedrooms: "any", max: "" });
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
@@ -35,6 +35,40 @@ function PropertiesList() {
       setIsOwner(!!roles?.some((r) => r.role === "proprietario"));
     });
   }, []);
+
+  // Carrega a lista de cidades/bairros disponíveis (apenas imóveis disponíveis)
+  const { data: locations } = useQuery({
+    queryKey: ["properties-locations"],
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("properties")
+        .select("city, neighborhood")
+        .eq("status", "available");
+      if (error) throw error;
+      const map = new Map<string, Set<string>>();
+      for (const r of rows ?? []) {
+        const city = (r.city ?? "").trim();
+        if (!city) continue;
+        if (!map.has(city)) map.set(city, new Set());
+        const n = (r.neighborhood ?? "").trim();
+        if (n) map.get(city)!.add(n);
+      }
+      return Array.from(map.entries())
+        .map(([city, set]) => ({ city, neighborhoods: Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR")) }))
+        .sort((a, b) => a.city.localeCompare(b.city, "pt-BR"));
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const neighborhoodOptions = useMemo(() => {
+    if (!locations) return [];
+    if (filters.city === "all") {
+      const all = new Set<string>();
+      for (const l of locations) l.neighborhoods.forEach((n) => all.add(n));
+      return Array.from(all).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    }
+    return locations.find((l) => l.city === filters.city)?.neighborhoods ?? [];
+  }, [locations, filters.city]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["properties", filters],
@@ -46,8 +80,8 @@ function PropertiesList() {
         .order("created_at", { ascending: false })
         .limit(60);
 
-      if (filters.city.trim()) q = q.ilike("city", `%${filters.city.trim()}%`);
-      if (filters.neighborhood.trim()) q = q.ilike("neighborhood", `%${filters.neighborhood.trim()}%`);
+      if (filters.city !== "all") q = q.eq("city", filters.city);
+      if (filters.neighborhood !== "all") q = q.eq("neighborhood", filters.neighborhood);
 
       if (filters.type !== "all") q = q.eq("property_type", filters.type as "casa" | "apartamento");
       if (filters.bedrooms !== "any") q = q.gte("bedrooms", Number(filters.bedrooms));

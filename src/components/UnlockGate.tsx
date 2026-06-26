@@ -1,0 +1,192 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Lock, MapPin, ShieldCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+
+export interface UnlockGateProps {
+  propertyId: string;
+  userId: string | null;
+  isOwner: boolean;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  full: string;
+  cep: string | null;
+}
+
+const UNLOCK_PRICE_CENTS = 2990;
+
+export function useUnlockStatus(propertyId: string, userId: string | null) {
+  return useQuery({
+    queryKey: ["unlock", propertyId, userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data, error } = await supabase
+        .from("property_unlocks")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("property_id", propertyId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function isUnlocked(row: { status: string; expires_at: string | null } | null | undefined) {
+  if (!row) return false;
+  if (row.status !== "paid") return false;
+  if (row.expires_at && new Date(row.expires_at) < new Date()) return false;
+  return true;
+}
+
+export function UnlockGate(props: UnlockGateProps) {
+  const { propertyId, userId, isOwner, neighborhood, city, state, full, cep } = props;
+  const { data: row } = useUnlockStatus(propertyId, userId);
+  const unlocked = isOwner || isUnlocked(row);
+
+  if (unlocked) {
+    return (
+      <p className="text-sm text-muted-foreground flex items-start gap-2">
+        <MapPin className="size-4 mt-0.5 shrink-0" />
+        <span>
+          {full}
+          {cep ? ` · CEP ${cep}` : ""}
+          {!isOwner && (
+            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 border border-emerald-200">
+              <ShieldCheck className="size-3" /> Desbloqueado
+            </span>
+          )}
+        </span>
+      </p>
+    );
+  }
+
+  const approx = [neighborhood, city, state].filter(Boolean).join(", ");
+  return (
+    <div className="rounded-lg border border-dashed bg-muted/30 p-3 space-y-2">
+      <p className="text-sm flex items-start gap-2">
+        <MapPin className="size-4 mt-0.5 shrink-0 text-muted-foreground" />
+        <span>
+          <span className="font-medium">{approx || "Localização aproximada"}</span>
+          <span className="block text-xs text-muted-foreground">
+            Endereço exato, chat, proposta e reserva ficam disponíveis após o desbloqueio.
+          </span>
+        </span>
+      </p>
+      <UnlockDialog propertyId={propertyId} userId={userId} existing={row ?? null} />
+    </div>
+  );
+}
+
+function UnlockDialog({
+  propertyId,
+  userId,
+  existing,
+}: {
+  propertyId: string;
+  userId: string | null;
+  existing: { id: string; status: string; terms_accepted_at: string | null } | null;
+}) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [terms, setTerms] = useState(Boolean(existing?.terms_accepted_at));
+  const [loading, setLoading] = useState(false);
+
+  async function handleUnlock() {
+    if (!userId) { toast.error("Faça login"); return; }
+    if (!terms) { toast.error("Aceite os termos para continuar"); return; }
+    setLoading(true);
+    try {
+      const now = new Date();
+      const expires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      if (!existing) {
+        const { error } = await supabase.from("property_unlocks").insert({
+          user_id: userId,
+          property_id: propertyId,
+          status: "pending",
+          amount_cents: UNLOCK_PRICE_CENTS,
+          terms_accepted_at: now.toISOString(),
+        });
+        if (error) throw error;
+      } else if (!existing.terms_accepted_at) {
+        const { error } = await supabase
+          .from("property_unlocks")
+          .update({ terms_accepted_at: now.toISOString() })
+          .eq("id", existing.id);
+        if (error) throw error;
+      }
+
+      // Sprint 1: simulação de pagamento — Sprint 2 plugará Mercado Pago real
+      const { error: payErr } = await supabase
+        .from("property_unlocks")
+        .update({
+          status: "paid",
+          paid_at: now.toISOString(),
+          expires_at: expires,
+          payment_id: `sim_${Date.now()}`,
+        })
+        .eq("user_id", userId)
+        .eq("property_id", propertyId);
+      if (payErr) throw payErr;
+
+      toast.success("Imóvel desbloqueado por 30 dias");
+      setOpen(false);
+      qc.invalidateQueries({ queryKey: ["unlock", propertyId, userId] });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Falha ao desbloquear";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="gap-2">
+          <Lock className="size-4" />
+          Desbloquear imóvel · R$ {(UNLOCK_PRICE_CENTS / 100).toFixed(2).replace(".", ",")}
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Desbloquear este imóvel</DialogTitle>
+          <DialogDescription>
+            Taxa única de seriedade. Válido por 30 dias e libera endereço exato, chat com o anunciante,
+            envio de proposta e reserva.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 text-sm">
+          <div className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+            <p><strong>Termos de uso resumidos:</strong></p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>Toda negociação deve ocorrer dentro da plataforma.</li>
+              <li>Fechar contrato fora da plataforma sujeita à multa de 1 aluguel.</li>
+              <li>Taxa de R$ 29,90 não é reembolsável após o desbloqueio.</li>
+              <li>Compartilhar o endereço fora do app é proibido.</li>
+            </ul>
+          </div>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <Checkbox checked={terms} onCheckedChange={(v) => setTerms(v === true)} />
+            <span className="text-sm">Li e aceito os termos de uso e a política anti-bypass.</span>
+          </label>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading}>Cancelar</Button>
+          <Button onClick={handleUnlock} disabled={loading || !terms}>
+            {loading ? "Processando…" : "Confirmar desbloqueio"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

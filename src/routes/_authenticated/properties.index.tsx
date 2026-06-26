@@ -179,11 +179,18 @@ function PropertiesList() {
               >
                 <Card className="overflow-hidden hover:border-primary transition-colors h-full">
                   <div className="aspect-[4/3] bg-muted overflow-hidden">
-                    {p.cover ? (
-                      <img src={p.cover} alt={p.title} className="w-full h-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">Sem foto</div>
-                    )}
+                    <img
+                      src={
+                        p.cover ??
+                        `https://source.unsplash.com/800x600/?${p.property_type === "casa" ? "house" : "apartment"},interior&sig=${p.id}`
+                      }
+                      alt={p.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://picsum.photos/seed/${p.id}/800/600`;
+                      }}
+                    />
                   </div>
                   <CardContent className="p-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">

@@ -166,6 +166,8 @@ function UnlockDialog({
       if (!result.ok) {
         if (result.reason === "not_configured") {
           toast.error("Pagamentos Mercado Pago ainda não foram configurados.");
+        } else if (result.reason === "rate_limited") {
+          toast.error(result.message);
         } else {
           toast.error(result.message);
         }

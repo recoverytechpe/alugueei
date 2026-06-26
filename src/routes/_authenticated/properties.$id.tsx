@@ -209,6 +209,7 @@ function PropertyDetail() {
   const preapproved = preapproval?.status === "approved" && Number(preapproval.max_rent) >= rent;
 
   async function contactAgent() {
+    if (!requireUnlock()) return;
     try {
       setContacting(true);
       const cid = await getOrCreateConversation({ propertyId: data!.id, otherUserId: data!.owner_id });

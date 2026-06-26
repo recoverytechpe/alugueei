@@ -481,6 +481,7 @@ export type Database = {
           created_at: string
           expires_at: string | null
           id: string
+          lgpd_accepted_at: string | null
           paid_at: string | null
           payment_id: string | null
           property_id: string
@@ -494,6 +495,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          lgpd_accepted_at?: string | null
           paid_at?: string | null
           payment_id?: string | null
           property_id: string
@@ -507,6 +509,7 @@ export type Database = {
           created_at?: string
           expires_at?: string | null
           id?: string
+          lgpd_accepted_at?: string | null
           paid_at?: string | null
           payment_id?: string | null
           property_id?: string
@@ -744,31 +747,43 @@ export type Database = {
       }
       tenant_preapprovals: {
         Row: {
+          cpf_doc_path: string | null
           created_at: string
+          docs_uploaded_at: string | null
           guarantee_type: Database["public"]["Enums"]["guarantee_type"]
           id: string
+          income_proof_path: string | null
           max_rent: number
           monthly_income: number
+          rg_doc_path: string | null
           status: Database["public"]["Enums"]["preapproval_status"]
           updated_at: string
           user_id: string
         }
         Insert: {
+          cpf_doc_path?: string | null
           created_at?: string
+          docs_uploaded_at?: string | null
           guarantee_type: Database["public"]["Enums"]["guarantee_type"]
           id?: string
+          income_proof_path?: string | null
           max_rent: number
           monthly_income: number
+          rg_doc_path?: string | null
           status?: Database["public"]["Enums"]["preapproval_status"]
           updated_at?: string
           user_id: string
         }
         Update: {
+          cpf_doc_path?: string | null
           created_at?: string
+          docs_uploaded_at?: string | null
           guarantee_type?: Database["public"]["Enums"]["guarantee_type"]
           id?: string
+          income_proof_path?: string | null
           max_rent?: number
           monthly_income?: number
+          rg_doc_path?: string | null
           status?: Database["public"]["Enums"]["preapproval_status"]
           updated_at?: string
           user_id?: string

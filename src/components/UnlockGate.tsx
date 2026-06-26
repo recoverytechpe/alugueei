@@ -108,16 +108,18 @@ function UnlockDialog({
 }: {
   propertyId: string;
   userId: string | null;
-  existing: { id: string; status: string; terms_accepted_at: string | null } | null;
+  existing: { id: string; status: string; terms_accepted_at: string | null; lgpd_accepted_at?: string | null } | null;
 }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [terms, setTerms] = useState(Boolean(existing?.terms_accepted_at));
+  const [lgpd, setLgpd] = useState(Boolean(existing?.lgpd_accepted_at));
   const [loading, setLoading] = useState(false);
 
   async function handleUnlock() {
     if (!userId) { toast.error("Faça login"); return; }
     if (!terms) { toast.error("Aceite os termos para continuar"); return; }
+    if (!lgpd) { toast.error("Aceite a política de privacidade (LGPD)"); return; }
     setLoading(true);
     try {
       const now = new Date();
@@ -130,12 +132,16 @@ function UnlockDialog({
           status: "pending",
           amount_cents: UNLOCK_PRICE_CENTS,
           terms_accepted_at: now.toISOString(),
+          lgpd_accepted_at: now.toISOString(),
         });
         if (error) throw error;
-      } else if (!existing.terms_accepted_at) {
+      } else {
         const { error } = await supabase
           .from("property_unlocks")
-          .update({ terms_accepted_at: now.toISOString() })
+          .update({
+            terms_accepted_at: existing.terms_accepted_at ?? now.toISOString(),
+            lgpd_accepted_at: existing.lgpd_accepted_at ?? now.toISOString(),
+          })
           .eq("id", existing.id);
         if (error) throw error;
       }
@@ -194,10 +200,17 @@ function UnlockDialog({
             <Checkbox checked={terms} onCheckedChange={(v) => setTerms(v === true)} />
             <span className="text-sm">Li e aceito os termos de uso e a política anti-bypass.</span>
           </label>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <Checkbox checked={lgpd} onCheckedChange={(v) => setLgpd(v === true)} />
+            <span className="text-sm">
+              Autorizo o tratamento dos meus dados pessoais para esta negociação,
+              conforme a <strong>LGPD</strong> (Lei 13.709/2018).
+            </span>
+          </label>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading}>Cancelar</Button>
-          <Button onClick={handleUnlock} disabled={loading || !terms}>
+          <Button onClick={handleUnlock} disabled={loading || !terms || !lgpd}>
             {loading ? "Processando…" : "Confirmar desbloqueio"}
           </Button>
         </DialogFooter>

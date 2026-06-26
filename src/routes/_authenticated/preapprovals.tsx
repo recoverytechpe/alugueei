@@ -80,6 +80,21 @@ function PreapprovalsPage() {
     qc.invalidateQueries({ queryKey: ["preapproval"] });
   }
 
+  async function revoke() {
+    if (!data?.userId) return;
+    if (!confirm("Tem certeza? Sua pré-aprovação será removida e suas próximas propostas não terão o selo.")) return;
+    setBusy(true);
+    const { error } = await supabase.from("tenant_preapprovals").delete().eq("user_id", data.userId);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Pré-aprovação revogada");
+    setIncome("");
+    setGuarantee("");
+    qc.invalidateQueries({ queryKey: ["my-preapproval"] });
+    qc.invalidateQueries({ queryKey: ["preapproval"] });
+  }
+
+
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="mx-auto max-w-[440px] min-h-screen bg-background shadow-xl">

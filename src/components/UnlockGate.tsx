@@ -61,32 +61,66 @@ function formatCountdown(expiresAt: string | null): { label: string; urgent: boo
   return { label, urgent: totalHours < 72 };
 }
 
+export function useVisitConfirmed(propertyId: string, userId: string | null) {
+  return useQuery({
+    queryKey: ["visit-confirmed", propertyId, userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      if (!userId) return false;
+      const { data, error } = await supabase
+        .from("visits")
+        .select("id")
+        .eq("property_id", propertyId)
+        .eq("tenant_id", userId)
+        .in("status", ["confirmed", "completed"])
+        .limit(1);
+      if (error) throw error;
+      return (data?.length ?? 0) > 0;
+    },
+  });
+}
+
 export function UnlockGate(props: UnlockGateProps) {
   const { propertyId, userId, isOwner, neighborhood, city, state, full, cep } = props;
   const { data: row } = useUnlockStatus(propertyId, userId);
+  const { data: visitConfirmed } = useVisitConfirmed(propertyId, userId);
   const unlocked = isOwner || isUnlocked(row);
+  const approx = [neighborhood, city, state].filter(Boolean).join(", ");
 
   if (unlocked) {
+    const canSeeExact = isOwner || visitConfirmed;
     const countdown = !isOwner ? formatCountdown(row?.expires_at ?? null) : null;
     const urgent = countdown?.urgent ?? false;
     return (
-      <p className="text-sm text-muted-foreground flex items-start gap-2 flex-wrap">
-        <MapPin className="size-4 mt-0.5 shrink-0" />
-        <span>
-          {full}
-          {cep ? ` · CEP ${cep}` : ""}
-          {!isOwner && (
-            <span className={`ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${urgent ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
-              <ShieldCheck className="size-3" />
-              Desbloqueado{countdown ? ` · expira em ${countdown.label}` : ""}
-            </span>
-          )}
-        </span>
-      </p>
+      <div className="text-sm text-muted-foreground space-y-1">
+        <p className="flex items-start gap-2 flex-wrap">
+          <MapPin className="size-4 mt-0.5 shrink-0" />
+          <span>
+            {canSeeExact ? (
+              <>{full}{cep ? ` · CEP ${cep}` : ""}</>
+            ) : (
+              <>
+                <span className="font-medium">{approx || "Localização aproximada"}</span>
+                {cep ? <span className="text-xs"> · CEP {cep.slice(0, 5)}-***</span> : null}
+              </>
+            )}
+            {!isOwner && (
+              <span className={`ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${urgent ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+                <ShieldCheck className="size-3" />
+                Desbloqueado{countdown ? ` · expira em ${countdown.label}` : ""}
+              </span>
+            )}
+          </span>
+        </p>
+        {!canSeeExact && (
+          <p className="text-xs text-muted-foreground pl-6">
+            Endereço exato (rua e número) é liberado após a visita ser confirmada pelo anunciante — privacidade dele, segurança sua.
+          </p>
+        )}
+      </div>
     );
   }
 
-  const approx = [neighborhood, city, state].filter(Boolean).join(", ");
   return (
     <div className="rounded-lg border border-dashed bg-muted/30 p-3 space-y-2">
       <p className="text-sm flex items-start gap-2">
@@ -102,6 +136,7 @@ export function UnlockGate(props: UnlockGateProps) {
     </div>
   );
 }
+
 
 function UnlockDialog({
   propertyId,

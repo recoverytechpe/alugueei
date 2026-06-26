@@ -389,6 +389,53 @@ export type Database = {
           },
         ]
       }
+      proposal_counters: {
+        Row: {
+          author_id: string
+          created_at: string
+          id: string
+          message: string
+          proposal_id: string
+          rent_offer: number
+          start_date: string
+          status: string
+          term_months: number
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string
+          id?: string
+          message?: string
+          proposal_id: string
+          rent_offer: number
+          start_date: string
+          status?: string
+          term_months: number
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          proposal_id?: string
+          rent_offer?: number
+          start_date?: string
+          status?: string
+          term_months?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposal_counters_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposals: {
         Row: {
           agent_id: string | null

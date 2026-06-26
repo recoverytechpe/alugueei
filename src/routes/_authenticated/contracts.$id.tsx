@@ -87,6 +87,8 @@ function ContractDetail() {
         () => qc.invalidateQueries({ queryKey: ["contract", id] }))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "rental_contracts", filter: `id=eq.${id}` },
         () => qc.invalidateQueries({ queryKey: ["contract", id] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments", filter: `contract_id=eq.${id}` },
+        () => qc.invalidateQueries({ queryKey: ["contract", id] }))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [id, qc]);

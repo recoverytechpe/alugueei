@@ -1,12 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { maskContacts } from "@/lib/chat-helpers";
+import { ChevronLeft, MoreVertical, ShieldCheck, Camera, Send, CheckCheck, Check, Home as HomeIcon } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/chat/$id")({
   head: () => ({ meta: [{ title: "Conversa | Plataforma de Aluguel" }] }),
@@ -27,7 +27,9 @@ type Message = {
 function ChatThread() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -127,64 +129,164 @@ function ChatThread() {
 
   const unlocked = data.conv.contacts_unlocked;
 
+  // Group messages by day
+  const groups: Array<{ day: string; items: Message[] }> = [];
+  for (const m of data.messages) {
+    const day = new Date(m.created_at).toDateString();
+    const last = groups[groups.length - 1];
+    if (last && last.day === day) last.items.push(m);
+    else groups.push({ day, items: [m] });
+  }
+  const dayLabel = (d: string) => {
+    const date = new Date(d);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const yest = new Date(today); yest.setDate(yest.getDate() - 1);
+    const cmp = new Date(date); cmp.setHours(0, 0, 0, 0);
+    if (cmp.getTime() === today.getTime()) return "Hoje";
+    if (cmp.getTime() === yest.getTime()) return "Ontem";
+    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="border-b">
-        <div className="max-w-3xl w-full mx-auto px-6 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-base font-semibold">{data.other?.full_name ?? "Usuário"}</h1>
-            <p className="text-xs text-muted-foreground">
-              {data.conv.properties?.title ?? "Imóvel"} ·{" "}
-              <Link to="/properties/$id" params={{ id: data.conv.property_id }} className="underline">ver</Link>
-            </p>
+    <div className="h-screen bg-background flex flex-col">
+      {/* Header */}
+      <header className="border-b bg-background flex-shrink-0">
+        <div className="max-w-3xl w-full mx-auto px-4 py-3 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate({ to: "/chat" })}
+            className="h-10 w-10 -ml-2 rounded-full hover:bg-muted flex items-center justify-center flex-shrink-0"
+            aria-label="Voltar"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <Link
+            to="/properties/$id"
+            params={{ id: data.conv.property_id }}
+            className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0 overflow-hidden"
+          >
+            <HomeIcon className="h-5 w-5 text-blue-700" />
+          </Link>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-bold truncate">{data.conv.properties?.title ?? "Imóvel"}</h1>
+            <p className="text-sm text-muted-foreground truncate">{data.other?.full_name ?? "Usuário"}</p>
           </div>
-          <div className="flex gap-2">
-            <Button asChild size="sm" variant="outline"><Link to="/chat">Voltar</Link></Button>
-            <Button size="sm" variant={unlocked ? "secondary" : "default"} onClick={toggleUnlock}>
-              {unlocked ? "Ocultar contatos" : "Liberar contatos"}
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            variant={unlocked ? "secondary" : "ghost"}
+            onClick={toggleUnlock}
+            className="hidden sm:inline-flex"
+          >
+            {unlocked ? "Ocultar contatos" : "Liberar contatos"}
+          </Button>
+          <button
+            type="button"
+            className="h-10 w-10 rounded-full hover:bg-muted flex items-center justify-center flex-shrink-0"
+            aria-label="Mais opções"
+            onClick={toggleUnlock}
+          >
+            <MoreVertical className="h-5 w-5" />
+          </button>
         </div>
-        {!unlocked && (
-          <div className="bg-muted text-xs text-muted-foreground px-6 py-2 text-center">
-            Telefones e e-mails ficam ocultos. Libere os contatos após confirmar a visita ou aceitar a proposta.
-          </div>
-        )}
       </header>
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-6 py-6 space-y-3">
+      {/* Messages */}
+      <main className="flex-1 overflow-y-auto bg-background">
+        <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
+          {/* Security banner */}
+          <div className="flex items-start gap-3 rounded-2xl bg-blue-50 border border-blue-100 px-4 py-3">
+            <ShieldCheck className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" strokeWidth={1.8} />
+            <p className="text-sm text-foreground leading-snug">
+              Mantenha a comunicação dentro da plataforma para sua segurança.
+              {!unlocked && " Telefones e e-mails são ocultados até a liberação."}
+            </p>
+          </div>
+
           {data.messages.length === 0 && (
-            <p className="text-sm text-center text-muted-foreground">Sem mensagens. Diga olá!</p>
+            <p className="text-sm text-center text-muted-foreground py-8">Sem mensagens. Diga olá!</p>
           )}
-          {data.messages.map((m) => {
-            const mine = m.sender_id === data.userId;
-            const display = unlocked ? m.body : maskContacts(m.body);
-            return (
-              <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${mine ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
-                  <p className="whitespace-pre-wrap break-words">{display}</p>
-                  <p className={`text-[10px] mt-1 ${mine ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                    {new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                  </p>
-                </div>
+
+          {groups.map((g) => (
+            <div key={g.day} className="space-y-2">
+              <div className="flex items-center gap-3 py-2">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground font-medium">{dayLabel(g.day)}</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
-            );
-          })}
+              {g.items.map((m, idx) => {
+                const mine = m.sender_id === data.userId;
+                const display = unlocked ? m.body : maskContacts(m.body);
+                const time = new Date(m.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+                const prev = g.items[idx - 1];
+                const showAvatar = !mine && (!prev || prev.sender_id !== m.sender_id);
+                return (
+                  <div key={m.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+                    {!mine && (
+                      <div className={`h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${showAvatar ? "" : "invisible"}`}>
+                        {(data.other?.full_name ?? "U").charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[78%] rounded-2xl px-4 py-2.5 ${
+                        mine
+                          ? "bg-blue-600 text-white rounded-br-md"
+                          : "bg-muted text-foreground rounded-bl-md"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{display}</p>
+                      <div className={`mt-1 flex items-center justify-end gap-1 text-[11px] ${mine ? "text-white/80" : "text-muted-foreground"}`}>
+                        <span>{time}</span>
+                        {mine && (m.read_at
+                          ? <CheckCheck className="h-3.5 w-3.5" />
+                          : <Check className="h-3.5 w-3.5" />)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
           <div ref={endRef} />
         </div>
       </main>
 
-      <footer className="border-t">
-        <form onSubmit={send} className="max-w-3xl mx-auto px-6 py-3 flex gap-2">
-          <Input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Escreva uma mensagem"
-            maxLength={2000}
-            disabled={sending}
-          />
-          <Button type="submit" disabled={sending || !text.trim()}>Enviar</Button>
+      {/* Composer */}
+      <footer className="border-t bg-background flex-shrink-0 safe-area-bottom">
+        <form onSubmit={send} className="max-w-3xl mx-auto px-4 py-3 flex items-end gap-2">
+          <button
+            type="button"
+            className="h-11 w-11 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center flex-shrink-0"
+            aria-label="Anexar foto"
+            onClick={() => toast.info("Anexos em breve")}
+          >
+            <Camera className="h-5 w-5" />
+          </button>
+          <div className="flex-1 rounded-full border bg-background px-4 py-2 focus-within:ring-2 focus-within:ring-blue-200">
+            <textarea
+              ref={inputRef}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void send(e as unknown as React.FormEvent);
+                }
+              }}
+              placeholder="Escreva uma mensagem..."
+              maxLength={2000}
+              disabled={sending}
+              rows={1}
+              className="w-full resize-none bg-transparent text-[15px] outline-none placeholder:text-muted-foreground max-h-32"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={sending || !text.trim()}
+            className="h-11 w-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            aria-label="Enviar"
+          >
+            <Send className="h-5 w-5" />
+          </button>
         </form>
       </footer>
     </div>

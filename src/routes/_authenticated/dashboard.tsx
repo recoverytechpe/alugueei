@@ -717,7 +717,10 @@ function TenantDashboard({ userId }: { userId: string }) {
         visits: visits.data ?? [],
       };
     },
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
   });
+
 
   useRealtimeNotifications({
     enabled: true,

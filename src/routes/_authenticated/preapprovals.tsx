@@ -247,7 +247,7 @@ function DocsCard({ userId, row, onSaved }: {
       .upload(path, file, { upsert: true, contentType: file.type });
     if (upErr) { setBusy(null); return toast.error(upErr.message); }
 
-    const next: Record<string, unknown> = { user_id: userId, [DOC_FIELD[kind]]: path };
+    const next: Record<string, string | null> = { [DOC_FIELD[kind]]: path };
     const willBeComplete =
       (kind === "rg" || paths.rg) &&
       (kind === "cpf" || paths.cpf) &&
@@ -256,7 +256,8 @@ function DocsCard({ userId, row, onSaved }: {
 
     const { error } = await supabase
       .from("tenant_preapprovals")
-      .upsert(next, { onConflict: "user_id" });
+      .update(next)
+      .eq("user_id", userId);
     setBusy(null);
     if (error) return toast.error(error.message);
     toast.success(`${DOC_LABEL[kind]} enviado`);

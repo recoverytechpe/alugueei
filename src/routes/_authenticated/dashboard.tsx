@@ -156,9 +156,26 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {role === "proprietario" && <OwnerDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Proprietário"} avatarUrl={me.profile?.avatar_url ?? null} />}
-        {role === "agente" && <AgentDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Agente"} avatarUrl={me.profile?.avatar_url ?? null} />}
-        {role === "locatario" && <TenantDashboard userId={me.userId} />}
+        {isAdmin ? (
+          <>
+            {/* Admins keep all three panels mounted so switching modes is instant (no remount/refetch). */}
+            <div hidden={role !== "proprietario"}>
+              <OwnerDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Proprietário"} avatarUrl={me.profile?.avatar_url ?? null} />
+            </div>
+            <div hidden={role !== "agente"}>
+              <AgentDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Agente"} avatarUrl={me.profile?.avatar_url ?? null} />
+            </div>
+            <div hidden={role !== "locatario"}>
+              <TenantDashboard userId={me.userId} />
+            </div>
+          </>
+        ) : (
+          <>
+            {role === "proprietario" && <OwnerDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Proprietário"} avatarUrl={me.profile?.avatar_url ?? null} />}
+            {role === "agente" && <AgentDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Agente"} avatarUrl={me.profile?.avatar_url ?? null} />}
+            {role === "locatario" && <TenantDashboard userId={me.userId} />}
+          </>
+        )}
 
         <Card className="border-primary/30 bg-primary/5">
           <CardHeader>

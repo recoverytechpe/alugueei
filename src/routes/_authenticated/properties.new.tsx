@@ -381,32 +381,48 @@ function NewProperty() {
             </label>
 
             {previews.length > 0 && (
-              <div className="grid grid-cols-3 gap-2">
-                {previews.map((src, i) => (
-                  <div
-                    key={src}
-                    className={cn(
-                      "group relative aspect-square overflow-hidden rounded-xl border bg-muted",
-                      i === 0 && "ring-2 ring-primary",
-                    )}
-                  >
-                    <img src={src} alt="" className="h-full w-full object-cover" />
-                    {i === 0 && (
-                      <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
-                        Capa
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(i)}
-                      className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 text-foreground opacity-0 transition group-hover:opacity-100"
-                      aria-label="Remover foto"
+              <>
+                <p className="text-xs text-muted-foreground">Arraste para reordenar. A primeira foto é a capa.</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {previews.map((src, i) => (
+                    <div
+                      key={src}
+                      draggable
+                      onDragStart={() => setDragIdx(i)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => {
+                        if (dragIdx !== null) reorderPhoto(dragIdx, i);
+                        setDragIdx(null);
+                      }}
+                      onDragEnd={() => setDragIdx(null)}
+                      className={cn(
+                        "group relative aspect-square cursor-grab overflow-hidden rounded-xl border bg-muted active:cursor-grabbing",
+                        i === 0 && "ring-2 ring-primary",
+                        dragIdx === i && "opacity-50",
+                      )}
                     >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                      <img src={src} alt="" className="h-full w-full object-cover" draggable={false} />
+                      {i === 0 && (
+                        <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                          Capa
+                        </span>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 opacity-0 transition group-hover:opacity-100">
+                        <GripVertical className="h-3.5 w-3.5 text-white" />
+                        <span className="text-[10px] font-medium text-white">{i + 1}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(i)}
+                        className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 text-foreground opacity-0 transition group-hover:opacity-100"
+                        aria-label="Remover foto"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
 
             <div className="rounded-2xl border bg-card p-4">

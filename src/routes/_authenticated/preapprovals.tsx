@@ -195,10 +195,10 @@ function PreapprovalsPage() {
             </CardContent>
           </Card>
 
-          {data?.userId && (
+          {data?.userId && data.preapproval && (
             <DocsCard
               userId={data.userId}
-              row={data.preapproval}
+              row={data.preapproval as unknown as Record<string, unknown>}
               onSaved={() => qc.invalidateQueries({ queryKey: ["my-preapproval"] })}
             />
           )}

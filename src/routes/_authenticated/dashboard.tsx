@@ -722,14 +722,7 @@ function ReputationRow({ Icon, label, value }: { Icon: typeof Award; label: stri
 }
 
 function TenantDashboard({ userId }: { userId: string }) {
-  const TENANT_CITY_KEY = "tenant_preferred_city";
-  const [city, setCity] = (function useCityState() {
-    // Using inline IIFE to keep colocation; React hook still called at top-level below
-    return [null as string | null, (_v: string | null) => {}] as const;
-  })();
-  // Real hook state (the IIFE above is just to keep types tidy):
-  const [selectedCity, setSelectedCity] = useTenantCity(TENANT_CITY_KEY);
-  void city; void setCity;
+  const [selectedCity, setSelectedCity] = useTenantCity("tenant_preferred_city");
 
   const { data, isLoading } = useQuery({
     queryKey: ["tenant-dash", userId],

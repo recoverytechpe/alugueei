@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createHmac, timingSafeEqual } from "crypto";
 
 /**
- * Webhook do Mercado Pago. Sem MERCADO_PAGO_ACCESS_TOKEN, responde 200
- * sem efeito colateral — permite cadastrar a URL no painel antes de finalizar.
+ * Webhook do Mercado Pago. Valida x-signature (HMAC SHA-256) com
+ * MERCADO_PAGO_WEBHOOK_SECRET antes de processar.
+ * Sem MERCADO_PAGO_ACCESS_TOKEN, responde 200 sem efeito colateral.
  */
 export const Route = createFileRoute("/api/public/mp-webhook")({
   server: {
@@ -10,11 +12,46 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
       GET: async () => new Response("ok", { status: 200 }),
       POST: async ({ request }) => {
         const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+        const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
+
+        const rawBody = await request.text();
         let body: unknown = null;
         try {
-          body = await request.json();
+          body = JSON.parse(rawBody);
         } catch {
           /* ignore */
+        }
+
+        const payload = body as { type?: string; action?: string; data?: { id?: string | number } } | null;
+        const paymentId = payload?.data?.id;
+        const type = payload?.type ?? payload?.action;
+
+        // === Validação de assinatura (x-signature) ===
+        // Formato MP: "ts=1700000000,v1=hexhash"
+        // Manifest:  id:<data.id>;request-id:<x-request-id>;ts:<ts>;
+        if (webhookSecret) {
+          const sigHeader = request.headers.get("x-signature") ?? "";
+          const requestId = request.headers.get("x-request-id") ?? "";
+          const parts = Object.fromEntries(
+            sigHeader.split(",").map((p) => {
+              const [k, ...v] = p.trim().split("=");
+              return [k, v.join("=")];
+            }),
+          );
+          const ts = parts.ts;
+          const v1 = parts.v1;
+          if (!ts || !v1 || !paymentId) {
+            console.warn("[mp-webhook] missing signature parts");
+            return new Response("unauthorized", { status: 401 });
+          }
+          const manifest = `id:${paymentId};request-id:${requestId};ts:${ts};`;
+          const expected = createHmac("sha256", webhookSecret).update(manifest).digest("hex");
+          const a = Buffer.from(v1, "hex");
+          const b = Buffer.from(expected, "hex");
+          if (a.length !== b.length || !timingSafeEqual(a, b)) {
+            console.warn("[mp-webhook] invalid signature");
+            return new Response("unauthorized", { status: 401 });
+          }
         }
 
         if (!accessToken) {
@@ -22,12 +59,10 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
           return new Response("ok", { status: 200 });
         }
 
-        const payload = body as { type?: string; action?: string; data?: { id?: string | number } } | null;
-        const paymentId = payload?.data?.id;
-        const type = payload?.type ?? payload?.action;
         if (!paymentId || (type && !String(type).includes("payment"))) {
           return new Response("ignored", { status: 200 });
         }
+
 
         const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
           headers: { authorization: `Bearer ${accessToken}` },

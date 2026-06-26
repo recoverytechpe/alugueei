@@ -117,6 +117,7 @@ function UnlockDialog({
   const [terms, setTerms] = useState(Boolean(existing?.terms_accepted_at));
   const [lgpd, setLgpd] = useState(Boolean(existing?.lgpd_accepted_at));
   const [loading, setLoading] = useState(false);
+  const checkout = useServerFn(createUnlockCheckout);
 
   async function handleUnlock() {
     if (!userId) { toast.error("Faça login"); return; }
@@ -124,53 +125,29 @@ function UnlockDialog({
     if (!lgpd) { toast.error("Aceite a política de privacidade (LGPD)"); return; }
     setLoading(true);
     try {
-      const now = new Date();
-      const expires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-
-      if (!existing) {
-        const { error } = await supabase.from("property_unlocks").insert({
-          user_id: userId,
-          property_id: propertyId,
-          status: "pending",
-          amount_cents: UNLOCK_PRICE_CENTS,
-          terms_accepted_at: now.toISOString(),
-          lgpd_accepted_at: now.toISOString(),
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("property_unlocks")
-          .update({
-            terms_accepted_at: existing.terms_accepted_at ?? now.toISOString(),
-            lgpd_accepted_at: existing.lgpd_accepted_at ?? now.toISOString(),
-          })
-          .eq("id", existing.id);
-        if (error) throw error;
+      const result = await checkout({
+        data: { propertyId, termsAccepted: terms, lgpdAccepted: lgpd },
+      });
+      if (!result.ok) {
+        if (result.reason === "not_configured") {
+          toast.error("Pagamentos Mercado Pago ainda não foram configurados.");
+        } else {
+          toast.error(result.message);
+        }
+        return;
       }
-
-      // Sprint 1: simulação de pagamento — Sprint 2 plugará Mercado Pago real
-      const { error: payErr } = await supabase
-        .from("property_unlocks")
-        .update({
-          status: "paid",
-          paid_at: now.toISOString(),
-          expires_at: expires,
-          payment_id: `sim_${Date.now()}`,
-        })
-        .eq("user_id", userId)
-        .eq("property_id", propertyId);
-      if (payErr) throw payErr;
-
-      toast.success("Imóvel desbloqueado por 30 dias");
-      setOpen(false);
       qc.invalidateQueries({ queryKey: ["unlock", propertyId, userId] });
+      setOpen(false);
+      toast.success("Redirecionando para o Mercado Pago…");
+      window.location.href = result.initPoint;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Falha ao desbloquear";
+      const msg = e instanceof Error ? e.message : "Falha ao iniciar pagamento";
       toast.error(msg);
     } finally {
       setLoading(false);
     }
   }
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

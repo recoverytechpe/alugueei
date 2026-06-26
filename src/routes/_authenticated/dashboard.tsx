@@ -47,10 +47,13 @@ function Dashboard() {
         supabase.from("profiles").select("*").eq("id", userData.user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userData.user.id),
       ]);
+      const allRoles = (roles ?? []).map((r) => r.role as string);
+      const primary = (allRoles.find((r) => r !== "admin") ?? "locatario") as Role;
       return {
         email: userData.user.email,
         profile,
-        role: (roles?.[0]?.role ?? "locatario") as Role,
+        role: primary,
+        isAdmin: allRoles.includes("admin"),
       };
     },
   });
@@ -101,7 +104,21 @@ function Dashboard() {
             <Button asChild variant="outline"><Link to="/contracts">Meus contratos</Link></Button>
             <Button asChild variant="outline"><Link to="/chat">Conversas</Link></Button>
             <Button asChild variant="outline"><Link to="/negotiations">Negociações</Link></Button>
+            {data.isAdmin && (
+              <Button asChild variant="secondary"><Link to="/admin">Painel de Moderação</Link></Button>
+            )}
           </CardContent>
+        </Card>
+
+        <Card className="border-primary/30 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="text-base">Benefícios exclusivos da plataforma</CardTitle>
+            <CardDescription>
+              Seguro fiança, garantia de recebimento e proteção em caso de inadimplência
+              estão disponíveis <strong>somente para transações concluídas integralmente
+              pela plataforma</strong>. Negociações fora do sistema perdem esses benefícios.
+            </CardDescription>
+          </CardHeader>
         </Card>
 
         <div className="grid gap-4 md:grid-cols-3">

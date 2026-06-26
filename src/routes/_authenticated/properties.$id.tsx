@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { ArrowLeft, Heart, Share2, BedDouble, Bath, Car, MapPin, MessageCircle, ChevronDown, ChevronUp, BadgeCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/properties/$id")({
   head: () => ({ meta: [{ title: "Detalhes do imóvel | Plataforma de Aluguel" }] }),

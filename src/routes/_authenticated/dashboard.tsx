@@ -1,11 +1,60 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+
+/**
+ * Subscribes to realtime postgres_changes for the given table+filter and
+ * invalidates the supplied query key whenever a change arrives. Optionally
+ * surfaces a toast for notable events (INSERT or status changes).
+ */
+function useRealtimeNotifications(opts: {
+  enabled: boolean;
+  channelName: string;
+  subscriptions: Array<{
+    table: "proposals" | "visits" | "rental_contracts";
+    filter: string;
+    onEvent?: (payload: {
+      eventType: "INSERT" | "UPDATE" | "DELETE";
+      new: Record<string, unknown>;
+      old: Record<string, unknown>;
+    }) => void;
+  }>;
+  invalidateKeys: ReadonlyArray<readonly unknown[]>;
+}) {
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!opts.enabled) return;
+    const channel = supabase.channel(opts.channelName);
+    for (const sub of opts.subscriptions) {
+      channel.on(
+        // @ts-expect-error - supabase types don't expose postgres_changes signature well
+        "postgres_changes",
+        { event: "*", schema: "public", table: sub.table, filter: sub.filter },
+        (payload: {
+          eventType: "INSERT" | "UPDATE" | "DELETE";
+          new: Record<string, unknown>;
+          old: Record<string, unknown>;
+        }) => {
+          sub.onEvent?.(payload);
+          for (const key of opts.invalidateKeys) {
+            qc.invalidateQueries({ queryKey: key as unknown[] });
+          }
+        }
+      );
+    }
+    channel.subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opts.enabled, opts.channelName]);
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard | Plataforma de Aluguel" }] }),

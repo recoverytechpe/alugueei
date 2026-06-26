@@ -19,6 +19,8 @@ import {
   X,
   ImagePlus,
   Building2,
+  Loader2,
+  GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

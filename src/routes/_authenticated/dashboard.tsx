@@ -97,6 +97,8 @@ function Dashboard() {
             {data.role === "proprietario" && (
               <Button asChild variant="outline"><Link to="/properties/new">Cadastrar imóvel</Link></Button>
             )}
+            <Button asChild variant="outline"><Link to="/profile">Meu perfil</Link></Button>
+            <Button asChild variant="outline"><Link to="/contracts">Meus contratos</Link></Button>
           </CardContent>
         </Card>
 

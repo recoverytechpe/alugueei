@@ -14,8 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_ratings: {
+        Row: {
+          agent_id: string
+          comment: string
+          contract_id: string
+          created_at: string
+          id: string
+          rater_id: string
+          stars: number
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          comment?: string
+          contract_id: string
+          created_at?: string
+          id?: string
+          rater_id: string
+          stars: number
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          comment?: string
+          contract_id?: string
+          created_at?: string
+          id?: string
+          rater_id?: string
+          stars?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_ratings_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "rental_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           cpf_cnpj: string | null
           created_at: string
           full_name: string
@@ -24,6 +67,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           full_name: string
@@ -32,6 +77,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           full_name?: string
@@ -148,6 +195,47 @@ export type Database = {
           },
         ]
       }
+      rental_contracts: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          id: string
+          owner_id: string
+          property_id: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          owner_id: string
+          property_id: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string
+          property_id?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_contracts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -171,9 +259,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_agent_rating: {
+        Args: { _agent_id: string }
+        Returns: {
+          avg_stars: number
+          total_ratings: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

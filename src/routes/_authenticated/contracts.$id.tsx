@@ -192,6 +192,13 @@ function ContractDetail() {
           </CardContent>
         </Card>
 
+        <PaymentCard
+          contract={c}
+          isTenant={role === "tenant"}
+          paying={paying}
+          onPay={payDepositAndFirstRent}
+        />
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Assinaturas</CardTitle>

@@ -21,11 +21,11 @@ export const Route = createFileRoute("/_authenticated/properties/")({
   component: PropertiesList,
 });
 
-type Filters = { city: string; type: string; bedrooms: string; max: string };
+type Filters = { city: string; neighborhood: string; type: string; bedrooms: string; max: string };
 
 function PropertiesList() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState<Filters>({ city: "", type: "all", bedrooms: "any", max: "" });
+  const [filters, setFilters] = useState<Filters>({ city: "", neighborhood: "", type: "all", bedrooms: "any", max: "" });
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
@@ -47,6 +47,8 @@ function PropertiesList() {
         .limit(60);
 
       if (filters.city.trim()) q = q.ilike("city", `%${filters.city.trim()}%`);
+      if (filters.neighborhood.trim()) q = q.ilike("neighborhood", `%${filters.neighborhood.trim()}%`);
+
       if (filters.type !== "all") q = q.eq("property_type", filters.type as "casa" | "apartamento");
       if (filters.bedrooms !== "any") q = q.gte("bedrooms", Number(filters.bedrooms));
       if (filters.max && !Number.isNaN(Number(filters.max))) q = q.lte("rent_value", Number(filters.max));
@@ -87,11 +89,16 @@ function PropertiesList() {
       <main className="max-w-6xl mx-auto px-6 py-6 space-y-6">
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base">Filtros</CardTitle></CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-4">
+          <CardContent className="grid gap-3 md:grid-cols-5">
             <div className="space-y-1.5">
               <Label htmlFor="f-city">Cidade</Label>
               <Input id="f-city" value={filters.city} onChange={(e) => setFilters({ ...filters, city: e.target.value })} placeholder="Ex: São Paulo" />
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="f-neigh">Bairro</Label>
+              <Input id="f-neigh" value={filters.neighborhood} onChange={(e) => setFilters({ ...filters, neighborhood: e.target.value })} placeholder="Ex: Vila Madalena" />
+            </div>
+
             <div className="space-y-1.5">
               <Label>Tipo</Label>
               <Select value={filters.type} onValueChange={(v) => setFilters({ ...filters, type: v })}>

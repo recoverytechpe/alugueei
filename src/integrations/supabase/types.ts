@@ -166,6 +166,60 @@ export type Database = {
           },
         ]
       }
+      moderation_alerts: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          excerpt: string
+          id: string
+          message_id: string | null
+          reason: string
+          sender_id: string
+          severity: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          excerpt: string
+          id?: string
+          message_id?: string | null
+          reason: string
+          sender_id: string
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          excerpt?: string
+          id?: string
+          message_id?: string | null
+          reason?: string
+          sender_id?: string
+          severity?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_alerts_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_alerts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -523,6 +577,15 @@ export type Database = {
         Returns: {
           avg_stars: number
           total_ratings: number
+        }[]
+      }
+      get_agent_visibility: {
+        Args: { _agent_id: string }
+        Returns: {
+          avg_stars: number
+          closed_deals: number
+          total_ratings: number
+          visibility_score: number
         }[]
       }
       has_role: {

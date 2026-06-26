@@ -78,6 +78,7 @@ type Role = "proprietario" | "locatario" | "agente";
 
 function Dashboard() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
 
   const { data: me, isLoading } = useQuery({
     queryKey: ["me"],
@@ -89,15 +90,28 @@ function Dashboard() {
         supabase.from("user_roles").select("role").eq("user_id", userData.user.id),
       ]);
       const all = (roles ?? []).map((r) => r.role as string);
+      const isAdmin = all.includes("admin");
+      const real = (all.find((r) => r !== "admin") ?? "locatario") as Role;
+      const override =
+        typeof window !== "undefined" ? (localStorage.getItem("admin_view_as") as Role | null) : null;
+      const role: Role = isAdmin && override && ["proprietario", "locatario", "agente"].includes(override)
+        ? override
+        : real;
       return {
         userId: userData.user.id,
         email: userData.user.email,
         profile,
-        role: (all.find((r) => r !== "admin") ?? "locatario") as Role,
-        isAdmin: all.includes("admin"),
+        role,
+        realRole: real,
+        isAdmin,
       };
     },
   });
+
+  function switchView(r: Role) {
+    localStorage.setItem("admin_view_as", r);
+    qc.invalidateQueries({ queryKey: ["me"] });
+  }
 
   async function signOut() {
     await supabase.auth.signOut();

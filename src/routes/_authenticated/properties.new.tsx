@@ -1,14 +1,26 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import {
+  ChevronLeft,
+  Home as HomeIcon,
+  MapPin,
+  Ruler,
+  Wallet,
+  Camera,
+  Check,
+  X,
+  ImagePlus,
+  Building2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/properties/new")({
   head: () => ({ meta: [{ title: "Cadastrar imóvel | Plataforma de Aluguel" }] }),
@@ -16,29 +28,79 @@ export const Route = createFileRoute("/_authenticated/properties/new")({
 });
 
 const schema = z.object({
-  title: z.string().trim().min(3).max(120),
+  title: z.string().trim().min(3, "Título muito curto").max(120),
   description: z.string().trim().max(2000).optional().default(""),
   property_type: z.enum(["casa", "apartamento"]),
-  cep: z.string().trim().min(8).max(10),
-  street: z.string().trim().min(2).max(160),
-  number: z.string().trim().min(1).max(20),
-  complement: z.string().trim().max(80).optional(),
-  neighborhood: z.string().trim().max(80).optional(),
-  city: z.string().trim().min(2).max(80),
-  state: z.string().trim().min(2).max(2),
+  cep: z.string().trim().min(8, "CEP inválido").max(10),
+  street: z.string().trim().min(2, "Informe a rua").max(160),
+  number: z.string().trim().min(1, "Informe o número").max(20),
+  complement: z.string().trim().max(80).optional().default(""),
+  neighborhood: z.string().trim().max(80).optional().default(""),
+  city: z.string().trim().min(2, "Informe a cidade").max(80),
+  state: z.string().trim().min(2, "UF").max(2),
   bedrooms: z.coerce.number().int().min(0).max(20),
   bathrooms: z.coerce.number().int().min(0).max(20),
   parking_spots: z.coerce.number().int().min(0).max(20),
   area_m2: z.coerce.number().min(0).max(100000),
-  rent_value: z.coerce.number().min(1).max(10_000_000),
+  rent_value: z.coerce.number().min(1, "Informe o aluguel").max(10_000_000),
   condo_value: z.coerce.number().min(0).max(10_000_000),
   iptu_value: z.coerce.number().min(0).max(10_000_000),
 });
 
+type FormState = {
+  title: string;
+  description: string;
+  property_type: "casa" | "apartamento";
+  cep: string;
+  street: string;
+  number: string;
+  complement: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  bedrooms: string;
+  bathrooms: string;
+  parking_spots: string;
+  area_m2: string;
+  rent_value: string;
+  condo_value: string;
+  iptu_value: string;
+};
+
+const initial: FormState = {
+  title: "",
+  description: "",
+  property_type: "apartamento",
+  cep: "",
+  street: "",
+  number: "",
+  complement: "",
+  neighborhood: "",
+  city: "",
+  state: "",
+  bedrooms: "0",
+  bathrooms: "0",
+  parking_spots: "0",
+  area_m2: "0",
+  rent_value: "",
+  condo_value: "0",
+  iptu_value: "0",
+};
+
+const STEPS = [
+  { key: "info", label: "Tipo", icon: HomeIcon },
+  { key: "addr", label: "Endereço", icon: MapPin },
+  { key: "feat", label: "Detalhes", icon: Ruler },
+  { key: "photos", label: "Fotos", icon: Camera },
+] as const;
+
 function NewProperty() {
   const navigate = useNavigate();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState<FormState>(initial);
   const [photos, setPhotos] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -50,32 +112,52 @@ function NewProperty() {
     })();
   }, []);
 
+  useEffect(() => {
+    const urls = photos.map((f) => URL.createObjectURL(f));
+    setPreviews(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [photos]);
+
+  const update = <K extends keyof FormState>(k: K, v: FormState[K]) =>
+    setForm((s) => ({ ...s, [k]: v }));
+
+  const canNext = useMemo(() => {
+    if (step === 0) return form.title.trim().length >= 3;
+    if (step === 1)
+      return (
+        form.cep.trim().length >= 8 &&
+        form.street.trim().length >= 2 &&
+        form.number.trim().length >= 1 &&
+        form.city.trim().length >= 2 &&
+        form.state.trim().length === 2
+      );
+    if (step === 2) return Number(form.rent_value) > 0;
+    return true;
+  }, [step, form]);
+
   if (authorized === false) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Acesso restrito</CardTitle>
-            <CardDescription>Apenas usuários com perfil de Proprietário podem cadastrar imóveis.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild><Link to="/dashboard">Voltar</Link></Button>
-          </CardContent>
-        </Card>
+        <div className="max-w-md rounded-3xl border bg-card p-8 text-center shadow-sm">
+          <Building2 className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+          <h1 className="text-lg font-semibold">Acesso restrito</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Apenas usuários com perfil de Proprietário podem cadastrar imóveis.
+          </p>
+          <Button asChild className="mt-5">
+            <Link to="/dashboard">Voltar ao painel</Link>
+          </Button>
+        </div>
       </div>
     );
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const raw = Object.fromEntries(fd.entries());
-    const parsed = schema.safeParse(raw);
+  async function submit() {
+    const parsed = schema.safeParse(form);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
       return;
     }
-
     setSubmitting(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -113,116 +195,375 @@ function NewProperty() {
     }
   }
 
+  function addPhotos(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setPhotos((p) => [...p, ...Array.from(files)].slice(0, 10));
+  }
+  function removePhoto(idx: number) {
+    setPhotos((p) => p.filter((_, i) => i !== idx));
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/properties" className="text-sm text-muted-foreground hover:text-foreground">← Imóveis</Link>
-          <h1 className="text-lg font-semibold">Cadastrar imóvel</h1>
-          <div className="w-20" />
+    <div className="min-h-screen bg-muted/30">
+      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+          <Link
+            to="/properties"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Imóveis
+          </Link>
+          <h1 className="text-base font-semibold">Cadastrar imóvel</h1>
+          <div className="w-16" />
         </div>
+        <Stepper step={step} />
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Informações</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <Field label="Título" name="title" required />
-              <div className="space-y-1.5">
-                <Label>Tipo</Label>
-                <Select name="property_type" defaultValue="apartamento">
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="apartamento">Apartamento</SelectItem>
-                    <SelectItem value="casa">Casa</SelectItem>
-                  </SelectContent>
-                </Select>
+      <main className="mx-auto max-w-3xl px-6 py-8 pb-32">
+        {step === 0 && (
+          <Section icon={HomeIcon} title="Sobre o imóvel" desc="Comece pelo essencial.">
+            <div className="grid gap-2 sm:grid-cols-2">
+              <TypeCard
+                active={form.property_type === "apartamento"}
+                onClick={() => update("property_type", "apartamento")}
+                icon={Building2}
+                label="Apartamento"
+              />
+              <TypeCard
+                active={form.property_type === "casa"}
+                onClick={() => update("property_type", "casa")}
+                icon={HomeIcon}
+                label="Casa"
+              />
+            </div>
+            <Field
+              label="Título do anúncio"
+              value={form.title}
+              onChange={(v) => update("title", v)}
+              placeholder="Ex: Apartamento 2 quartos com varanda"
+            />
+            <div className="space-y-1.5">
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                id="description"
+                rows={5}
+                value={form.description}
+                onChange={(e) => update("description", e.target.value)}
+                placeholder="Conte sobre o imóvel, vizinhança, diferenciais..."
+                className="resize-none rounded-2xl"
+              />
+            </div>
+          </Section>
+        )}
+
+        {step === 1 && (
+          <Section icon={MapPin} title="Endereço" desc="Onde fica o imóvel.">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="CEP" value={form.cep} onChange={(v) => update("cep", v)} placeholder="00000-000" />
+              <Field label="UF" value={form.state} onChange={(v) => update("state", v.toUpperCase().slice(0, 2))} placeholder="SP" />
+              <div className="sm:col-span-2">
+                <Field label="Rua / Avenida" value={form.street} onChange={(v) => update("street", v)} />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="description">Descrição</Label>
-                <Textarea id="description" name="description" rows={4} />
+              <Field label="Número" value={form.number} onChange={(v) => update("number", v)} />
+              <Field label="Complemento" value={form.complement} onChange={(v) => update("complement", v)} />
+              <Field label="Bairro" value={form.neighborhood} onChange={(v) => update("neighborhood", v)} />
+              <Field label="Cidade" value={form.city} onChange={(v) => update("city", v)} />
+            </div>
+          </Section>
+        )}
+
+        {step === 2 && (
+          <>
+            <Section icon={Ruler} title="Características" desc="Quartos, banheiros e área.">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Counter label="Quartos" value={form.bedrooms} onChange={(v) => update("bedrooms", v)} />
+                <Counter label="Banheiros" value={form.bathrooms} onChange={(v) => update("bathrooms", v)} />
+                <Counter label="Vagas" value={form.parking_spots} onChange={(v) => update("parking_spots", v)} />
+                <Field
+                  label="Área (m²)"
+                  type="number"
+                  value={form.area_m2}
+                  onChange={(v) => update("area_m2", v)}
+                />
               </div>
-            </CardContent>
-          </Card>
+            </Section>
+            <Section icon={Wallet} title="Valores" desc="Em reais (R$).">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Aluguel" type="number" value={form.rent_value} onChange={(v) => update("rent_value", v)} />
+                <Field label="Condomínio" type="number" value={form.condo_value} onChange={(v) => update("condo_value", v)} />
+                <Field label="IPTU" type="number" value={form.iptu_value} onChange={(v) => update("iptu_value", v)} />
+              </div>
+            </Section>
+          </>
+        )}
 
-          <Card>
-            <CardHeader><CardTitle className="text-base">Endereço</CardTitle></CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <Field label="CEP" name="cep" required />
-              <Field label="Rua" name="street" required />
-              <Field label="Número" name="number" required />
-              <Field label="Complemento" name="complement" />
-              <Field label="Bairro" name="neighborhood" />
-              <Field label="Cidade" name="city" required />
-              <Field label="UF" name="state" required maxLength={2} placeholder="SP" />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle className="text-base">Características</CardTitle></CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-4">
-              <Field label="Quartos" name="bedrooms" type="number" defaultValue="0" />
-              <Field label="Banheiros" name="bathrooms" type="number" defaultValue="0" />
-              <Field label="Vagas" name="parking_spots" type="number" defaultValue="0" />
-              <Field label="Área (m²)" name="area_m2" type="number" step="0.01" defaultValue="0" />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader><CardTitle className="text-base">Valores (R$)</CardTitle></CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-3">
-              <Field label="Aluguel" name="rent_value" type="number" step="0.01" required />
-              <Field label="Condomínio" name="condo_value" type="number" step="0.01" defaultValue="0" />
-              <Field label="IPTU" name="iptu_value" type="number" step="0.01" defaultValue="0" />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Fotos</CardTitle>
-              <CardDescription>Selecione uma ou mais imagens</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Input
+        {step === 3 && (
+          <Section icon={Camera} title="Fotos" desc="Até 10 imagens. A primeira será a capa.">
+            <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-card p-8 text-center transition hover:border-primary/50 hover:bg-muted/50">
+              <ImagePlus className="mb-2 h-8 w-8 text-muted-foreground" />
+              <span className="text-sm font-medium">Toque para adicionar fotos</span>
+              <span className="mt-1 text-xs text-muted-foreground">PNG, JPG até 10MB cada</span>
+              <input
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
+                className="hidden"
+                onChange={(e) => {
+                  addPhotos(e.target.files);
+                  e.currentTarget.value = "";
+                }}
               />
-              {photos.length > 0 && (
-                <p className="text-sm text-muted-foreground mt-2">{photos.length} arquivo(s) selecionado(s)</p>
-              )}
-            </CardContent>
-          </Card>
+            </label>
 
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" asChild><Link to="/properties">Cancelar</Link></Button>
-            <Button type="submit" disabled={submitting}>{submitting ? "Salvando..." : "Cadastrar imóvel"}</Button>
-          </div>
-        </form>
+            {previews.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {previews.map((src, i) => (
+                  <div
+                    key={src}
+                    className={cn(
+                      "group relative aspect-square overflow-hidden rounded-xl border bg-muted",
+                      i === 0 && "ring-2 ring-primary",
+                    )}
+                  >
+                    <img src={src} alt="" className="h-full w-full object-cover" />
+                    {i === 0 && (
+                      <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                        Capa
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 text-foreground opacity-0 transition group-hover:opacity-100"
+                      aria-label="Remover foto"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="rounded-2xl border bg-card p-4">
+              <h3 className="text-sm font-semibold">Resumo</h3>
+              <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                <SummaryRow label="Título" value={form.title || "—"} />
+                <SummaryRow label="Tipo" value={form.property_type === "casa" ? "Casa" : "Apartamento"} />
+                <SummaryRow
+                  label="Endereço"
+                  value={[form.street, form.number].filter(Boolean).join(", ") || "—"}
+                />
+                <SummaryRow label="Cidade" value={[form.city, form.state].filter(Boolean).join("/") || "—"} />
+                <SummaryRow
+                  label="Quartos / Banh. / Vagas"
+                  value={`${form.bedrooms} / ${form.bathrooms} / ${form.parking_spots}`}
+                />
+                <SummaryRow label="Aluguel" value={form.rent_value ? `R$ ${form.rent_value}` : "—"} />
+              </dl>
+            </div>
+          </Section>
+        )}
       </main>
+
+      <footer className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/95 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-6 py-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setStep((s) => Math.max(0, s - 1))}
+            disabled={step === 0 || submitting}
+          >
+            Voltar
+          </Button>
+          {step < STEPS.length - 1 ? (
+            <Button
+              type="button"
+              onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
+              disabled={!canNext}
+              className="min-w-32"
+            >
+              Continuar
+            </Button>
+          ) : (
+            <Button type="button" onClick={submit} disabled={submitting} className="min-w-32">
+              {submitting ? "Publicando..." : "Publicar imóvel"}
+            </Button>
+          )}
+        </div>
+      </footer>
     </div>
   );
 }
 
-type FieldProps = {
-  label: string;
-  name: string;
-  type?: string;
-  required?: boolean;
-  defaultValue?: string;
-  placeholder?: string;
-  step?: string;
-  maxLength?: number;
-};
+function Stepper({ step }: { step: number }) {
+  return (
+    <div className="mx-auto flex max-w-3xl items-center gap-2 px-6 pb-4">
+      {STEPS.map((s, i) => {
+        const Icon = s.icon;
+        const done = i < step;
+        const active = i === step;
+        return (
+          <div key={s.key} className="flex flex-1 items-center gap-2">
+            <div
+              className={cn(
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition",
+                done && "border-primary bg-primary text-primary-foreground",
+                active && "border-primary bg-primary/10 text-primary",
+                !done && !active && "border-border bg-background text-muted-foreground",
+              )}
+            >
+              {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+            </div>
+            <span
+              className={cn(
+                "hidden text-xs sm:inline",
+                active ? "font-medium text-foreground" : "text-muted-foreground",
+              )}
+            >
+              {s.label}
+            </span>
+            {i < STEPS.length - 1 && (
+              <div className={cn("h-px flex-1", done ? "bg-primary" : "bg-border")} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
-function Field({ label, name, type = "text", ...rest }: FieldProps) {
-  const id = `f-${name}`;
+function Section({
+  icon: Icon,
+  title,
+  desc,
+  children,
+}: {
+  icon: typeof HomeIcon;
+  title: string;
+  desc?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mb-5 rounded-3xl border bg-card p-6 shadow-sm">
+      <div className="mb-5 flex items-start gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <h2 className="text-base font-semibold">{title}</h2>
+          {desc && <p className="text-sm text-muted-foreground">{desc}</p>}
+        </div>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </section>
+  );
+}
+
+function TypeCard({
+  active,
+  onClick,
+  icon: Icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: typeof HomeIcon;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-3 rounded-2xl border p-4 text-left transition",
+        active ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border hover:bg-muted/50",
+      )}
+    >
+      <div
+        className={cn(
+          "flex h-10 w-10 items-center justify-center rounded-xl",
+          active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+        )}
+      >
+        <Icon className="h-5 w-5" />
+      </div>
+      <span className="font-medium">{label}</span>
+      {active && <Check className="ml-auto h-4 w-4 text-primary" />}
+    </button>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+}) {
+  const id = `f-${label.replace(/\s+/g, "-").toLowerCase()}`;
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} name={name} type={type} {...rest} />
+      <Input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="rounded-xl"
+      />
+    </div>
+  );
+}
+
+function Counter({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const n = Number(value) || 0;
+  return (
+    <div className="flex items-center justify-between rounded-2xl border bg-background px-4 py-3">
+      <span className="text-sm font-medium">{label}</span>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(String(Math.max(0, n - 1)))}
+          className="flex h-8 w-8 items-center justify-center rounded-full border text-lg hover:bg-muted"
+          aria-label={`Diminuir ${label}`}
+        >
+          −
+        </button>
+        <span className="w-6 text-center text-sm font-semibold tabular-nums">{n}</span>
+        <button
+          type="button"
+          onClick={() => onChange(String(Math.min(20, n + 1)))}
+          className="flex h-8 w-8 items-center justify-center rounded-full border text-lg hover:bg-muted"
+          aria-label={`Aumentar ${label}`}
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3 border-b border-border/50 py-1.5 last:border-0">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="text-right font-medium">{value}</dd>
     </div>
   );
 }

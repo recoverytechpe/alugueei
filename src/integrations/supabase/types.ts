@@ -131,6 +131,35 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          property_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string
@@ -509,6 +538,39 @@ export type Database = {
           },
         ]
       }
+      tenant_preapprovals: {
+        Row: {
+          created_at: string
+          guarantee_type: Database["public"]["Enums"]["guarantee_type"]
+          id: string
+          max_rent: number
+          monthly_income: number
+          status: Database["public"]["Enums"]["preapproval_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          guarantee_type: Database["public"]["Enums"]["guarantee_type"]
+          id?: string
+          max_rent: number
+          monthly_income: number
+          status?: Database["public"]["Enums"]["preapproval_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          guarantee_type?: Database["public"]["Enums"]["guarantee_type"]
+          id?: string
+          max_rent?: number
+          monthly_income?: number
+          status?: Database["public"]["Enums"]["preapproval_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -635,6 +697,12 @@ export type Database = {
     }
     Enums: {
       app_role: "proprietario" | "locatario" | "agente" | "admin"
+      guarantee_type:
+        | "fiador"
+        | "seguro_fianca"
+        | "caucao"
+        | "titulo_capitalizacao"
+      preapproval_status: "pending" | "approved" | "rejected"
       property_status: "available" | "rented" | "inactive"
       property_type: "casa" | "apartamento"
     }
@@ -765,6 +833,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["proprietario", "locatario", "agente", "admin"],
+      guarantee_type: [
+        "fiador",
+        "seguro_fianca",
+        "caucao",
+        "titulo_capitalizacao",
+      ],
+      preapproval_status: ["pending", "approved", "rejected"],
       property_status: ["available", "rented", "inactive"],
       property_type: ["casa", "apartamento"],
     },

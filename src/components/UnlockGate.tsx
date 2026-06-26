@@ -47,6 +47,23 @@ export function isUnlocked(row: { status: string; expires_at: string | null } | 
   return true;
 }
 
+function formatCountdown(expiresAt: string | null): { label: string; urgent: boolean } | null {
+  if (!expiresAt) return null;
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return null;
+  const totalHours = Math.floor(ms / 3_600_000);
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  const minutes = Math.floor((ms % 3_600_000) / 60_000);
+  const label = days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+  return { label, urgent: totalHours < 72 };
+}
+  if (!row) return false;
+  if (row.status !== "paid") return false;
+  if (row.expires_at && new Date(row.expires_at) < new Date()) return false;
+  return true;
+}
+
 export function UnlockGate(props: UnlockGateProps) {
   const { propertyId, userId, isOwner, neighborhood, city, state, full, cep } = props;
   const { data: row } = useUnlockStatus(propertyId, userId);

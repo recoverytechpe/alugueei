@@ -141,6 +141,9 @@ function ContractDetail() {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={c.status === "closed" ? "default" : "secondary"} className="capitalize">{c.status}</Badge>
+            <Button variant="outline" size="sm" onClick={downloadPdf}>
+              <Download className="size-4 mr-1" /> PDF
+            </Button>
             <Button asChild variant="outline" size="sm"><Link to="/contracts">Voltar</Link></Button>
           </div>
         </div>

@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedPhotoUrls, formatBRL } from "@/lib/property-helpers";
+import { citiesQueryOptions, neighborhoodsQueryOptions } from "@/lib/locations-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,34 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-
-// Query reutilizável: cidades + bairros disponíveis.
-// Centralizar em queryOptions permite prime no loader e leitura suspensa no componente.
-const locationsQueryOptions = queryOptions({
-  queryKey: ["properties-locations"] as const,
-  queryFn: async () => {
-    const { data: rows, error } = await supabase
-      .from("properties")
-      .select("city, neighborhood")
-      .eq("status", "available");
-    if (error) throw error;
-    const map = new Map<string, Set<string>>();
-    for (const r of rows ?? []) {
-      const city = (r.city ?? "").trim();
-      if (!city) continue;
-      if (!map.has(city)) map.set(city, new Set());
-      const n = (r.neighborhood ?? "").trim();
-      if (n) map.get(city)!.add(n);
-    }
-    return Array.from(map.entries())
-      .map(([city, set]) => ({
-        city,
-        neighborhoods: Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR")),
-      }))
-      .sort((a, b) => a.city.localeCompare(b.city, "pt-BR"));
-  },
-  staleTime: 5 * 60_000,
-});
 
 export const Route = createFileRoute("/_authenticated/properties/")({
   head: () => ({

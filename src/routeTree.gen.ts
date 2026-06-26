@@ -19,6 +19,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties.index'
 import { Route as AuthenticatedContractsIndexRouteImport } from './routes/_authenticated/contracts.index'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
+import { Route as ApiPublicNeighborhoodsRouteImport } from './routes/api/public/neighborhoods'
 import { Route as ApiPublicCitiesRouteImport } from './routes/api/public/cities'
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
@@ -78,6 +79,11 @@ const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
   path: '/chat/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicNeighborhoodsRoute = ApiPublicNeighborhoodsRouteImport.update({
+  id: '/api/public/neighborhoods',
+  path: '/api/public/neighborhoods',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCitiesRoute = ApiPublicCitiesRouteImport.update({
   id: '/api/public/cities',
   path: '/api/public/cities',
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
+  '/api/public/neighborhoods': typeof ApiPublicNeighborhoodsRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/contracts/': typeof AuthenticatedContractsIndexRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
+  '/api/public/neighborhoods': typeof ApiPublicNeighborhoodsRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/contracts': typeof AuthenticatedContractsIndexRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
+  '/api/public/neighborhoods': typeof ApiPublicNeighborhoodsRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/contracts/': typeof AuthenticatedContractsIndexRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/users/$id'
     | '/api/public/cities'
+    | '/api/public/neighborhoods'
     | '/chat/'
     | '/contracts/'
     | '/properties/'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/users/$id'
     | '/api/public/cities'
+    | '/api/public/neighborhoods'
     | '/chat'
     | '/contracts'
     | '/properties'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/_authenticated/properties/new'
     | '/_authenticated/users/$id'
     | '/api/public/cities'
+    | '/api/public/neighborhoods'
     | '/_authenticated/chat/'
     | '/_authenticated/contracts/'
     | '/_authenticated/properties/'
@@ -225,6 +237,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicCitiesRoute: typeof ApiPublicCitiesRoute
+  ApiPublicNeighborhoodsRoute: typeof ApiPublicNeighborhoodsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/chat/'
       preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/neighborhoods': {
+      id: '/api/public/neighborhoods'
+      path: '/api/public/neighborhoods'
+      fullPath: '/api/public/neighborhoods'
+      preLoaderRoute: typeof ApiPublicNeighborhoodsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/cities': {
       id: '/api/public/cities'
@@ -382,6 +402,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicCitiesRoute: ApiPublicCitiesRoute,
+  ApiPublicNeighborhoodsRoute: ApiPublicNeighborhoodsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

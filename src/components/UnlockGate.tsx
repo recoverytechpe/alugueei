@@ -58,11 +58,6 @@ function formatCountdown(expiresAt: string | null): { label: string; urgent: boo
   const label = days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   return { label, urgent: totalHours < 72 };
 }
-  if (!row) return false;
-  if (row.status !== "paid") return false;
-  if (row.expires_at && new Date(row.expires_at) < new Date()) return false;
-  return true;
-}
 
 export function UnlockGate(props: UnlockGateProps) {
   const { propertyId, userId, isOwner, neighborhood, city, state, full, cep } = props;

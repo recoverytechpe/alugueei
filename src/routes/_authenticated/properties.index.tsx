@@ -367,6 +367,16 @@ function PropertiesList() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5 md:col-span-2">
+              <Label>Acesso</Label>
+              <Select value={f.unlocked} onValueChange={(v) => update({ unlocked: v as "all" | "mine" })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os imóveis</SelectItem>
+                  <SelectItem value="mine">Só os que já desbloqueei</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
 

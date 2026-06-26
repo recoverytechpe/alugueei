@@ -922,9 +922,14 @@ function TenantDashboard({ userId }: { userId: string }) {
                     <span>·</span>
                     <span>{Number(p.area_m2 ?? 0)} m²</span>
                   </div>
-                  <Badge variant="secondary" className="mt-1 gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
-                    <BadgeCheck className="h-3.5 w-3.5" /> Verificado
-                  </Badge>
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <Badge variant="secondary" className="gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
+                      <BadgeCheck className="h-3.5 w-3.5" /> Verificado
+                    </Badge>
+                    <span className="text-xs font-semibold text-primary inline-flex items-center gap-1 group-hover:underline">
+                      Quero alugar <ChevronRight className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}

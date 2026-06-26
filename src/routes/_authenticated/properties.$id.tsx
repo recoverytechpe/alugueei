@@ -394,14 +394,6 @@ function Row({ label, value }: { label: string; value: string }) {
 
 /* ---------------- Tenant action dialogs ---------------- */
 
-function ActionTile({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick?: () => void }) {
-  return (
-    <button onClick={onClick} className="flex flex-col items-center gap-1.5 p-3 rounded-xl border bg-card hover:bg-accent transition text-center">
-      <span className="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">{icon}</span>
-      <span className="text-xs font-medium leading-tight">{label}</span>
-    </button>
-  );
-}
 
 function SimulatorDialog({ rent, condo, iptu }: { rent: number; condo: number; iptu: number }) {
   const [open, setOpen] = useState(false);

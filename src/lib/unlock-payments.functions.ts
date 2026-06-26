@@ -15,9 +15,13 @@ export type UnlockCheckoutResult =
   | { ok: true; initPoint: string; preferenceId: string }
   | {
       ok: false;
-      reason: "not_configured" | "validation" | "already_paid" | "provider_error";
+      reason: "not_configured" | "validation" | "already_paid" | "provider_error" | "rate_limited";
       message: string;
     };
+
+const RATE_LIMIT_WINDOW_MIN = 10;
+const RATE_LIMIT_MAX = 5;
+
 
 /**
  * Cria preferência no Mercado Pago para desbloqueio de imóvel (R$ 29,90).

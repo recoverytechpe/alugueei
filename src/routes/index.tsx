@@ -253,7 +253,7 @@ function Home() {
         </section>
 
         {/* Bottom nav */}
-        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] border-t bg-background/95 backdrop-blur z-10">
+        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] border-t bg-background/95 backdrop-blur z-10 md:hidden">
           <div className="grid grid-cols-4 px-2 py-2">
             <NavItem icon={<HomeIcon className="size-5" />} label="Início" to="/" active />
             <NavItem icon={<Search className="size-5" />} label="Buscar" to="/properties" />
@@ -263,6 +263,7 @@ function Home() {
         </nav>
       </div>
     </div>
+
   );
 }
 

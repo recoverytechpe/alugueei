@@ -468,61 +468,8 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
       </div>
 
       {/* Propostas recebidas */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">Propostas recebidas</h3>
-          <Link to="/negotiations" className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1">
-            Ver todas <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
-        {data.proposals.length === 0 ? (
-          <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Nenhuma proposta recebida ainda.</CardContent></Card>
-        ) : (
-          <div className="space-y-3">
-            {data.proposals.slice(0, 5).map((p) => {
-              const prop = (p as unknown as { property: { id: string; title: string; city: string | null; neighborhood: string | null } | null }).property;
-              const pp = p as unknown as {
-                tenant_preapproval_income: number | null;
-                tenant_preapproval_max_rent: number | null;
-                tenant_preapproval_guarantee: string | null;
-                term_months: number | null;
-                start_date: string | null;
-              };
-              const preapproved = pp.tenant_preapproval_max_rent != null;
-              const status = mapProposalStatus(p.status);
-              return (
-                <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-start gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold truncate">{prop?.title ?? "Imóvel"}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {[prop?.neighborhood, prop?.city].filter(Boolean).join(", ") || "—"}
-                        </p>
-                        <p className="text-sm mt-1">
-                          <strong>{brl(p.rent_offer)}</strong>
-                          <span className="text-muted-foreground"> /mês · {pp.term_months ?? "—"} meses</span>
-                        </p>
-                      </div>
-                      <StatusPill status={status} />
-                    </div>
-                    {preapproved && (
-                      <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
-                        <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
-                        <span>
-                          Locatário <strong>pré-aprovado</strong> até {brl(Number(pp.tenant_preapproval_max_rent))}
-                          {pp.tenant_preapproval_income ? ` · renda ${brl(Number(pp.tenant_preapproval_income))}` : ""}
-                        </span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      <OwnerProposals proposals={data.proposals} />
+
     </div>
   );
 }

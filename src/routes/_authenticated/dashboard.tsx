@@ -417,6 +417,39 @@ function TenantDashboard({ userId }: { userId: string }) {
     },
   });
 
+  useRealtimeNotifications({
+    enabled: true,
+    channelName: `tenant-dash-${userId}`,
+    invalidateKeys: [["tenant-dash", userId]],
+    subscriptions: [
+      {
+        table: "proposals",
+        filter: `tenant_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
+            toast.info(`Sua proposta: ${String(p.new.status)}`);
+        },
+      },
+      {
+        table: "visits",
+        filter: `tenant_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status === "confirmed")
+            toast.success("Visita confirmada");
+        },
+      },
+      {
+        table: "rental_contracts",
+        filter: `tenant_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "INSERT") toast.success("Contrato disponível para assinatura");
+          else if (p.eventType === "UPDATE" && p.new.status === "closed")
+            toast.success("Contrato fechado");
+        },
+      },
+    ],
+  });
+
   if (isLoading || !data) return <Skeleton className="h-40 w-full" />;
 
   return (

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedPhotoUrls, formatBRL } from "@/lib/property-helpers";
+import { getOrCreateConversation } from "@/lib/chat-helpers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -62,9 +63,21 @@ function PropertyDetail() {
       <header className="border-b">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/properties" className="text-sm text-muted-foreground hover:text-foreground">← Voltar</Link>
-          {data.isOwner && (
-            <Button variant="destructive" size="sm" onClick={handleDelete}>Remover</Button>
-          )}
+          <div className="flex gap-2">
+            {!data.isOwner && (
+              <Button size="sm" onClick={async () => {
+                try {
+                  const cid = await getOrCreateConversation({ propertyId: data.id, otherUserId: data.owner_id });
+                  navigate({ to: "/chat/$id", params: { id: cid } });
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Erro ao iniciar conversa");
+                }
+              }}>Conversar com proprietário</Button>
+            )}
+            {data.isOwner && (
+              <Button variant="destructive" size="sm" onClick={handleDelete}>Remover</Button>
+            )}
+          </div>
         </div>
       </header>
 

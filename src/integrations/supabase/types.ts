@@ -55,6 +55,82 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          contacts_unlocked: boolean
+          created_at: string
+          id: string
+          initiator_id: string
+          last_message_at: string | null
+          property_id: string
+          recipient_id: string
+          updated_at: string
+        }
+        Insert: {
+          contacts_unlocked?: boolean
+          created_at?: string
+          id?: string
+          initiator_id: string
+          last_message_at?: string | null
+          property_id: string
+          recipient_id: string
+          updated_at?: string
+        }
+        Update: {
+          contacts_unlocked?: boolean
+          created_at?: string
+          id?: string
+          initiator_id?: string
+          last_message_at?: string | null
+          property_id?: string
+          recipient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -55,6 +55,41 @@ export type Database = {
           },
         ]
       }
+      contract_signatures: {
+        Row: {
+          contract_id: string
+          id: string
+          signature_text: string
+          signed_at: string
+          signer_id: string
+          signer_role: string
+        }
+        Insert: {
+          contract_id: string
+          id?: string
+          signature_text: string
+          signed_at?: string
+          signer_id: string
+          signer_role: string
+        }
+        Update: {
+          contract_id?: string
+          id?: string
+          signature_text?: string
+          signed_at?: string
+          signer_id?: string
+          signer_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_signatures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "rental_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           contacts_unlocked: boolean
@@ -271,35 +306,103 @@ export type Database = {
           },
         ]
       }
-      rental_contracts: {
+      proposals: {
         Row: {
           agent_id: string | null
           created_at: string
           id: string
+          message: string
           owner_id: string
           property_id: string
+          rent_offer: number
+          start_date: string
           status: string
           tenant_id: string
+          term_months: number
           updated_at: string
         }
         Insert: {
           agent_id?: string | null
           created_at?: string
           id?: string
+          message?: string
           owner_id: string
           property_id: string
+          rent_offer: number
+          start_date: string
           status?: string
           tenant_id: string
+          term_months?: number
           updated_at?: string
         }
         Update: {
           agent_id?: string | null
           created_at?: string
           id?: string
+          message?: string
           owner_id?: string
           property_id?: string
+          rent_offer?: number
+          start_date?: string
           status?: string
           tenant_id?: string
+          term_months?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rental_contracts: {
+        Row: {
+          agent_id: string | null
+          contract_text: string
+          created_at: string
+          id: string
+          owner_id: string
+          property_id: string
+          proposal_id: string | null
+          rent_value: number | null
+          start_date: string | null
+          status: string
+          tenant_id: string
+          term_months: number | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          contract_text?: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          property_id: string
+          proposal_id?: string | null
+          rent_value?: number | null
+          start_date?: string | null
+          status?: string
+          tenant_id: string
+          term_months?: number | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          contract_text?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          property_id?: string
+          proposal_id?: string | null
+          rent_value?: number | null
+          start_date?: string | null
+          status?: string
+          tenant_id?: string
+          term_months?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -308,6 +411,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_contracts_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
             referencedColumns: ["id"]
           },
         ]
@@ -332,6 +442,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      visits: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          owner_id: string
+          property_id: string
+          scheduled_at: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_id: string
+          property_id: string
+          scheduled_at: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          property_id?: string
+          scheduled_at?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visits_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

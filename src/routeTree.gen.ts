@@ -13,13 +13,15 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedNegotiationsRouteImport } from './routes/_authenticated/negotiations'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedContractsRouteImport } from './routes/_authenticated/contracts'
 import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_authenticated/properties.index'
+import { Route as AuthenticatedContractsIndexRouteImport } from './routes/_authenticated/contracts.index'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
 import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
+import { Route as AuthenticatedContractsIdRouteImport } from './routes/_authenticated/contracts.$id'
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -41,20 +43,27 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNegotiationsRoute =
+  AuthenticatedNegotiationsRouteImport.update({
+    id: '/negotiations',
+    path: '/negotiations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedContractsRoute = AuthenticatedContractsRouteImport.update({
-  id: '/contracts',
-  path: '/contracts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPropertiesIndexRoute =
   AuthenticatedPropertiesIndexRouteImport.update({
     id: '/properties/',
     path: '/properties/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedContractsIndexRoute =
+  AuthenticatedContractsIndexRouteImport.update({
+    id: '/contracts/',
+    path: '/contracts/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
@@ -79,6 +88,12 @@ const AuthenticatedPropertiesIdRoute =
     path: '/properties/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedContractsIdRoute =
+  AuthenticatedContractsIdRouteImport.update({
+    id: '/contracts/$id',
+    path: '/contracts/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedChatIdRoute = AuthenticatedChatIdRouteImport.update({
   id: '/chat/$id',
   path: '/chat/$id',
@@ -88,27 +103,31 @@ const AuthenticatedChatIdRoute = AuthenticatedChatIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/contracts': typeof AuthenticatedContractsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/negotiations': typeof AuthenticatedNegotiationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
+  '/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
+  '/contracts/': typeof AuthenticatedContractsIndexRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/contracts': typeof AuthenticatedContractsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/negotiations': typeof AuthenticatedNegotiationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
+  '/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/chat': typeof AuthenticatedChatIndexRoute
+  '/contracts': typeof AuthenticatedContractsIndexRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
 }
 export interface FileRoutesById {
@@ -116,14 +135,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/_authenticated/contracts': typeof AuthenticatedContractsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/negotiations': typeof AuthenticatedNegotiationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
+  '/_authenticated/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRoute
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
+  '/_authenticated/contracts/': typeof AuthenticatedContractsIndexRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
 }
 export interface FileRouteTypes {
@@ -131,41 +152,47 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/contracts'
     | '/dashboard'
+    | '/negotiations'
     | '/profile'
     | '/chat/$id'
+    | '/contracts/$id'
     | '/properties/$id'
     | '/properties/new'
     | '/users/$id'
     | '/chat/'
+    | '/contracts/'
     | '/properties/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/contracts'
     | '/dashboard'
+    | '/negotiations'
     | '/profile'
     | '/chat/$id'
+    | '/contracts/$id'
     | '/properties/$id'
     | '/properties/new'
     | '/users/$id'
     | '/chat'
+    | '/contracts'
     | '/properties'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/_authenticated/contracts'
     | '/_authenticated/dashboard'
+    | '/_authenticated/negotiations'
     | '/_authenticated/profile'
     | '/_authenticated/chat/$id'
+    | '/_authenticated/contracts/$id'
     | '/_authenticated/properties/$id'
     | '/_authenticated/properties/new'
     | '/_authenticated/users/$id'
     | '/_authenticated/chat/'
+    | '/_authenticated/contracts/'
     | '/_authenticated/properties/'
   fileRoutesById: FileRoutesById
 }
@@ -205,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/negotiations': {
+      id: '/_authenticated/negotiations'
+      path: '/negotiations'
+      fullPath: '/negotiations'
+      preLoaderRoute: typeof AuthenticatedNegotiationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -212,18 +246,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/contracts': {
-      id: '/_authenticated/contracts'
-      path: '/contracts'
-      fullPath: '/contracts'
-      preLoaderRoute: typeof AuthenticatedContractsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/properties/': {
       id: '/_authenticated/properties/'
       path: '/properties'
       fullPath: '/properties/'
       preLoaderRoute: typeof AuthenticatedPropertiesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/contracts/': {
+      id: '/_authenticated/contracts/'
+      path: '/contracts'
+      fullPath: '/contracts/'
+      preLoaderRoute: typeof AuthenticatedContractsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/chat/': {
@@ -254,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/contracts/$id': {
+      id: '/_authenticated/contracts/$id'
+      path: '/contracts/$id'
+      fullPath: '/contracts/$id'
+      preLoaderRoute: typeof AuthenticatedContractsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/chat/$id': {
       id: '/_authenticated/chat/$id'
       path: '/chat/$id'
@@ -265,26 +306,30 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedContractsRoute: typeof AuthenticatedContractsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedNegotiationsRoute: typeof AuthenticatedNegotiationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
+  AuthenticatedContractsIdRoute: typeof AuthenticatedContractsIdRoute
   AuthenticatedPropertiesIdRoute: typeof AuthenticatedPropertiesIdRoute
   AuthenticatedPropertiesNewRoute: typeof AuthenticatedPropertiesNewRoute
   AuthenticatedUsersIdRoute: typeof AuthenticatedUsersIdRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
+  AuthenticatedContractsIndexRoute: typeof AuthenticatedContractsIndexRoute
   AuthenticatedPropertiesIndexRoute: typeof AuthenticatedPropertiesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedContractsRoute: AuthenticatedContractsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedNegotiationsRoute: AuthenticatedNegotiationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
+  AuthenticatedContractsIdRoute: AuthenticatedContractsIdRoute,
   AuthenticatedPropertiesIdRoute: AuthenticatedPropertiesIdRoute,
   AuthenticatedPropertiesNewRoute: AuthenticatedPropertiesNewRoute,
   AuthenticatedUsersIdRoute: AuthenticatedUsersIdRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
+  AuthenticatedContractsIndexRoute: AuthenticatedContractsIndexRoute,
   AuthenticatedPropertiesIndexRoute: AuthenticatedPropertiesIndexRoute,
 }
 

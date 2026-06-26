@@ -305,7 +305,24 @@ function NewProperty() {
         {step === 1 && (
           <Section icon={MapPin} title="Endereço" desc="Onde fica o imóvel.">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="CEP" value={form.cep} onChange={(v) => update("cep", v)} placeholder="00000-000" />
+              <div className="space-y-1.5">
+                <Label htmlFor="f-cep">CEP</Label>
+                <div className="relative">
+                  <Input
+                    id="f-cep"
+                    value={form.cep}
+                    onChange={(e) => update("cep", e.target.value)}
+                    onBlur={(e) => lookupCep(e.target.value)}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                    className="rounded-xl pr-9"
+                  />
+                  {cepLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">Preenchemos o endereço automaticamente.</p>
+              </div>
               <Field label="UF" value={form.state} onChange={(v) => update("state", v.toUpperCase().slice(0, 2))} placeholder="SP" />
               <div className="sm:col-span-2">
                 <Field label="Rua / Avenida" value={form.street} onChange={(v) => update("street", v)} />

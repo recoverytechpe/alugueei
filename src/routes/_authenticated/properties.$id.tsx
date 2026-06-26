@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { pushRecent } from "@/lib/property-prefs";
+
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedPhotoUrls, formatBRL } from "@/lib/property-helpers";
 import { getOrCreateConversation } from "@/lib/chat-helpers";
@@ -80,6 +82,22 @@ function PropertyDetail() {
 
   const userId = data?.userId ?? null;
   const isTenant = data?.userRole === "locatario";
+
+  // Track in recents (localStorage) on load
+  useEffect(() => {
+    if (!data) return;
+    const cover = data.photoUrls[0] ?? null;
+    pushRecent({
+      id: data.id,
+      title: data.title,
+      city: data.city ?? null,
+      neighborhood: data.neighborhood ?? null,
+      rent_value: Number(data.rent_value),
+      property_type: data.property_type,
+      cover,
+    });
+  }, [data]);
+
 
   // Favorite
   const { data: isFav } = useQuery({

@@ -25,6 +25,7 @@ import { Route as ApiPublicNeighborhoodsRouteImport } from './routes/api/public/
 import { Route as ApiPublicCitiesRouteImport } from './routes/api/public/cities'
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
+import { Route as AuthenticatedPropertiesCompareRouteImport } from './routes/_authenticated/properties.compare'
 import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
 import { Route as AuthenticatedContractsIdRouteImport } from './routes/_authenticated/contracts.$id'
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
@@ -113,6 +114,12 @@ const AuthenticatedPropertiesNewRoute =
     path: '/properties/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPropertiesCompareRoute =
+  AuthenticatedPropertiesCompareRouteImport.update({
+    id: '/properties/compare',
+    path: '/properties/compare',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPropertiesIdRoute =
   AuthenticatedPropertiesIdRouteImport.update({
     id: '/properties/$id',
@@ -143,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRoute
+  '/properties/compare': typeof AuthenticatedPropertiesCompareRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
@@ -163,6 +171,7 @@ export interface FileRoutesByTo {
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRoute
+  '/properties/compare': typeof AuthenticatedPropertiesCompareRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
@@ -185,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRoute
+  '/_authenticated/properties/compare': typeof AuthenticatedPropertiesCompareRoute
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/chat/$id'
     | '/contracts/$id'
     | '/properties/$id'
+    | '/properties/compare'
     | '/properties/new'
     | '/users/$id'
     | '/api/public/cities'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/chat/$id'
     | '/contracts/$id'
     | '/properties/$id'
+    | '/properties/compare'
     | '/properties/new'
     | '/users/$id'
     | '/api/public/cities'
@@ -248,6 +260,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat/$id'
     | '/_authenticated/contracts/$id'
     | '/_authenticated/properties/$id'
+    | '/_authenticated/properties/compare'
     | '/_authenticated/properties/new'
     | '/_authenticated/users/$id'
     | '/api/public/cities'
@@ -379,6 +392,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPropertiesNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/properties/compare': {
+      id: '/_authenticated/properties/compare'
+      path: '/properties/compare'
+      fullPath: '/properties/compare'
+      preLoaderRoute: typeof AuthenticatedPropertiesCompareRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/properties/$id': {
       id: '/_authenticated/properties/$id'
       path: '/properties/$id'
@@ -413,6 +433,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
   AuthenticatedContractsIdRoute: typeof AuthenticatedContractsIdRoute
   AuthenticatedPropertiesIdRoute: typeof AuthenticatedPropertiesIdRoute
+  AuthenticatedPropertiesCompareRoute: typeof AuthenticatedPropertiesCompareRoute
   AuthenticatedPropertiesNewRoute: typeof AuthenticatedPropertiesNewRoute
   AuthenticatedUsersIdRoute: typeof AuthenticatedUsersIdRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
@@ -430,6 +451,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
   AuthenticatedContractsIdRoute: AuthenticatedContractsIdRoute,
   AuthenticatedPropertiesIdRoute: AuthenticatedPropertiesIdRoute,
+  AuthenticatedPropertiesCompareRoute: AuthenticatedPropertiesCompareRoute,
   AuthenticatedPropertiesNewRoute: AuthenticatedPropertiesNewRoute,
   AuthenticatedUsersIdRoute: AuthenticatedUsersIdRoute,
   AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,

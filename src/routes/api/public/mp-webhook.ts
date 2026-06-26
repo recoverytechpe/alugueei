@@ -42,11 +42,34 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
           external_reference?: string;
         };
 
-        const contractId = payment.external_reference;
-        if (!contractId) return new Response("ok", { status: 200 });
+        const externalRef = payment.external_reference;
+        if (!externalRef) return new Response("ok", { status: 200 });
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+        // === Desbloqueio de imóvel (R$ 29,90) ===
+        if (externalRef.startsWith("unlock:")) {
+          const unlockId = externalRef.slice("unlock:".length);
+          const approved = payment.status === "approved";
+          const failed = ["rejected", "cancelled"].includes(payment.status);
+          const update = {
+            payment_id: String(payment.id),
+            ...(approved
+              ? {
+                  status: "paid",
+                  paid_at: new Date().toISOString(),
+                  expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                }
+              : failed
+                ? { status: "failed" }
+                : {}),
+          };
+          await supabaseAdmin.from("property_unlocks").update(update).eq("id", unlockId);
+          return new Response("ok", { status: 200 });
+        }
+
+        // === Pagamento de contrato (caução + 1º aluguel) ===
+        const contractId = externalRef;
         await supabaseAdmin
           .from("payments")
           .update({

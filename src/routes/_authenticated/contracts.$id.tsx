@@ -221,6 +221,10 @@ function ContractDetail() {
           onPay={payDepositAndFirstRent}
         />
 
+        <PaymentHistoryCard payments={data.payments} contract={c} />
+
+
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Assinaturas</CardTitle>

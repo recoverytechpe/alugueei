@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedPreapprovalsRouteImport } from './routes/_authenticated/preapprovals'
 import { Route as AuthenticatedNegotiationsRouteImport } from './routes/_authenticated/negotiations'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -47,6 +48,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPreapprovalsRoute =
+  AuthenticatedPreapprovalsRouteImport.update({
+    id: '/preapprovals',
+    path: '/preapprovals',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedNegotiationsRoute =
   AuthenticatedNegotiationsRouteImport.update({
     id: '/negotiations',
@@ -131,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/negotiations': typeof AuthenticatedNegotiationsRoute
+  '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
@@ -150,6 +158,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/negotiations': typeof AuthenticatedNegotiationsRoute
+  '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
@@ -171,6 +180,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
   '/_authenticated/negotiations': typeof AuthenticatedNegotiationsRoute
+  '/_authenticated/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/contracts/$id': typeof AuthenticatedContractsIdRoute
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/favorites'
     | '/negotiations'
+    | '/preapprovals'
     | '/profile'
     | '/chat/$id'
     | '/contracts/$id'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/favorites'
     | '/negotiations'
+    | '/preapprovals'
     | '/profile'
     | '/chat/$id'
     | '/contracts/$id'
@@ -231,6 +243,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/favorites'
     | '/_authenticated/negotiations'
+    | '/_authenticated/preapprovals'
     | '/_authenticated/profile'
     | '/_authenticated/chat/$id'
     | '/_authenticated/contracts/$id'
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/preapprovals': {
+      id: '/_authenticated/preapprovals'
+      path: '/preapprovals'
+      fullPath: '/preapprovals'
+      preLoaderRoute: typeof AuthenticatedPreapprovalsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/negotiations': {
@@ -388,6 +408,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
   AuthenticatedNegotiationsRoute: typeof AuthenticatedNegotiationsRoute
+  AuthenticatedPreapprovalsRoute: typeof AuthenticatedPreapprovalsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
   AuthenticatedContractsIdRoute: typeof AuthenticatedContractsIdRoute
@@ -404,6 +425,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
   AuthenticatedNegotiationsRoute: AuthenticatedNegotiationsRoute,
+  AuthenticatedPreapprovalsRoute: AuthenticatedPreapprovalsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
   AuthenticatedContractsIdRoute: AuthenticatedContractsIdRoute,

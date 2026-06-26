@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useViewAs } from "@/lib/view-as";
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedPhotoUrls, formatBRL } from "@/lib/property-helpers";
 import { Input } from "@/components/ui/input";

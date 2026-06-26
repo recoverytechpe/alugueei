@@ -188,9 +188,14 @@ function VisitDialog({ propertyId, ownerId, userId, userRole }: { propertyId: st
     e.preventDefault();
     if (!when) return toast.error("Selecione data e hora");
     setBusy(true);
-    const payload = userRole === "agente"
-      ? { property_id: propertyId, owner_id: ownerId, tenant_id: userId, agent_id: userId, scheduled_at: new Date(when).toISOString(), notes }
-      : { property_id: propertyId, owner_id: ownerId, tenant_id: userId, scheduled_at: new Date(when).toISOString(), notes };
+    const payload: {
+      property_id: string; owner_id: string; tenant_id: string; agent_id: string | null;
+      scheduled_at: string; notes: string;
+    } = {
+      property_id: propertyId, owner_id: ownerId, tenant_id: userId,
+      agent_id: userRole === "agente" ? userId : null,
+      scheduled_at: new Date(when).toISOString(), notes,
+    };
     const { error } = await supabase.from("visits").insert(payload);
     setBusy(false);
     if (error) return toast.error(error.message);

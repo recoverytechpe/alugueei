@@ -176,6 +176,53 @@ function ProfilePage() {
             </form>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Histórico de desbloqueios</CardTitle>
+            <CardDescription>Imóveis cujos contatos você liberou.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!unlocks || unlocks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Você ainda não desbloqueou nenhum imóvel.</p>
+            ) : (
+              <ul className="divide-y">
+                {unlocks.map((u) => {
+                  const p = u.properties as { title?: string; city?: string; state?: string } | null;
+                  const expired = u.expires_at && new Date(u.expires_at) < new Date();
+                  const label =
+                    u.status === "refunded" ? "Reembolsado"
+                    : u.status === "paid" && expired ? "Expirado"
+                    : u.status === "paid" ? "Ativo"
+                    : u.status === "pending" ? "Pendente"
+                    : u.status;
+                  return (
+                    <li key={u.id} className="py-3 flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <Link
+                          to="/properties/$id"
+                          params={{ id: u.property_id }}
+                          className="font-medium truncate block hover:underline"
+                        >
+                          {p?.title ?? "Imóvel"}
+                        </Link>
+                        <p className="text-xs text-muted-foreground">
+                          {p?.city}{p?.state ? `/${p.state}` : ""} ·{" "}
+                          {u.paid_at ? `Pago em ${new Date(u.paid_at).toLocaleDateString("pt-BR")}` : `Criado em ${new Date(u.created_at).toLocaleDateString("pt-BR")}`}
+                          {u.expires_at && u.status === "paid" && !expired ? ` · expira ${new Date(u.expires_at).toLocaleDateString("pt-BR")}` : ""}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-medium">R$ {(u.amount_cents / 100).toFixed(2).replace(".", ",")}</p>
+                        <p className={`text-xs ${u.status === "paid" && !expired ? "text-emerald-600" : "text-muted-foreground"}`}>{label}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatBRL } from "@/lib/property-helpers";
-import { ArrowLeft, ShieldCheck, Info } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Info, FileCheck2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 type GuaranteeType = "fiador" | "seguro_fianca" | "caucao" | "titulo_capitalizacao";

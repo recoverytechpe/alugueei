@@ -72,22 +72,151 @@ function PropertyDetail() {
   }
   if (!data) return <div className="p-8 text-center">Imóvel não encontrado.</div>;
 
+  const cover = data.photoUrls[activePhoto];
+  const description = data.description ?? "";
+  const longDescription = description.length > 220;
+  const shownDescription = aboutOpen || !longDescription ? description : description.slice(0, 220).trimEnd() + "…";
+
+  async function contactAgent() {
+    try {
+      setContacting(true);
+      const cid = await getOrCreateConversation({ propertyId: data!.id, otherUserId: data!.owner_id });
+      navigate({ to: "/chat/$id", params: { id: cid } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao iniciar conversa");
+    } finally {
+      setContacting(false);
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to="/properties" className="text-sm text-muted-foreground hover:text-foreground">← Voltar</Link>
-          <div className="flex gap-2 flex-wrap">
-            {!data.isOwner && (
-              <Button size="sm" variant="outline" onClick={async () => {
-                try {
-                  const cid = await getOrCreateConversation({ propertyId: data.id, otherUserId: data.owner_id });
-                  navigate({ to: "/chat/$id", params: { id: cid } });
-                } catch (e) {
-                  toast.error(e instanceof Error ? e.message : "Erro ao iniciar conversa");
-                }
-              }}>Conversar</Button>
+    <div className="min-h-screen bg-muted/30">
+      <div className="mx-auto max-w-[440px] min-h-screen bg-background shadow-xl pb-28 relative">
+        {/* Gallery */}
+        <section className="relative">
+          <div className="aspect-[4/3] bg-muted overflow-hidden">
+            {cover ? (
+              <img src={cover} alt={data.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">Sem fotos</div>
             )}
+          </div>
+
+          {/* Floating header */}
+          <div className="absolute top-0 inset-x-0 px-4 pt-4 flex items-center justify-between">
+            <Link
+              to="/properties"
+              className="size-10 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow hover:bg-background"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="size-4" />
+            </Link>
+            <p className="text-xs font-medium bg-background/90 backdrop-blur px-3 py-1.5 rounded-full shadow">
+              Detalhes do imóvel
+            </p>
+            <div className="flex gap-2">
+              <button
+                className="size-10 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow hover:bg-background"
+                aria-label="Favoritar"
+              >
+                <Heart className="size-4" />
+              </button>
+              <button
+                className="size-10 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow hover:bg-background"
+                aria-label="Compartilhar"
+              >
+                <Share2 className="size-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Thumbnails */}
+          {data.photoUrls.length > 1 && (
+            <div className="absolute bottom-3 inset-x-0 px-4 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {data.photoUrls.map((u, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActivePhoto(i)}
+                  className={`shrink-0 w-14 h-10 rounded-md overflow-hidden border-2 ${
+                    i === activePhoto ? "border-background ring-2 ring-primary" : "border-background/60"
+                  }`}
+                >
+                  <img src={u} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <main className="px-5 pt-5 space-y-5">
+          {/* Title + price */}
+          <div className="space-y-1">
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-xl font-bold leading-tight">{data.title}</h1>
+              <Badge variant="secondary" className="capitalize shrink-0">{data.property_type}</Badge>
+            </div>
+            <p className="text-lg font-semibold text-primary">
+              {formatBRL(data.rent_value)}
+              <span className="text-xs font-normal text-muted-foreground"> /mês</span>
+            </p>
+          </div>
+
+          {/* Quick stats row */}
+          <div className="flex items-center gap-5 text-sm">
+            <span className="flex items-center gap-1.5"><BedDouble className="size-4 text-muted-foreground" /> {data.bedrooms} Quartos</span>
+            <span className="flex items-center gap-1.5"><Bath className="size-4 text-muted-foreground" /> {data.bathrooms} Banheiros</span>
+            <span className="flex items-center gap-1.5"><Car className="size-4 text-muted-foreground" /> {data.parking_spots} Vaga{data.parking_spots === 1 ? "" : "s"}</span>
+          </div>
+
+          {/* Address */}
+          <p className="text-sm text-muted-foreground flex items-start gap-2">
+            <MapPin className="size-4 mt-0.5 shrink-0" />
+            <span>
+              {[data.street, data.number, data.neighborhood, data.city, data.state]
+                .filter(Boolean)
+                .join(", ")} · CEP {data.cep}
+            </span>
+          </p>
+
+          <Badge variant="secondary" className="gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
+            <BadgeCheck className="size-3.5" /> Imóvel verificado pela plataforma
+          </Badge>
+
+          {/* About */}
+          {description && (
+            <div className="space-y-2">
+              <h2 className="text-base font-semibold">Sobre este imóvel</h2>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                {shownDescription}
+              </p>
+              {longDescription && (
+                <button
+                  onClick={() => setAboutOpen((v) => !v)}
+                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
+                  {aboutOpen ? "Ver menos" : "Ver mais"}
+                  {aboutOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Pricing breakdown */}
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm">Valores mensais</CardTitle></CardHeader>
+            <CardContent className="space-y-1.5 text-sm">
+              <Row label="Aluguel" value={formatBRL(data.rent_value)} />
+              <Row label="Condomínio" value={formatBRL(data.condo_value)} />
+              <Row label="IPTU" value={formatBRL(data.iptu_value)} />
+              <div className="border-t pt-2 mt-1 flex justify-between font-semibold">
+                <span>Total estimado</span>
+                <span>{formatBRL(Number(data.rent_value) + Number(data.condo_value) + Number(data.iptu_value))}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Secondary actions */}
+          <div className="flex flex-wrap gap-2 pt-1">
             {!data.isOwner && (data.userRole === "locatario" || data.userRole === "agente") && (
               <VisitDialog propertyId={data.id} ownerId={data.owner_id} userId={data.userId!} userRole={data.userRole} />
             )}
@@ -95,75 +224,26 @@ function PropertyDetail() {
               <ProposalDialog propertyId={data.id} ownerId={data.owner_id} userId={data.userId!} rentSuggestion={Number(data.rent_value)} />
             )}
             {data.isOwner && (
-              <Button variant="destructive" size="sm" onClick={handleDelete}>Remover</Button>
+              <Button variant="destructive" size="sm" onClick={handleDelete}>Remover imóvel</Button>
             )}
           </div>
-        </div>
-      </header>
+        </main>
 
-      <main className="max-w-4xl mx-auto px-6 py-6 space-y-6">
-        <div className="space-y-2">
-          {data.photoUrls.length > 0 ? (
-            <>
-              <div className="aspect-[16/10] rounded-lg overflow-hidden bg-muted">
-                <img src={data.photoUrls[activePhoto]} alt={data.title} className="w-full h-full object-cover" />
-              </div>
-              {data.photoUrls.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto">
-                  {data.photoUrls.map((u, i) => (
-                    <button key={i} onClick={() => setActivePhoto(i)} className={`shrink-0 w-20 h-16 rounded overflow-hidden border-2 ${i === activePhoto ? "border-primary" : "border-transparent"}`}>
-                      <img src={u} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="aspect-[16/10] rounded-lg bg-muted flex items-center justify-center text-muted-foreground">Sem fotos</div>
-          )}
-        </div>
-
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h1 className="text-2xl font-bold">{data.title}</h1>
-            <p className="text-muted-foreground">
-              {[data.street, data.number, data.neighborhood, data.city, data.state].filter(Boolean).join(", ")} · CEP {data.cep}
-            </p>
+        {/* Sticky CTA */}
+        {!data.isOwner && (
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] bg-background/95 backdrop-blur border-t px-5 py-3 z-10">
+            <Button
+              size="lg"
+              className="w-full h-12 rounded-2xl text-base font-semibold"
+              onClick={contactAgent}
+              disabled={contacting}
+            >
+              <MessageCircle className="size-5" />
+              {contacting ? "Abrindo conversa..." : "Falar com o agente"}
+            </Button>
           </div>
-          <div className="text-right">
-            <Badge variant="secondary" className="capitalize">{data.property_type}</Badge>
-            <div className="text-2xl font-bold mt-1">{formatBRL(data.rent_value)}</div>
-            <div className="text-xs text-muted-foreground">/ mês</div>
-          </div>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-4">
-          <Stat label="Quartos" value={String(data.bedrooms)} />
-          <Stat label="Banheiros" value={String(data.bathrooms)} />
-          <Stat label="Vagas" value={String(data.parking_spots)} />
-          <Stat label="Área" value={`${Number(data.area_m2)} m²`} />
-        </div>
-
-        {data.description && (
-          <Card>
-            <CardHeader><CardTitle className="text-base">Descrição</CardTitle></CardHeader>
-            <CardContent className="whitespace-pre-wrap text-sm">{data.description}</CardContent>
-          </Card>
         )}
-
-        <Card>
-          <CardHeader><CardTitle className="text-base">Valores mensais</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <Row label="Aluguel" value={formatBRL(data.rent_value)} />
-            <Row label="Condomínio" value={formatBRL(data.condo_value)} />
-            <Row label="IPTU" value={formatBRL(data.iptu_value)} />
-            <div className="border-t pt-2 flex justify-between font-semibold">
-              <span>Total estimado</span>
-              <span>{formatBRL(Number(data.rent_value) + Number(data.condo_value) + Number(data.iptu_value))}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </main>
+      </div>
     </div>
   );
 }

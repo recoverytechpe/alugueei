@@ -114,10 +114,66 @@ function NegotiationsPage() {
           ))}
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase text-muted-foreground">Propostas</h2>
-          {data.proposals.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma proposta.</p>}
-          {data.proposals.map((p) => (
+        <ProposalsSection
+          proposals={data.proposals}
+          userId={data.userId}
+          setProposalStatus={setProposalStatus}
+        />
+      </main>
+    </div>
+  );
+}
+
+type ProposalFilter = "all" | "pending" | "accepted" | "rejected";
+
+function ProposalsSection({
+  proposals,
+  userId,
+  setProposalStatus,
+}: {
+  proposals: Proposal[];
+  userId: string;
+  setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
+}) {
+  const [filter, setFilter] = useState<ProposalFilter>("all");
+  const counts = useMemo(() => ({
+    all: proposals.length,
+    pending: proposals.filter((p) => p.status === "pending").length,
+    accepted: proposals.filter((p) => p.status === "accepted").length,
+    rejected: proposals.filter((p) => p.status === "rejected" || p.status === "withdrawn").length,
+  }), [proposals]);
+  const visible = useMemo(() => {
+    if (filter === "all") return proposals;
+    if (filter === "rejected") return proposals.filter((p) => p.status === "rejected" || p.status === "withdrawn");
+    return proposals.filter((p) => p.status === filter);
+  }, [proposals, filter]);
+
+  const tabs: { key: ProposalFilter; label: string }[] = [
+    { key: "all", label: "Todas" },
+    { key: "pending", label: "Pendentes" },
+    { key: "accepted", label: "Aceitas" },
+    { key: "rejected", label: "Recusadas" },
+  ];
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Propostas</h2>
+        <div className="flex gap-1 flex-wrap">
+          {tabs.map((t) => (
+            <Button
+              key={t.key}
+              size="sm"
+              variant={filter === t.key ? "default" : "outline"}
+              onClick={() => setFilter(t.key)}
+            >
+              {t.label} <span className="ml-1 text-xs opacity-70">({counts[t.key]})</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+      {visible.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma proposta.</p>}
+      {visible.map((p) => (
             <Card key={p.id}>
               <CardHeader className="flex flex-row items-start justify-between gap-2">
                 <div>

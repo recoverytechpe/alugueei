@@ -15,6 +15,7 @@ import {
   Home, Settings, Bell, FileText,
 } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useViewAs } from "@/lib/view-as";
 
 /**
@@ -132,6 +133,7 @@ function Dashboard() {
             <p className="text-sm text-muted-foreground">{me.profile?.full_name ?? me.email}</p>
           </div>
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <PushToggle />
             <Button variant="outline" onClick={signOut}>Sair</Button>
           </div>

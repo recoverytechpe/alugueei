@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
-import { Download, CreditCard, CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { Download, CreditCard, CheckCircle2, Clock, AlertCircle, Loader2, Receipt } from "lucide-react";
 import { createMpPreference } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/contracts/$id")({
@@ -22,6 +22,16 @@ export const Route = createFileRoute("/_authenticated/contracts/$id")({
 });
 
 type Signature = { id: string; signer_id: string; signer_role: string; signature_text: string; signed_at: string };
+type Payment = {
+  id: string;
+  amount: number;
+  kind: string;
+  status: string;
+  provider: string;
+  provider_payment_id: string | null;
+  preference_id: string | null;
+  created_at: string;
+};
 
 function ContractDetail() {
   const { id } = Route.useParams();
@@ -56,7 +66,17 @@ function ContractDetail() {
         .from("contract_signatures")
         .select("*")
         .eq("contract_id", id);
-      return { userId: u.user.id, contract, signatures: (sigs ?? []) as Signature[] };
+      const { data: pays } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("contract_id", id)
+        .order("created_at", { ascending: false });
+      return {
+        userId: u.user.id,
+        contract,
+        signatures: (sigs ?? []) as Signature[],
+        payments: (pays ?? []) as Payment[],
+      };
     },
   });
 
@@ -66,6 +86,8 @@ function ContractDetail() {
       .on("postgres_changes", { event: "*", schema: "public", table: "contract_signatures", filter: `contract_id=eq.${id}` },
         () => qc.invalidateQueries({ queryKey: ["contract", id] }))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "rental_contracts", filter: `id=eq.${id}` },
+        () => qc.invalidateQueries({ queryKey: ["contract", id] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "payments", filter: `contract_id=eq.${id}` },
         () => qc.invalidateQueries({ queryKey: ["contract", id] }))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
@@ -199,6 +221,10 @@ function ContractDetail() {
           onPay={payDepositAndFirstRent}
         />
 
+        <PaymentHistoryCard payments={data.payments} contract={c} />
+
+
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Assinaturas</CardTitle>
@@ -327,6 +353,115 @@ function PaymentCard({
           </p>
         )}
       </CardContent>
+    </Card>
+  );
+}
+
+const kindLabel: Record<string, string> = {
+  deposit_plus_first_rent: "Caução + 1º aluguel",
+  rent: "Aluguel",
+  deposit: "Caução",
+  other: "Outro",
+};
+
+const payStatusTone: Record<string, string> = {
+  approved: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  authorized: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  in_process: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  pending: "bg-muted text-muted-foreground",
+  rejected: "bg-destructive/10 text-destructive",
+  cancelled: "bg-destructive/10 text-destructive",
+  refunded: "bg-muted text-muted-foreground",
+};
+
+function downloadReceipt(payment: Payment, contract: ContractRow & { properties?: { title?: string | null } | null }) {
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const margin = 48;
+  let y = margin;
+  doc.setFont("helvetica", "bold").setFontSize(18);
+  doc.text("Recibo de Pagamento", margin, y); y += 26;
+  doc.setFont("helvetica", "normal").setFontSize(10);
+  doc.text(`Emitido em: ${new Date().toLocaleString("pt-BR")}`, margin, y); y += 22;
+
+  const rows: Array<[string, string]> = [
+    ["Imóvel", contract.properties?.title ?? "—"],
+    ["Contrato", contract.id],
+    ["Tipo", kindLabel[payment.kind] ?? payment.kind],
+    ["Valor", brl(Number(payment.amount))],
+    ["Status", payment.status],
+    ["Provedor", payment.provider],
+    ["ID do pagamento", payment.provider_payment_id ?? "—"],
+    ["Preferência", payment.preference_id ?? "—"],
+    ["Criado em", new Date(payment.created_at).toLocaleString("pt-BR")],
+  ];
+  doc.setFontSize(11);
+  for (const [k, v] of rows) {
+    doc.setFont("helvetica", "bold"); doc.text(`${k}:`, margin, y);
+    doc.setFont("helvetica", "normal"); doc.text(String(v), margin + 130, y);
+    y += 18;
+  }
+  y += 14;
+  doc.setFontSize(9).setTextColor(120);
+  doc.text("Este recibo é gerado automaticamente pela plataforma.", margin, y);
+  doc.save(`recibo-${payment.id.slice(0, 8)}.pdf`);
+}
+
+function PaymentHistoryCard({
+  payments,
+  contract,
+}: {
+  payments: Payment[];
+  contract: ContractRow & { properties?: { title?: string | null } | null };
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Receipt className="size-4" /> Histórico de pagamentos
+        </CardTitle>
+        <CardDescription>
+          {payments.length === 0 ? "Nenhum pagamento registrado." : `${payments.length} registro(s)`}
+        </CardDescription>
+      </CardHeader>
+      {payments.length > 0 && (
+        <CardContent className="space-y-2">
+          {payments.map((p) => (
+            <div
+              key={p.id}
+              className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium truncate">{kindLabel[p.kind] ?? p.kind}</span>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      payStatusTone[p.status] ?? "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {p.status}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(p.created_at).toLocaleString("pt-BR")} · {p.provider}
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="font-semibold">{brl(Number(p.amount))}</div>
+                {(p.status === "approved" || p.status === "authorized") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => downloadReceipt(p, contract)}
+                  >
+                    <Download className="size-3.5 mr-1" /> Recibo
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      )}
     </Card>
   );
 }

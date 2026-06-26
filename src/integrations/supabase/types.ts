@@ -249,6 +249,39 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          read_at: string | null
+          title: string
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind: string
+          read_at?: string | null
+          title: string
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title?: string
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -814,6 +847,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      notify_user: {
+        Args: {
+          _body: string
+          _kind: string
+          _title: string
+          _url: string
+          _user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

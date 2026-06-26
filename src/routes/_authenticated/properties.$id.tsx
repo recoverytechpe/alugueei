@@ -28,6 +28,7 @@ import {
   Link as LinkIcon, MessageSquare, Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UnlockGate } from "@/components/UnlockGate";
 
 type GuaranteeType = "fiador" | "seguro_fianca" | "caucao" | "titulo_capitalizacao";
 const GUARANTEE_LABEL: Record<GuaranteeType, string> = {

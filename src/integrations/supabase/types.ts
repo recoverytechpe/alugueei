@@ -249,6 +249,59 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          contract_id: string
+          created_at: string
+          id: string
+          kind: string
+          payer_id: string
+          preference_id: string | null
+          provider: string
+          provider_payment_id: string | null
+          raw: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          contract_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          payer_id: string
+          preference_id?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          contract_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          payer_id?: string
+          preference_id?: string | null
+          provider?: string
+          provider_payment_id?: string | null
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "rental_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -536,8 +589,12 @@ export type Database = {
           agent_id: string | null
           contract_text: string
           created_at: string
+          deposit_value: number | null
           id: string
           owner_id: string
+          paid_at: string | null
+          payment_id: string | null
+          payment_status: string
           property_id: string
           proposal_id: string | null
           rent_value: number | null
@@ -551,8 +608,12 @@ export type Database = {
           agent_id?: string | null
           contract_text?: string
           created_at?: string
+          deposit_value?: number | null
           id?: string
           owner_id: string
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_status?: string
           property_id: string
           proposal_id?: string | null
           rent_value?: number | null
@@ -566,8 +627,12 @@ export type Database = {
           agent_id?: string | null
           contract_text?: string
           created_at?: string
+          deposit_value?: number | null
           id?: string
           owner_id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          payment_status?: string
           property_id?: string
           proposal_id?: string | null
           rent_value?: number | null

@@ -79,14 +79,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Alugueei" },
+      { name: "description", content: "Plataforma de Alugueis de Imoveis
+Seu Marketplace de imoveis" },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Alugueei" },
+      { property: "og:description", content: "Plataforma de Alugueis de Imoveis
+Seu Marketplace de imoveis" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Alugueei" },
+      { name: "twitter:description", content: "Plataforma de Alugueis de Imoveis
+Seu Marketplace de imoveis" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/a902c9b6-9c14-4532-b3de-dd98bf22ce06" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/a902c9b6-9c14-4532-b3de-dd98bf22ce06" },
     ],
     links: [
       {

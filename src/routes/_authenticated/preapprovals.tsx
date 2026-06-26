@@ -314,11 +314,6 @@ function DocsCard({ userId, row, onSaved }: {
     </Card>
   );
 }
-        </main>
-      </div>
-    </div>
-  );
-}
 
 function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
   return (

@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getSignedPhotoUrls } from "@/lib/property-helpers";
 import { toast } from "sonner";
 import {
   Wallet, Users, Clock, RefreshCw, CheckCircle2,
@@ -720,6 +722,8 @@ function ReputationRow({ Icon, label, value }: { Icon: typeof Award; label: stri
 }
 
 function TenantDashboard({ userId }: { userId: string }) {
+  const [selectedCity, setSelectedCity] = useTenantCity("tenant_preferred_city");
+
   const { data, isLoading } = useQuery({
     queryKey: ["tenant-dash", userId],
     queryFn: async () => {
@@ -738,50 +742,211 @@ function TenantDashboard({ userId }: { userId: string }) {
     placeholderData: (prev) => prev,
   });
 
+  const { data: cities } = useQuery({
+    queryKey: ["tenant-cities"],
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("properties")
+        .select("city, state")
+        .eq("status", "available")
+        .not("city", "is", null);
+      const seen = new Set<string>();
+      const list: { city: string; state: string | null }[] = [];
+      for (const r of rows ?? []) {
+        const key = `${r.city}|${r.state ?? ""}`;
+        if (!seen.has(key) && r.city) {
+          seen.add(key);
+          list.push({ city: r.city, state: r.state });
+        }
+      }
+      return list.sort((a, b) => a.city.localeCompare(b.city));
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const { data: regional, isLoading: loadingRegional } = useQuery({
+    queryKey: ["tenant-regional", selectedCity],
+    enabled: !!selectedCity,
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("properties")
+        .select("id,title,city,state,neighborhood,bedrooms,bathrooms,area_m2,rent_value,property_photos(storage_path,position)")
+        .eq("status", "available")
+        .eq("city", selectedCity as string)
+        .order("created_at", { ascending: false })
+        .limit(12);
+      const firstPaths = (rows ?? [])
+        .map((p) => (p.property_photos ?? []).slice().sort((a, b) => a.position - b.position)[0]?.storage_path)
+        .filter((s): s is string => !!s);
+      const urls = await getSignedPhotoUrls(firstPaths);
+      return (rows ?? []).map((p) => {
+        const path = (p.property_photos ?? []).slice().sort((a, b) => a.position - b.position)[0]?.storage_path;
+        return { ...p, cover: path ? urls[path] : null };
+      });
+    },
+    staleTime: 60_000,
+  });
 
   useRealtimeNotifications({
     enabled: true,
     channelName: `tenant-dash-${userId}`,
     invalidateKeys: [["tenant-dash", userId]],
     subscriptions: [
-      {
-        table: "proposals",
-        filter: `tenant_id=eq.${userId}`,
-        onEvent: (p) => {
-          if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
-            toast.info(`Sua proposta: ${String(p.new.status)}`);
-        },
-      },
-      {
-        table: "visits",
-        filter: `tenant_id=eq.${userId}`,
-        onEvent: (p) => {
-          if (p.eventType === "UPDATE" && p.new.status === "confirmed")
-            toast.success("Visita confirmada");
-        },
-      },
-      {
-        table: "rental_contracts",
-        filter: `tenant_id=eq.${userId}`,
-        onEvent: (p) => {
-          if (p.eventType === "INSERT") toast.success("Contrato disponível para assinatura");
-          else if (p.eventType === "UPDATE" && p.new.status === "closed")
-            toast.success("Contrato fechado");
-        },
-      },
+      { table: "proposals", filter: `tenant_id=eq.${userId}`, onEvent: (p) => {
+        if (p.eventType === "UPDATE" && p.new.status !== p.old.status) toast.info(`Sua proposta: ${String(p.new.status)}`);
+      } },
+      { table: "visits", filter: `tenant_id=eq.${userId}`, onEvent: (p) => {
+        if (p.eventType === "UPDATE" && p.new.status === "confirmed") toast.success("Visita confirmada");
+      } },
+      { table: "rental_contracts", filter: `tenant_id=eq.${userId}`, onEvent: (p) => {
+        if (p.eventType === "INSERT") toast.success("Contrato disponível para assinatura");
+        else if (p.eventType === "UPDATE" && p.new.status === "closed") toast.success("Contrato fechado");
+      } },
     ],
   });
 
   if (isLoading || !data) return <Skeleton className="h-40 w-full" />;
 
+  const activeContracts = data.contracts.filter((c) => c.status === "active" || c.status === "closed").length;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
+      {/* Hero elegante */}
+      <section className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white px-6 py-8 md:px-10 md:py-12">
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,theme(colors.amber.400),transparent_55%)]" />
+        <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-amber-300/90 font-medium">Sua próxima casa</p>
+            <h2 className="text-3xl md:text-4xl font-serif leading-tight">
+              Boas-vindas. Vamos encontrar o lar perfeito para você.
+            </h2>
+            <p className="text-sm text-white/70">
+              Escolha uma região para priorizarmos imóveis verificados próximos de você.
+            </p>
+          </div>
+
+          <div className="w-full md:w-72 space-y-1.5">
+            <label className="text-xs text-white/70 font-medium">Sua localidade preferida</label>
+            <Select
+              value={selectedCity ?? ""}
+              onValueChange={(v) => setSelectedCity(v)}
+            >
+              <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white hover:bg-white/15 [&>span]:text-white">
+                <SelectValue placeholder="Selecione uma cidade" />
+              </SelectTrigger>
+              <SelectContent>
+                {(cities ?? []).map((c) => (
+                  <SelectItem key={`${c.city}-${c.state ?? ""}`} value={c.city}>
+                    {c.city}{c.state ? ` · ${c.state}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats minimalistas */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Stat label="Propostas enviadas" value={data.proposals.length} />
         <Stat label="Visitas agendadas" value={data.visits.length} />
-        <Stat label="Contratos ativos" value={data.contracts.filter((c) => c.status === "active" || c.status === "closed").length} />
+        <Stat label="Contratos ativos" value={activeContracts} />
         <Stat label="Contratos fechados" value={data.contracts.filter((c) => c.status === "closed").length} />
       </div>
+
+      {/* Imóveis na região */}
+      <section className="space-y-4">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h3 className="text-xl md:text-2xl font-serif">
+              {selectedCity ? `Oportunidades em ${selectedCity}` : "Oportunidades para você"}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {selectedCity
+                ? "Selecionadas com base na sua localidade preferida."
+                : "Selecione uma cidade acima para ver imóveis priorizados na sua região."}
+            </p>
+          </div>
+          <Link to="/properties" className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1 shrink-0">
+            Ver todos <ChevronRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {!selectedCity ? (
+          <Card className="border-dashed">
+            <CardContent className="p-8 text-center text-sm text-muted-foreground">
+              Escolha uma cidade no seletor acima para começarmos.
+            </CardContent>
+          </Card>
+        ) : loadingRegional ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-64 rounded-2xl" />
+            ))}
+          </div>
+        ) : (regional ?? []).length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="p-8 text-center text-sm text-muted-foreground">
+              Ainda não temos imóveis disponíveis em {selectedCity}. Em breve, novidades.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {(regional ?? []).map((p) => (
+              <Link
+                key={p.id}
+                to="/properties/$id"
+                params={{ id: p.id }}
+                className="group rounded-2xl overflow-hidden bg-card border hover:shadow-lg hover:border-primary/40 transition"
+              >
+                <div className="aspect-[16/10] bg-muted relative overflow-hidden">
+                  {p.cover ? (
+                    <img src={p.cover} alt={p.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-[1.03] transition" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">Sem foto</div>
+                  )}
+                  <div className="absolute top-3 right-3 bg-background/95 backdrop-blur px-2.5 py-1 rounded-full text-xs font-semibold shadow">
+                    {brl(Number(p.rent_value))}
+                    <span className="text-muted-foreground font-normal"> /mês</span>
+                  </div>
+                </div>
+                <div className="p-4 space-y-2">
+                  <h4 className="font-semibold leading-tight line-clamp-1">{p.title}</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {[p.neighborhood, p.city, p.state].filter(Boolean).join(", ")}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
+                    <span>{p.bedrooms ?? 0} quartos</span>
+                    <span>·</span>
+                    <span>{p.bathrooms ?? 0} banh.</span>
+                    <span>·</span>
+                    <span>{Number(p.area_m2 ?? 0)} m²</span>
+                  </div>
+                  <Badge variant="secondary" className="mt-1 gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
+                    <BadgeCheck className="h-3.5 w-3.5" /> Verificado
+                  </Badge>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
+
+function useTenantCity(storageKey: string) {
+  const [value, setValue] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(storageKey);
+  });
+  const update = (v: string | null) => {
+    setValue(v);
+    if (typeof window !== "undefined") {
+      if (v) window.localStorage.setItem(storageKey, v);
+      else window.localStorage.removeItem(storageKey);
+    }
+  };
+  return [value, update] as const;
+}
+

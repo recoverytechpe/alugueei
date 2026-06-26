@@ -47,21 +47,36 @@ export function isUnlocked(row: { status: string; expires_at: string | null } | 
   return true;
 }
 
+function formatCountdown(expiresAt: string | null): { label: string; urgent: boolean } | null {
+  if (!expiresAt) return null;
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return null;
+  const totalHours = Math.floor(ms / 3_600_000);
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  const minutes = Math.floor((ms % 3_600_000) / 60_000);
+  const label = days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+  return { label, urgent: totalHours < 72 };
+}
+
 export function UnlockGate(props: UnlockGateProps) {
   const { propertyId, userId, isOwner, neighborhood, city, state, full, cep } = props;
   const { data: row } = useUnlockStatus(propertyId, userId);
   const unlocked = isOwner || isUnlocked(row);
 
   if (unlocked) {
+    const countdown = !isOwner ? formatCountdown(row?.expires_at ?? null) : null;
+    const urgent = countdown?.urgent ?? false;
     return (
-      <p className="text-sm text-muted-foreground flex items-start gap-2">
+      <p className="text-sm text-muted-foreground flex items-start gap-2 flex-wrap">
         <MapPin className="size-4 mt-0.5 shrink-0" />
         <span>
           {full}
           {cep ? ` · CEP ${cep}` : ""}
           {!isOwner && (
-            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 border border-emerald-200">
-              <ShieldCheck className="size-3" /> Desbloqueado
+            <span className={`ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${urgent ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+              <ShieldCheck className="size-3" />
+              Desbloqueado{countdown ? ` · expira em ${countdown.label}` : ""}
             </span>
           )}
         </span>

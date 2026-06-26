@@ -37,6 +37,22 @@ export const createUnlockCheckout = createServerFn({ method: "POST" })
       return { ok: false, reason: "validation", message: "Aceite os termos e a LGPD." };
     }
 
+    // Rate limit: max RATE_LIMIT_MAX checkouts per RATE_LIMIT_WINDOW_MIN min por usuário
+    const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MIN * 60 * 1000).toISOString();
+    const { count: recentCount } = await supabase
+      .from("property_unlocks")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("updated_at", windowStart);
+    if ((recentCount ?? 0) >= RATE_LIMIT_MAX) {
+      return {
+        ok: false,
+        reason: "rate_limited",
+        message: `Muitas tentativas de desbloqueio. Aguarde alguns minutos e tente novamente.`,
+      };
+    }
+
+
     const { data: property } = await supabase
       .from("properties")
       .select("id, title")

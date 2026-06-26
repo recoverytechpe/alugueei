@@ -312,16 +312,18 @@ function PropertyDetail() {
             <span className="flex items-center gap-1.5"><Car className="size-4 text-muted-foreground" /> {data.parking_spots} Vaga{data.parking_spots === 1 ? "" : "s"}</span>
           </div>
 
-          <UnlockGate
-            propertyId={data.id}
-            userId={userId}
-            isOwner={data.isOwner}
-            neighborhood={data.neighborhood ?? null}
-            city={data.city ?? null}
-            state={data.state ?? null}
-            cep={data.cep ?? null}
-            full={[data.street, data.number, data.neighborhood, data.city, data.state].filter(Boolean).join(", ")}
-          />
+          <div id="unlock-gate">
+            <UnlockGate
+              propertyId={data.id}
+              userId={userId}
+              isOwner={data.isOwner}
+              neighborhood={data.neighborhood ?? null}
+              city={data.city ?? null}
+              state={data.state ?? null}
+              cep={data.cep ?? null}
+              full={[data.street, data.number, data.neighborhood, data.city, data.state].filter(Boolean).join(", ")}
+            />
+          </div>
 
           <div className="flex flex-wrap gap-2">
             <Badge variant="secondary" className="gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">

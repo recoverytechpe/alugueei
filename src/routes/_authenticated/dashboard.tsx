@@ -515,7 +515,10 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
         visibility: visibilityRpc.data?.[0] ?? { closed_deals: 0, visibility_score: 0 },
       };
     },
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
   });
+
 
   useRealtimeNotifications({
     enabled: true,

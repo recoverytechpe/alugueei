@@ -475,6 +475,56 @@ export type Database = {
           },
         ]
       }
+      property_unlocks: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          expires_at: string | null
+          id: string
+          paid_at: string | null
+          payment_id: string | null
+          property_id: string
+          status: string
+          terms_accepted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          property_id: string
+          status?: string
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          property_id?: string
+          status?: string
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_unlocks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proposal_counters: {
         Row: {
           author_id: string
@@ -846,6 +896,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_unlock: {
+        Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
       notify_user: {

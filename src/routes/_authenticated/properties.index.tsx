@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/properties/")({
   component: PropertiesList,
 });
 
-type Filters = { city: string; type: string; bedrooms: string; max: string };
+type Filters = { city: string; neighborhood: string; type: string; bedrooms: string; max: string };
 
 function PropertiesList() {
   const navigate = useNavigate();

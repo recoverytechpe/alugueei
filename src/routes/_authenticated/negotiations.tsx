@@ -72,6 +72,7 @@ function NegotiationsPage() {
       .channel("negotiations")
       .on("postgres_changes", { event: "*", schema: "public", table: "visits" }, () => qc.invalidateQueries({ queryKey: ["negotiations"] }))
       .on("postgres_changes", { event: "*", schema: "public", table: "proposals" }, () => qc.invalidateQueries({ queryKey: ["negotiations"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "proposal_counters" }, () => qc.invalidateQueries({ queryKey: ["negotiations"] }))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [qc]);

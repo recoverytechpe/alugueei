@@ -846,6 +846,16 @@ function TenantDashboard({ userId }: { userId: string }) {
         </div>
       </section>
 
+      {/* Acesso rápido */}
+      <div className="flex flex-wrap gap-2">
+        <Button asChild variant="outline" size="sm">
+          <Link to="/favorites">❤️ Meus favoritos</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/negotiations">Minhas propostas</Link>
+        </Button>
+      </div>
+
       {/* Stats minimalistas — perspectiva do locatário (quem aluga o imóvel) */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
         <Stat label="Propostas que enviei" value={data.proposals.length} hint="Ofertas feitas a proprietários" />
@@ -853,6 +863,7 @@ function TenantDashboard({ userId }: { userId: string }) {
         <Stat label="Aluguéis em andamento" value={activeContracts} hint="Contratos como locatário" />
         <Stat label="Aluguéis concluídos" value={data.contracts.filter((c) => c.status === "closed").length} hint="Histórico de locações" />
       </div>
+
 
       {/* Imóveis na região */}
       <section className="space-y-4">

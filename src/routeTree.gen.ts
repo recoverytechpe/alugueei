@@ -30,6 +30,7 @@ import { Route as AuthenticatedPropertiesCompareRouteImport } from './routes/_au
 import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authenticated/properties.$id'
 import { Route as AuthenticatedContractsIdRouteImport } from './routes/_authenticated/contracts.$id'
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
+import { Route as ApiPublicHooksUnlockExpiryWarningRouteImport } from './routes/api/public/hooks/unlock-expiry-warning'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -143,6 +144,12 @@ const AuthenticatedChatIdRoute = AuthenticatedChatIdRouteImport.update({
   path: '/chat/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicHooksUnlockExpiryWarningRoute =
+  ApiPublicHooksUnlockExpiryWarningRouteImport.update({
+    id: '/api/public/hooks/unlock-expiry-warning',
+    path: '/api/public/hooks/unlock-expiry-warning',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/contracts/': typeof AuthenticatedContractsIndexRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
+  '/api/public/hooks/unlock-expiry-warning': typeof ApiPublicHooksUnlockExpiryWarningRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -187,6 +195,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatIndexRoute
   '/contracts': typeof AuthenticatedContractsIndexRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
+  '/api/public/hooks/unlock-expiry-warning': typeof ApiPublicHooksUnlockExpiryWarningRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -211,6 +220,7 @@ export interface FileRoutesById {
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/contracts/': typeof AuthenticatedContractsIndexRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
+  '/api/public/hooks/unlock-expiry-warning': typeof ApiPublicHooksUnlockExpiryWarningRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/chat/'
     | '/contracts/'
     | '/properties/'
+    | '/api/public/hooks/unlock-expiry-warning'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contracts'
     | '/properties'
+    | '/api/public/hooks/unlock-expiry-warning'
   id:
     | '__root__'
     | '/'
@@ -280,6 +292,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat/'
     | '/_authenticated/contracts/'
     | '/_authenticated/properties/'
+    | '/api/public/hooks/unlock-expiry-warning'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -289,6 +302,7 @@ export interface RootRouteChildren {
   ApiPublicCitiesRoute: typeof ApiPublicCitiesRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicNeighborhoodsRoute: typeof ApiPublicNeighborhoodsRoute
+  ApiPublicHooksUnlockExpiryWarningRoute: typeof ApiPublicHooksUnlockExpiryWarningRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -440,6 +454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChatIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/hooks/unlock-expiry-warning': {
+      id: '/api/public/hooks/unlock-expiry-warning'
+      path: '/api/public/hooks/unlock-expiry-warning'
+      fullPath: '/api/public/hooks/unlock-expiry-warning'
+      preLoaderRoute: typeof ApiPublicHooksUnlockExpiryWarningRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -489,6 +510,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCitiesRoute: ApiPublicCitiesRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicNeighborhoodsRoute: ApiPublicNeighborhoodsRoute,
+  ApiPublicHooksUnlockExpiryWarningRoute:
+    ApiPublicHooksUnlockExpiryWarningRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

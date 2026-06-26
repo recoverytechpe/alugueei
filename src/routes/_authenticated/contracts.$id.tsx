@@ -99,6 +99,26 @@ function ContractDetail() {
     qc.invalidateQueries({ queryKey: ["contract", id] });
   }
 
+  async function payDepositAndFirstRent() {
+    setPaying(true);
+    try {
+      const result = await createPreference({ data: { contractId: id } });
+      if (result.ok) {
+        window.location.href = result.initPoint;
+      } else if (result.reason === "not_configured") {
+        toast.info("Pagamentos via Mercado Pago ainda serão configurados.", {
+          description: "A integração está pronta — falta apenas conectar a chave de API.",
+        });
+      } else {
+        toast.error(result.message);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao iniciar pagamento");
+    } finally {
+      setPaying(false);
+    }
+  }
+
   function downloadPdf() {
     if (!data?.contract) return;
     const doc = new jsPDF({ unit: "pt", format: "a4" });

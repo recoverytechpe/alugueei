@@ -119,6 +119,7 @@ function UnlockDialog({
   async function handleUnlock() {
     if (!userId) { toast.error("Faça login"); return; }
     if (!terms) { toast.error("Aceite os termos para continuar"); return; }
+    if (!lgpd) { toast.error("Aceite a política de privacidade (LGPD)"); return; }
     setLoading(true);
     try {
       const now = new Date();
@@ -131,12 +132,16 @@ function UnlockDialog({
           status: "pending",
           amount_cents: UNLOCK_PRICE_CENTS,
           terms_accepted_at: now.toISOString(),
+          lgpd_accepted_at: now.toISOString(),
         });
         if (error) throw error;
-      } else if (!existing.terms_accepted_at) {
+      } else {
         const { error } = await supabase
           .from("property_unlocks")
-          .update({ terms_accepted_at: now.toISOString() })
+          .update({
+            terms_accepted_at: existing.terms_accepted_at ?? now.toISOString(),
+            lgpd_accepted_at: existing.lgpd_accepted_at ?? now.toISOString(),
+          })
           .eq("id", existing.id);
         if (error) throw error;
       }

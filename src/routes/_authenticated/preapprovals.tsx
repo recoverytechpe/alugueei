@@ -218,11 +218,6 @@ const DOC_LABEL: Record<DocKey, string> = {
   cpf: "CPF",
   income: "Comprovante de renda",
 };
-const DOC_FIELD: Record<DocKey, "rg_doc_path" | "cpf_doc_path" | "income_proof_path"> = {
-  rg: "rg_doc_path",
-  cpf: "cpf_doc_path",
-  income: "income_proof_path",
-};
 
 function DocsCard({ userId, row, onSaved }: {
   userId: string;

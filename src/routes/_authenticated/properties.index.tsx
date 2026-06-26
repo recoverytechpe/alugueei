@@ -89,11 +89,16 @@ function PropertiesList() {
       <main className="max-w-6xl mx-auto px-6 py-6 space-y-6">
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base">Filtros</CardTitle></CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-4">
+          <CardContent className="grid gap-3 md:grid-cols-5">
             <div className="space-y-1.5">
               <Label htmlFor="f-city">Cidade</Label>
               <Input id="f-city" value={filters.city} onChange={(e) => setFilters({ ...filters, city: e.target.value })} placeholder="Ex: São Paulo" />
             </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="f-neigh">Bairro</Label>
+              <Input id="f-neigh" value={filters.neighborhood} onChange={(e) => setFilters({ ...filters, neighborhood: e.target.value })} placeholder="Ex: Vila Madalena" />
+            </div>
+
             <div className="space-y-1.5">
               <Label>Tipo</Label>
               <Select value={filters.type} onValueChange={(v) => setFilters({ ...filters, type: v })}>

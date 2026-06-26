@@ -42,6 +42,7 @@ function PublicProfile() {
       const agg = Array.isArray(rating) ? rating[0] : rating;
       return {
         profile: p,
+        avatar,
         role: roles?.[0]?.role,
         avg: Number(agg?.avg_stars ?? 0),
         total: Number(agg?.total_ratings ?? 0),

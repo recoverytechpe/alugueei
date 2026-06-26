@@ -19,6 +19,8 @@ import {
   X,
   ImagePlus,
   Building2,
+  Loader2,
+  GripVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +104,51 @@ function NewProperty() {
   const [photos, setPhotos] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+
+  async function lookupCep(raw: string) {
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      if (!res.ok) throw new Error("CEP não encontrado");
+      const j = (await res.json()) as {
+        erro?: boolean;
+        logradouro?: string;
+        bairro?: string;
+        localidade?: string;
+        uf?: string;
+      };
+      if (j.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setForm((s) => ({
+        ...s,
+        street: j.logradouro || s.street,
+        neighborhood: j.bairro || s.neighborhood,
+        city: j.localidade || s.city,
+        state: (j.uf || s.state).toUpperCase().slice(0, 2),
+      }));
+    } catch (e) {
+      console.error(e);
+      toast.error("Não foi possível buscar o CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  }
+
+  function reorderPhoto(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) return;
+    setPhotos((p) => {
+      const arr = [...p];
+      const [m] = arr.splice(from, 1);
+      arr.splice(to, 0, m);
+      return arr;
+    });
+  }
 
   useEffect(() => {
     (async () => {
@@ -260,7 +307,24 @@ function NewProperty() {
         {step === 1 && (
           <Section icon={MapPin} title="Endereço" desc="Onde fica o imóvel.">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="CEP" value={form.cep} onChange={(v) => update("cep", v)} placeholder="00000-000" />
+              <div className="space-y-1.5">
+                <Label htmlFor="f-cep">CEP</Label>
+                <div className="relative">
+                  <Input
+                    id="f-cep"
+                    value={form.cep}
+                    onChange={(e) => update("cep", e.target.value)}
+                    onBlur={(e) => lookupCep(e.target.value)}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                    className="rounded-xl pr-9"
+                  />
+                  {cepLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">Preenchemos o endereço automaticamente.</p>
+              </div>
               <Field label="UF" value={form.state} onChange={(v) => update("state", v.toUpperCase().slice(0, 2))} placeholder="SP" />
               <div className="sm:col-span-2">
                 <Field label="Rua / Avenida" value={form.street} onChange={(v) => update("street", v)} />
@@ -317,32 +381,48 @@ function NewProperty() {
             </label>
 
             {previews.length > 0 && (
-              <div className="grid grid-cols-3 gap-2">
-                {previews.map((src, i) => (
-                  <div
-                    key={src}
-                    className={cn(
-                      "group relative aspect-square overflow-hidden rounded-xl border bg-muted",
-                      i === 0 && "ring-2 ring-primary",
-                    )}
-                  >
-                    <img src={src} alt="" className="h-full w-full object-cover" />
-                    {i === 0 && (
-                      <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
-                        Capa
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(i)}
-                      className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 text-foreground opacity-0 transition group-hover:opacity-100"
-                      aria-label="Remover foto"
+              <>
+                <p className="text-xs text-muted-foreground">Arraste para reordenar. A primeira foto é a capa.</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {previews.map((src, i) => (
+                    <div
+                      key={src}
+                      draggable
+                      onDragStart={() => setDragIdx(i)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => {
+                        if (dragIdx !== null) reorderPhoto(dragIdx, i);
+                        setDragIdx(null);
+                      }}
+                      onDragEnd={() => setDragIdx(null)}
+                      className={cn(
+                        "group relative aspect-square cursor-grab overflow-hidden rounded-xl border bg-muted active:cursor-grabbing",
+                        i === 0 && "ring-2 ring-primary",
+                        dragIdx === i && "opacity-50",
+                      )}
                     >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                      <img src={src} alt="" className="h-full w-full object-cover" draggable={false} />
+                      {i === 0 && (
+                        <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
+                          Capa
+                        </span>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5 opacity-0 transition group-hover:opacity-100">
+                        <GripVertical className="h-3.5 w-3.5 text-white" />
+                        <span className="text-[10px] font-medium text-white">{i + 1}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removePhoto(i)}
+                        className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1 text-foreground opacity-0 transition group-hover:opacity-100"
+                        aria-label="Remover foto"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
 
             <div className="rounded-2xl border bg-card p-4">

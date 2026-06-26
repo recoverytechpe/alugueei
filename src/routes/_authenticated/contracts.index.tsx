@@ -125,14 +125,16 @@ function ContractCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {contract.agent_id && (
-          <p className="text-sm">
-            Agente:{" "}
-            <Link to="/users/$id" params={{ id: contract.agent_id }} className="underline">
-              ver perfil
-            </Link>
-          </p>
-        )}
+        <div className="flex gap-2 flex-wrap">
+          <Button asChild size="sm" variant="outline">
+            <Link to="/contracts/$id" params={{ id: contract.id }}>Abrir contrato</Link>
+          </Button>
+          {contract.agent_id && (
+            <Button asChild size="sm" variant="ghost">
+              <Link to="/users/$id" params={{ id: contract.agent_id }}>Perfil do agente</Link>
+            </Button>
+          )}
+        </div>
         {canRate ? (
           <form onSubmit={submit} className="space-y-3 border-t pt-3">
             <div>

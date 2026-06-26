@@ -92,7 +92,9 @@ export const createUnlockCheckout = createServerFn({ method: "POST" })
         .eq("id", unlockId);
     }
 
-    const origin = process.env.PUBLIC_SITE_URL ?? "";
+    const host = getRequestHost();
+    const proto = getRequestHeader("x-forwarded-proto") ?? "https";
+    const origin = process.env.PUBLIC_SITE_URL ?? (host ? `${proto}://${host}` : "");
     const backUrl = (status: string) =>
       origin ? `${origin}/properties/${data.propertyId}?unlock=${status}` : undefined;
 

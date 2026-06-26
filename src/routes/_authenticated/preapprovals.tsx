@@ -195,9 +195,125 @@ function PreapprovalsPage() {
             </CardContent>
           </Card>
 
+          {data?.userId && (
+            <DocsCard
+              userId={data.userId}
+              row={data.preapproval}
+              onSaved={() => qc.invalidateQueries({ queryKey: ["my-preapproval"] })}
+            />
+          )}
+
           <p className="text-xs text-muted-foreground text-center">
             Seus dados financeiros ficam visíveis apenas para você e para o proprietário do imóvel ao enviar uma proposta.
           </p>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+type DocKey = "rg" | "cpf" | "income";
+const DOC_LABEL: Record<DocKey, string> = {
+  rg: "RG (frente e verso)",
+  cpf: "CPF",
+  income: "Comprovante de renda",
+};
+const DOC_FIELD: Record<DocKey, "rg_doc_path" | "cpf_doc_path" | "income_proof_path"> = {
+  rg: "rg_doc_path",
+  cpf: "cpf_doc_path",
+  income: "income_proof_path",
+};
+
+function DocsCard({ userId, row, onSaved }: {
+  userId: string;
+  row: Record<string, unknown> | null;
+  onSaved: () => void;
+}) {
+  const paths = {
+    rg: (row?.rg_doc_path as string | null) ?? null,
+    cpf: (row?.cpf_doc_path as string | null) ?? null,
+    income: (row?.income_proof_path as string | null) ?? null,
+  };
+  const allUploaded = Boolean(paths.rg && paths.cpf && paths.income);
+  const [busy, setBusy] = useState<DocKey | null>(null);
+
+  async function upload(kind: DocKey, file: File) {
+    if (file.size > 8 * 1024 * 1024) return toast.error("Arquivo > 8MB");
+    setBusy(kind);
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+    const path = `${userId}/${kind}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("lead-documents")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) { setBusy(null); return toast.error(upErr.message); }
+
+    const next: Record<string, unknown> = { user_id: userId, [DOC_FIELD[kind]]: path };
+    const willBeComplete =
+      (kind === "rg" || paths.rg) &&
+      (kind === "cpf" || paths.cpf) &&
+      (kind === "income" || paths.income);
+    if (willBeComplete) next.docs_uploaded_at = new Date().toISOString();
+
+    const { error } = await supabase
+      .from("tenant_preapprovals")
+      .upsert(next, { onConflict: "user_id" });
+    setBusy(null);
+    if (error) return toast.error(error.message);
+    toast.success(`${DOC_LABEL[kind]} enviado`);
+    onSaved();
+  }
+
+  return (
+    <Card className={allUploaded ? "border-emerald-200 bg-emerald-50/40" : "border-amber-200 bg-amber-50/40"}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <FileCheck2 className={`size-4 ${allUploaded ? "text-emerald-600" : "text-amber-600"}`} />
+          Documentação obrigatória
+        </CardTitle>
+        <CardDescription>
+          Necessária para enviar propostas. Apenas você e o proprietário (ao receber sua proposta) veem.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {(Object.keys(DOC_LABEL) as DocKey[]).map((k) => {
+          const has = Boolean(paths[k]);
+          return (
+            <div key={k} className="flex items-center justify-between gap-3 rounded-md border bg-background px-3 py-2">
+              <div className="text-sm">
+                <p className="font-medium">{DOC_LABEL[k]}</p>
+                <p className="text-xs text-muted-foreground">
+                  {has ? "Enviado ✓" : "Pendente"}
+                </p>
+              </div>
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  disabled={busy !== null}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) upload(k, f);
+                    e.target.value = "";
+                  }}
+                />
+                <span className="inline-flex items-center gap-1 rounded-md border bg-background px-3 py-1.5 text-xs hover:bg-accent">
+                  <Upload className="size-3.5" />
+                  {busy === k ? "Enviando…" : has ? "Substituir" : "Enviar"}
+                </span>
+              </label>
+            </div>
+          );
+        })}
+        {!allUploaded && (
+          <p className="text-xs text-amber-800">
+            Suas propostas ficarão bloqueadas até os 3 documentos serem enviados.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
         </main>
       </div>
     </div>

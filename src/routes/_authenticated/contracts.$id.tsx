@@ -28,6 +28,19 @@ function ContractDetail() {
   const qc = useQueryClient();
   const [signatureText, setSignatureText] = useState("");
   const [signing, setSigning] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const createPreference = useServerFn(createMpPreference);
+
+  // Feedback do retorno do Mercado Pago via querystring (?payment=success|failure|pending)
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const p = sp.get("payment");
+    if (!p) return;
+    if (p === "success") toast.success("Pagamento aprovado! Atualizando status...");
+    else if (p === "pending") toast.info("Pagamento pendente de confirmação.");
+    else if (p === "failure") toast.error("Pagamento não foi concluído.");
+    window.history.replaceState({}, "", window.location.pathname);
+  }, []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["contract", id],

@@ -13,6 +13,7 @@ import {
   Home, Settings, Bell, FileText,
 } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
+import { useViewAs } from "@/lib/view-as";
 
 /**
  * Subscribes to realtime postgres_changes for the given table+filter and
@@ -78,40 +79,25 @@ type Role = "proprietario" | "locatario" | "agente";
 
 function Dashboard() {
   const navigate = useNavigate();
-  const qc = useQueryClient();
+  const viewAs = useViewAs();
 
   const { data: me, isLoading } = useQuery({
     queryKey: ["me"],
     queryFn: async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Sem sessão");
-      const [{ data: profile }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", userData.user.id).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", userData.user.id),
-      ]);
-      const all = (roles ?? []).map((r) => r.role as string);
-      const isAdmin = all.includes("admin");
-      const real = (all.find((r) => r !== "admin") ?? "locatario") as Role;
-      const override =
-        typeof window !== "undefined" ? (localStorage.getItem("admin_view_as") as Role | null) : null;
-      const role: Role = isAdmin && override && ["proprietario", "locatario", "agente"].includes(override)
-        ? override
-        : real;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userData.user.id)
+        .maybeSingle();
       return {
         userId: userData.user.id,
         email: userData.user.email,
         profile,
-        role,
-        realRole: real,
-        isAdmin,
       };
     },
   });
-
-  function switchView(r: Role) {
-    localStorage.setItem("admin_view_as", r);
-    qc.invalidateQueries({ queryKey: ["me"] });
-  }
 
   async function signOut() {
     await supabase.auth.signOut();

@@ -102,6 +102,51 @@ function NewProperty() {
   const [photos, setPhotos] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+
+  async function lookupCep(raw: string) {
+    const digits = raw.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      if (!res.ok) throw new Error("CEP não encontrado");
+      const j = (await res.json()) as {
+        erro?: boolean;
+        logradouro?: string;
+        bairro?: string;
+        localidade?: string;
+        uf?: string;
+      };
+      if (j.erro) {
+        toast.error("CEP não encontrado");
+        return;
+      }
+      setForm((s) => ({
+        ...s,
+        street: j.logradouro || s.street,
+        neighborhood: j.bairro || s.neighborhood,
+        city: j.localidade || s.city,
+        state: (j.uf || s.state).toUpperCase().slice(0, 2),
+      }));
+    } catch (e) {
+      console.error(e);
+      toast.error("Não foi possível buscar o CEP");
+    } finally {
+      setCepLoading(false);
+    }
+  }
+
+  function reorderPhoto(from: number, to: number) {
+    if (from === to || from < 0 || to < 0) return;
+    setPhotos((p) => {
+      const arr = [...p];
+      const [m] = arr.splice(from, 1);
+      arr.splice(to, 0, m);
+      return arr;
+    });
+  }
 
   useEffect(() => {
     (async () => {

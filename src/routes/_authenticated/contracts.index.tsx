@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/_authenticated/contracts")({
+export const Route = createFileRoute("/_authenticated/contracts/")({
   head: () => ({ meta: [{ title: "Meus contratos | Plataforma de Aluguel" }] }),
   component: ContractsPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,

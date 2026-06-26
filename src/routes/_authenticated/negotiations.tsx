@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { formatBRL } from "@/lib/property-helpers";
 import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +30,7 @@ type Visit = {
 type Proposal = {
   id: string; property_id: string; owner_id: string; tenant_id: string; agent_id: string | null;
   rent_offer: number; term_months: number; start_date: string; message: string; status: string;
+  created_at: string;
   properties: PropertyRef;
   tenant_preapproval_income: number | null;
   tenant_preapproval_max_rent: number | null;
@@ -86,34 +90,7 @@ function NegotiationsPage() {
         </div>
       </header>
       <main className="max-w-3xl mx-auto px-6 py-8 space-y-8">
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase text-muted-foreground">Visitas</h2>
-          {data.visits.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma visita.</p>}
-          {data.visits.map((v) => (
-            <Card key={v.id}>
-              <CardHeader className="flex flex-row items-start justify-between gap-2">
-                <div>
-                  <CardTitle className="text-base">{v.properties?.title ?? "Imóvel"}</CardTitle>
-                  <CardDescription>{new Date(v.scheduled_at).toLocaleString("pt-BR")}</CardDescription>
-                </div>
-                <Badge variant="secondary" className="capitalize">{v.status}</Badge>
-              </CardHeader>
-              {v.notes && <CardContent className="text-sm">{v.notes}</CardContent>}
-              <CardContent className="flex gap-2 flex-wrap">
-                {data.userId === v.owner_id && v.status === "requested" && (
-                  <Button size="sm" onClick={() => setVisitStatus(v.id, "confirmed")}>Confirmar</Button>
-                )}
-                {v.status !== "done" && v.status !== "cancelled" && (
-                  <>
-                    <Button size="sm" variant="outline" onClick={() => setVisitStatus(v.id, "done")}>Marcar realizada</Button>
-                    <Button size="sm" variant="ghost" onClick={() => setVisitStatus(v.id, "cancelled")}>Cancelar</Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </section>
-
+        <VisitsSection visits={data.visits} userId={data.userId} setVisitStatus={setVisitStatus} />
         <ProposalsSection
           proposals={data.proposals}
           userId={data.userId}
@@ -124,7 +101,85 @@ function NegotiationsPage() {
   );
 }
 
+type VisitFilter = "all" | "requested" | "confirmed" | "done" | "cancelled";
+
+function VisitsSection({
+  visits,
+  userId,
+  setVisitStatus,
+}: {
+  visits: Visit[];
+  userId: string;
+  setVisitStatus: (id: string, status: string) => Promise<void>;
+}) {
+  const [filter, setFilter] = useState<VisitFilter>("all");
+  const counts = useMemo(() => ({
+    all: visits.length,
+    requested: visits.filter((v) => v.status === "requested").length,
+    confirmed: visits.filter((v) => v.status === "confirmed").length,
+    done: visits.filter((v) => v.status === "done").length,
+    cancelled: visits.filter((v) => v.status === "cancelled").length,
+  }), [visits]);
+  const visible = useMemo(
+    () => filter === "all" ? visits : visits.filter((v) => v.status === filter),
+    [visits, filter],
+  );
+
+  const tabs: { key: VisitFilter; label: string }[] = [
+    { key: "all", label: "Todas" },
+    { key: "requested", label: "Solicitadas" },
+    { key: "confirmed", label: "Confirmadas" },
+    { key: "done", label: "Realizadas" },
+    { key: "cancelled", label: "Canceladas" },
+  ];
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Visitas</h2>
+        <div className="flex gap-1 flex-wrap">
+          {tabs.map((t) => (
+            <Button
+              key={t.key}
+              size="sm"
+              variant={filter === t.key ? "default" : "outline"}
+              onClick={() => setFilter(t.key)}
+            >
+              {t.label} <span className="ml-1 text-xs opacity-70">({counts[t.key]})</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+      {visible.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma visita.</p>}
+      {visible.map((v) => (
+        <Card key={v.id}>
+          <CardHeader className="flex flex-row items-start justify-between gap-2">
+            <div>
+              <CardTitle className="text-base">{v.properties?.title ?? "Imóvel"}</CardTitle>
+              <CardDescription>{new Date(v.scheduled_at).toLocaleString("pt-BR")}</CardDescription>
+            </div>
+            <Badge variant="secondary" className="capitalize">{v.status}</Badge>
+          </CardHeader>
+          {v.notes && <CardContent className="text-sm">{v.notes}</CardContent>}
+          <CardContent className="flex gap-2 flex-wrap">
+            {userId === v.owner_id && v.status === "requested" && (
+              <Button size="sm" onClick={() => setVisitStatus(v.id, "confirmed")}>Confirmar</Button>
+            )}
+            {v.status !== "done" && v.status !== "cancelled" && (
+              <>
+                <Button size="sm" variant="outline" onClick={() => setVisitStatus(v.id, "done")}>Marcar realizada</Button>
+                <Button size="sm" variant="ghost" onClick={() => setVisitStatus(v.id, "cancelled")}>Cancelar</Button>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </section>
+  );
+}
+
 type ProposalFilter = "all" | "pending" | "accepted" | "rejected";
+type ProposalSort = "date_desc" | "date_asc" | "value_desc" | "value_asc";
 
 function ProposalsSection({
   proposals,
@@ -136,6 +191,7 @@ function ProposalsSection({
   setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
 }) {
   const [filter, setFilter] = useState<ProposalFilter>("all");
+  const [sort, setSort] = useState<ProposalSort>("date_desc");
   const counts = useMemo(() => ({
     all: proposals.length,
     pending: proposals.filter((p) => p.status === "pending").length,
@@ -143,10 +199,21 @@ function ProposalsSection({
     rejected: proposals.filter((p) => p.status === "rejected" || p.status === "withdrawn").length,
   }), [proposals]);
   const visible = useMemo(() => {
-    if (filter === "all") return proposals;
-    if (filter === "rejected") return proposals.filter((p) => p.status === "rejected" || p.status === "withdrawn");
-    return proposals.filter((p) => p.status === filter);
-  }, [proposals, filter]);
+    let list = proposals;
+    if (filter === "rejected") list = list.filter((p) => p.status === "rejected" || p.status === "withdrawn");
+    else if (filter !== "all") list = list.filter((p) => p.status === filter);
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      switch (sort) {
+        case "date_asc": return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "value_desc": return Number(b.rent_offer) - Number(a.rent_offer);
+        case "value_asc": return Number(a.rent_offer) - Number(b.rent_offer);
+        case "date_desc":
+        default: return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+    return sorted;
+  }, [proposals, filter, sort]);
 
   const tabs: { key: ProposalFilter; label: string }[] = [
     { key: "all", label: "Todas" },
@@ -159,17 +226,28 @@ function ProposalsSection({
     <section className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h2 className="text-sm font-semibold uppercase text-muted-foreground">Propostas</h2>
-        <div className="flex gap-1 flex-wrap">
-          {tabs.map((t) => (
-            <Button
-              key={t.key}
-              size="sm"
-              variant={filter === t.key ? "default" : "outline"}
-              onClick={() => setFilter(t.key)}
-            >
-              {t.label} <span className="ml-1 text-xs opacity-70">({counts[t.key]})</span>
-            </Button>
-          ))}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex gap-1 flex-wrap">
+            {tabs.map((t) => (
+              <Button
+                key={t.key}
+                size="sm"
+                variant={filter === t.key ? "default" : "outline"}
+                onClick={() => setFilter(t.key)}
+              >
+                {t.label} <span className="ml-1 text-xs opacity-70">({counts[t.key]})</span>
+              </Button>
+            ))}
+          </div>
+          <Select value={sort} onValueChange={(v) => setSort(v as ProposalSort)}>
+            <SelectTrigger className="h-8 w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date_desc">Mais recentes</SelectItem>
+              <SelectItem value="date_asc">Mais antigas</SelectItem>
+              <SelectItem value="value_desc">Maior valor</SelectItem>
+              <SelectItem value="value_asc">Menor valor</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       {visible.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma proposta.</p>}

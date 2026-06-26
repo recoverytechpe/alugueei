@@ -149,7 +149,7 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        {me.role === "proprietario" && <OwnerDashboard userId={me.userId} />}
+        {me.role === "proprietario" && <OwnerDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Proprietário"} avatarUrl={me.profile?.avatar_url ?? null} />}
         {me.role === "agente" && <AgentDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Agente"} avatarUrl={me.profile?.avatar_url ?? null} />}
         {me.role === "locatario" && <TenantDashboard userId={me.userId} />}
 

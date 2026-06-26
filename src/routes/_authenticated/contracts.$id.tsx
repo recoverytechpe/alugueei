@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { jsPDF } from "jspdf";
+import { Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/contracts/$id")({
   head: () => ({ meta: [{ title: "Contrato | Plataforma de Aluguel" }] }),

@@ -87,7 +87,7 @@ function PropertiesList() {
   const neighborhoodOptions = neighborhoodsResp?.data.map((n) => n.neighborhood) ?? [];
 
   function update(patch: Partial<z.infer<typeof searchSchema>>) {
-    navigate({ search: (prev) => ({ ...prev, ...patch }) });
+    navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, ...patch }) as never });
   }
 
   const hasFilters = useMemo(

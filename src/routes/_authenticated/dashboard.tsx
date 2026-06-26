@@ -1,11 +1,63 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+
+/**
+ * Subscribes to realtime postgres_changes for the given table+filter and
+ * invalidates the supplied query key whenever a change arrives. Optionally
+ * surfaces a toast for notable events (INSERT or status changes).
+ */
+function useRealtimeNotifications(opts: {
+  enabled: boolean;
+  channelName: string;
+  subscriptions: Array<{
+    table: "proposals" | "visits" | "rental_contracts";
+    filter: string;
+    onEvent?: (payload: {
+      eventType: "INSERT" | "UPDATE" | "DELETE";
+      new: Record<string, unknown>;
+      old: Record<string, unknown>;
+    }) => void;
+  }>;
+  invalidateKeys: ReadonlyArray<readonly unknown[]>;
+}) {
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!opts.enabled) return;
+    const channel = supabase.channel(opts.channelName);
+    for (const sub of opts.subscriptions) {
+      (channel.on as unknown as (
+        type: string,
+        config: Record<string, unknown>,
+        cb: (p: { eventType: "INSERT" | "UPDATE" | "DELETE"; new: Record<string, unknown>; old: Record<string, unknown> }) => void,
+      ) => void)(
+        "postgres_changes",
+        { event: "*", schema: "public", table: sub.table, filter: sub.filter },
+        (payload: {
+          eventType: "INSERT" | "UPDATE" | "DELETE";
+          new: Record<string, unknown>;
+          old: Record<string, unknown>;
+        }) => {
+          sub.onEvent?.(payload);
+          for (const key of opts.invalidateKeys) {
+            qc.invalidateQueries({ queryKey: key as unknown[] });
+          }
+        }
+      );
+    }
+    channel.subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opts.enabled, opts.channelName]);
+}
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard | Plataforma de Aluguel" }] }),
@@ -146,6 +198,41 @@ function OwnerDashboard({ userId }: { userId: string }) {
     },
   });
 
+  useRealtimeNotifications({
+    enabled: true,
+    channelName: `owner-dash-${userId}`,
+    invalidateKeys: [["owner-dash", userId]],
+    subscriptions: [
+      {
+        table: "proposals",
+        filter: `owner_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "INSERT") toast.info("Nova proposta recebida");
+          else if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
+            toast.info(`Proposta atualizada: ${String(p.new.status)}`);
+        },
+      },
+      {
+        table: "visits",
+        filter: `owner_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status === "confirmed")
+            toast.success("Visita confirmada");
+          else if (p.eventType === "INSERT") toast.info("Nova visita agendada");
+        },
+      },
+      {
+        table: "rental_contracts",
+        filter: `owner_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
+            toast.success(`Contrato: ${String(p.new.status)}`);
+          else if (p.eventType === "INSERT") toast.success("Novo contrato gerado");
+        },
+      },
+    ],
+  });
+
   if (isLoading || !data) return <Skeleton className="h-40 w-full" />;
 
   const activeContracts = data.contracts.filter((c) => c.status === "active" || c.status === "closed");
@@ -217,6 +304,31 @@ function AgentDashboard({ userId }: { userId: string }) {
         visibility: visibilityRpc.data?.[0] ?? { closed_deals: 0, visibility_score: 0 },
       };
     },
+  });
+
+  useRealtimeNotifications({
+    enabled: true,
+    channelName: `agent-dash-${userId}`,
+    invalidateKeys: [["agent-dash", userId]],
+    subscriptions: [
+      {
+        table: "proposals",
+        filter: `agent_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
+            toast.info(`Proposta: ${String(p.new.status)}`);
+        },
+      },
+      {
+        table: "rental_contracts",
+        filter: `agent_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "INSERT") toast.success("Novo contrato — comissão pendente");
+          else if (p.eventType === "UPDATE" && p.new.status === "closed")
+            toast.success("Contrato fechado — comissão liberada");
+        },
+      },
+    ],
   });
 
   if (isLoading || !data) return <Skeleton className="h-40 w-full" />;
@@ -303,6 +415,39 @@ function TenantDashboard({ userId }: { userId: string }) {
         visits: visits.data ?? [],
       };
     },
+  });
+
+  useRealtimeNotifications({
+    enabled: true,
+    channelName: `tenant-dash-${userId}`,
+    invalidateKeys: [["tenant-dash", userId]],
+    subscriptions: [
+      {
+        table: "proposals",
+        filter: `tenant_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
+            toast.info(`Sua proposta: ${String(p.new.status)}`);
+        },
+      },
+      {
+        table: "visits",
+        filter: `tenant_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status === "confirmed")
+            toast.success("Visita confirmada");
+        },
+      },
+      {
+        table: "rental_contracts",
+        filter: `tenant_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "INSERT") toast.success("Contrato disponível para assinatura");
+          else if (p.eventType === "UPDATE" && p.new.status === "closed")
+            toast.success("Contrato fechado");
+        },
+      },
+    ],
   });
 
   if (isLoading || !data) return <Skeleton className="h-40 w-full" />;

@@ -671,7 +671,7 @@ function VisitDialog({ propertyId, ownerId, userId, userRole }: { propertyId: st
 
 function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion, preapproval }: {
   propertyId: string; ownerId: string; userId: string; rentSuggestion: number;
-  preapproval: { monthly_income: number; guarantee_type: GuaranteeType; max_rent: number; status: string } | null;
+  preapproval: { monthly_income: number; guarantee_type: GuaranteeType; max_rent: number; status: string; docs_uploaded_at?: string | null } | null;
 }) {
   const [open, setOpen] = useState(false);
   const [rent, setRent] = useState(String(rentSuggestion));
@@ -681,9 +681,11 @@ function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion, preapprov
   const [busy, setBusy] = useState(false);
 
   const attachPreapproval = preapproval?.status === "approved";
+  const docsOk = Boolean(preapproval?.docs_uploaded_at);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!docsOk) return toast.error("Envie sua documentação antes de mandar uma proposta");
     const rentN = Number(rent);
     const termN = Number(term);
     if (!rentN || rentN <= 0) return toast.error("Valor inválido");
@@ -714,6 +716,17 @@ function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion, preapprov
           <DialogDescription>O proprietário poderá aceitar ou recusar.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
+          {!docsOk && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 space-y-2">
+              <p className="font-medium">Documentação obrigatória</p>
+              <p className="text-xs">
+                Antes de enviar uma proposta, envie RG, CPF e comprovante de renda na sua pré-aprovação.
+              </p>
+              <Link to="/preapprovals" className="inline-block text-xs underline font-medium">
+                Enviar documentos agora →
+              </Link>
+            </div>
+          )}
           {attachPreapproval && preapproval && (
             <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-800 flex items-start gap-2">
               <ShieldCheck className="size-4 mt-0.5 shrink-0" />
@@ -742,11 +755,12 @@ function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion, preapprov
             <Textarea id="msg" rows={3} maxLength={1000} value={msg} onChange={(e) => setMsg(e.target.value)} />
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={busy}>{busy ? "Enviando..." : "Enviar proposta"}</Button>
+            <Button type="submit" disabled={busy || !docsOk}>{busy ? "Enviando..." : "Enviar proposta"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
 }
+
 

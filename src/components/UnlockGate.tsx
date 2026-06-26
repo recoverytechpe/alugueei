@@ -200,10 +200,17 @@ function UnlockDialog({
             <Checkbox checked={terms} onCheckedChange={(v) => setTerms(v === true)} />
             <span className="text-sm">Li e aceito os termos de uso e a política anti-bypass.</span>
           </label>
+          <label className="flex items-start gap-2 cursor-pointer">
+            <Checkbox checked={lgpd} onCheckedChange={(v) => setLgpd(v === true)} />
+            <span className="text-sm">
+              Autorizo o tratamento dos meus dados pessoais para esta negociação,
+              conforme a <strong>LGPD</strong> (Lei 13.709/2018).
+            </span>
+          </label>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading}>Cancelar</Button>
-          <Button onClick={handleUnlock} disabled={loading || !terms}>
+          <Button onClick={handleUnlock} disabled={loading || !terms || !lgpd}>
             {loading ? "Processando…" : "Confirmar desbloqueio"}
           </Button>
         </DialogFooter>

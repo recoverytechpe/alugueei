@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useState, useMemo } from "react";
 import { pushRecent } from "@/lib/property-prefs";
+
 import { supabase } from "@/integrations/supabase/client";
 import { getSignedPhotoUrls, formatBRL } from "@/lib/property-helpers";
 import { getOrCreateConversation } from "@/lib/chat-helpers";

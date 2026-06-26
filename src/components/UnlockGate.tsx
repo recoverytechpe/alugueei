@@ -53,15 +53,18 @@ export function UnlockGate(props: UnlockGateProps) {
   const unlocked = isOwner || isUnlocked(row);
 
   if (unlocked) {
+    const countdown = !isOwner ? formatCountdown(row?.expires_at ?? null) : null;
+    const urgent = countdown?.urgent ?? false;
     return (
-      <p className="text-sm text-muted-foreground flex items-start gap-2">
+      <p className="text-sm text-muted-foreground flex items-start gap-2 flex-wrap">
         <MapPin className="size-4 mt-0.5 shrink-0" />
         <span>
           {full}
           {cep ? ` · CEP ${cep}` : ""}
           {!isOwner && (
-            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 border border-emerald-200">
-              <ShieldCheck className="size-3" /> Desbloqueado
+            <span className={`ml-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${urgent ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+              <ShieldCheck className="size-3" />
+              Desbloqueado{countdown ? ` · expira em ${countdown.label}` : ""}
             </span>
           )}
         </span>

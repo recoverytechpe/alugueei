@@ -306,6 +306,31 @@ function AgentDashboard({ userId }: { userId: string }) {
     },
   });
 
+  useRealtimeNotifications({
+    enabled: true,
+    channelName: `agent-dash-${userId}`,
+    invalidateKeys: [["agent-dash", userId]],
+    subscriptions: [
+      {
+        table: "proposals",
+        filter: `agent_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "UPDATE" && p.new.status !== p.old.status)
+            toast.info(`Proposta: ${String(p.new.status)}`);
+        },
+      },
+      {
+        table: "rental_contracts",
+        filter: `agent_id=eq.${userId}`,
+        onEvent: (p) => {
+          if (p.eventType === "INSERT") toast.success("Novo contrato — comissão pendente");
+          else if (p.eventType === "UPDATE" && p.new.status === "closed")
+            toast.success("Contrato fechado — comissão liberada");
+        },
+      },
+    ],
+  });
+
   if (isLoading || !data) return <Skeleton className="h-40 w-full" />;
 
   const closedContracts = data.contracts.filter((c) => c.status === "closed");

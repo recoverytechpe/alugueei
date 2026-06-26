@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
-import { Download } from "lucide-react";
+import { Download, CreditCard, CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { createMpPreference } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/contracts/$id")({
   head: () => ({ meta: [{ title: "Contrato | Plataforma de Aluguel" }] }),

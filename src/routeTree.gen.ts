@@ -22,6 +22,7 @@ import { Route as AuthenticatedPropertiesIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedContractsIndexRouteImport } from './routes/_authenticated/contracts.index'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as ApiPublicNeighborhoodsRouteImport } from './routes/api/public/neighborhoods'
+import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
 import { Route as ApiPublicCitiesRouteImport } from './routes/api/public/cities'
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
@@ -98,6 +99,11 @@ const ApiPublicNeighborhoodsRoute = ApiPublicNeighborhoodsRouteImport.update({
   path: '/api/public/neighborhoods',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
+  id: '/api/public/mp-webhook',
+  path: '/api/public/mp-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCitiesRoute = ApiPublicCitiesRouteImport.update({
   id: '/api/public/cities',
   path: '/api/public/cities',
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/neighborhoods': typeof ApiPublicNeighborhoodsRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/contracts/': typeof AuthenticatedContractsIndexRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/neighborhoods': typeof ApiPublicNeighborhoodsRoute
   '/chat': typeof AuthenticatedChatIndexRoute
   '/contracts': typeof AuthenticatedContractsIndexRoute
@@ -198,6 +206,7 @@ export interface FileRoutesById {
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
+  '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/neighborhoods': typeof ApiPublicNeighborhoodsRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/contracts/': typeof AuthenticatedContractsIndexRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/users/$id'
     | '/api/public/cities'
+    | '/api/public/mp-webhook'
     | '/api/public/neighborhoods'
     | '/chat/'
     | '/contracts/'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/users/$id'
     | '/api/public/cities'
+    | '/api/public/mp-webhook'
     | '/api/public/neighborhoods'
     | '/chat'
     | '/contracts'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/_authenticated/properties/new'
     | '/_authenticated/users/$id'
     | '/api/public/cities'
+    | '/api/public/mp-webhook'
     | '/api/public/neighborhoods'
     | '/_authenticated/chat/'
     | '/_authenticated/contracts/'
@@ -275,6 +287,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicCitiesRoute: typeof ApiPublicCitiesRoute
+  ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicNeighborhoodsRoute: typeof ApiPublicNeighborhoodsRoute
 }
 
@@ -369,6 +382,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/neighborhoods'
       fullPath: '/api/public/neighborhoods'
       preLoaderRoute: typeof ApiPublicNeighborhoodsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/mp-webhook': {
+      id: '/api/public/mp-webhook'
+      path: '/api/public/mp-webhook'
+      fullPath: '/api/public/mp-webhook'
+      preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/cities': {
@@ -467,6 +487,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicCitiesRoute: ApiPublicCitiesRoute,
+  ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicNeighborhoodsRoute: ApiPublicNeighborhoodsRoute,
 }
 export const routeTree = rootRouteImport

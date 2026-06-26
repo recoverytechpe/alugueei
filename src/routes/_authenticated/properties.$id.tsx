@@ -248,14 +248,6 @@ function PropertyDetail() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <Card><CardContent className="p-4 text-center">
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-lg font-semibold">{value}</div>
-    </CardContent></Card>
-  );
-}
 
 function Row({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between"><span className="text-muted-foreground">{label}</span><span>{value}</span></div>;

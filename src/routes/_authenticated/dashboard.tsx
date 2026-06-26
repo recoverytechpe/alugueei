@@ -398,6 +398,8 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           <div className="space-y-3">
             {data.properties.slice(0, 5).map((p) => {
               const dot = propStatusDot(p.status);
+              const m = data.metrics[p.id] ?? { favorites: 0, proposals: 0, conversations: 0 };
+              const isPaused = p.status === "inactive";
               return (
                 <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-3 flex flex-col sm:flex-row gap-3">
@@ -410,9 +412,14 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {p.bedrooms ?? 0} quartos · {p.bathrooms ?? 0} banh. · {p.area_m2 ?? 0} m²
                       </p>
-                      <div className={`mt-1 flex items-center gap-1.5 text-xs font-medium ${dot.text}`}>
-                        <span className={`h-2 w-2 rounded-full ${dot.cls}`} />
-                        {dot.label}
+                      <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className={`inline-flex items-center gap-1 font-medium ${dot.text}`}>
+                          <span className={`h-2 w-2 rounded-full ${dot.cls}`} />
+                          {isPaused ? "Pausado" : dot.label}
+                        </span>
+                        <span title="Favoritos">❤ {m.favorites}</span>
+                        <span title="Propostas">📩 {m.proposals}</span>
+                        <span title="Conversas">💬 {m.conversations}</span>
                       </div>
                     </div>
                     <div className="flex sm:flex-col gap-2 sm:w-40">
@@ -422,17 +429,15 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
                           Gerenciar
                         </Link>
                       </Button>
-                      <Button asChild size="sm" variant="outline" className="flex-1">
-                        <Link to="/negotiations">
-                          <Users className="h-4 w-4 mr-1.5" />
-                          Leads
-                        </Link>
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => togglePause(p.id, p.status)}>
+                        {isPaused ? "Reativar" : "Pausar"}
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               );
             })}
+
           </div>
         )}
       </section>

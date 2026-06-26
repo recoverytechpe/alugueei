@@ -100,6 +100,7 @@ function Dashboard() {
             <Button asChild variant="outline"><Link to="/profile">Meu perfil</Link></Button>
             <Button asChild variant="outline"><Link to="/contracts">Meus contratos</Link></Button>
             <Button asChild variant="outline"><Link to="/chat">Conversas</Link></Button>
+            <Button asChild variant="outline"><Link to="/negotiations">Negociações</Link></Button>
           </CardContent>
         </Card>
 

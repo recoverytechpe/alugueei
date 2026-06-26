@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { useViewAs, ALL_ROLES, type Role } from "@/lib/view-as";
 import { Eye, RotateCcw } from "lucide-react";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 
 const LABEL: Record<Role, string> = {
   proprietario: "Proprietário",

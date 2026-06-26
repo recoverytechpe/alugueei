@@ -56,7 +56,17 @@ function ContractDetail() {
         .from("contract_signatures")
         .select("*")
         .eq("contract_id", id);
-      return { userId: u.user.id, contract, signatures: (sigs ?? []) as Signature[] };
+      const { data: pays } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("contract_id", id)
+        .order("created_at", { ascending: false });
+      return {
+        userId: u.user.id,
+        contract,
+        signatures: (sigs ?? []) as Signature[],
+        payments: (pays ?? []) as Payment[],
+      };
     },
   });
 

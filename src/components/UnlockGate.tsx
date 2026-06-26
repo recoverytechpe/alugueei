@@ -108,11 +108,12 @@ function UnlockDialog({
 }: {
   propertyId: string;
   userId: string | null;
-  existing: { id: string; status: string; terms_accepted_at: string | null } | null;
+  existing: { id: string; status: string; terms_accepted_at: string | null; lgpd_accepted_at?: string | null } | null;
 }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [terms, setTerms] = useState(Boolean(existing?.terms_accepted_at));
+  const [lgpd, setLgpd] = useState(Boolean(existing?.lgpd_accepted_at));
   const [loading, setLoading] = useState(false);
 
   async function handleUnlock() {

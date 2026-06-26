@@ -52,16 +52,18 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
           const unlockId = externalRef.slice("unlock:".length);
           const approved = payment.status === "approved";
           const failed = ["rejected", "cancelled"].includes(payment.status);
-          const update: Record<string, string | null> = {
+          const update = {
             payment_id: String(payment.id),
+            ...(approved
+              ? {
+                  status: "paid",
+                  paid_at: new Date().toISOString(),
+                  expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                }
+              : failed
+                ? { status: "failed" }
+                : {}),
           };
-          if (approved) {
-            update.status = "paid";
-            update.paid_at = new Date().toISOString();
-            update.expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-          } else if (failed) {
-            update.status = "failed";
-          }
           await supabaseAdmin.from("property_unlocks").update(update).eq("id", unlockId);
           return new Response("ok", { status: 200 });
         }

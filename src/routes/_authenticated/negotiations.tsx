@@ -53,14 +53,16 @@ function NegotiationsPage() {
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Sem sessão");
-      const [{ data: visits }, { data: proposals }] = await Promise.all([
+      const [{ data: visits }, { data: proposals }, { data: counters }] = await Promise.all([
         supabase.from("visits").select("*, properties(id,title)").order("scheduled_at", { ascending: false }),
         supabase.from("proposals").select("*, properties(id,title)").order("created_at", { ascending: false }),
+        supabase.from("proposal_counters").select("*").order("created_at", { ascending: true }),
       ]);
       return {
         userId: u.user.id,
         visits: (visits ?? []) as unknown as Visit[],
         proposals: (proposals ?? []) as unknown as Proposal[],
+        counters: (counters ?? []) as unknown as Counter[],
       };
     },
   });

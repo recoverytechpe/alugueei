@@ -462,23 +462,42 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
               const end = start && c.term_months ? new Date(start.getFullYear(), start.getMonth() + c.term_months, start.getDate()) : null;
               const fmt = (d: Date | null) => d ? d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
               return (
-                <Link key={c.id} to="/contracts/$id" params={{ id: c.id }} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0 hover:bg-muted/30 -mx-1 px-1 rounded">
-                  <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <FileText className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
-                    <p className="text-xs text-muted-foreground truncate">{tenant?.full_name ?? "—"}</p>
-                    <p className="text-xs text-muted-foreground">{fmt(start)} – {fmt(end)}</p>
-                  </div>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${pill.cls}`}>
-                    {pill.label}
-                  </span>
-                </Link>
+                <div key={c.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0">
+                  <Link to="/contracts/$id" params={{ id: c.id }} className="flex flex-1 items-center gap-3 min-w-0 hover:bg-muted/30 -mx-1 px-1 rounded">
+                    <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
+                      <p className="text-xs text-muted-foreground truncate">{tenant?.full_name ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground">{fmt(start)} – {fmt(end)}</p>
+                    </div>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${pill.cls}`}>
+                      {pill.label}
+                    </span>
+                  </Link>
+                  {(c.status === "closed" || c.status === "active") && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => renewContract({
+                        property_id: (c as unknown as { property_id: string }).property_id,
+                        tenant_id: (c as unknown as { tenant_id: string }).tenant_id,
+                        agent_id: (c as unknown as { agent_id: string | null }).agent_id,
+                        rent_value: Number(c.rent_value),
+                        term_months: Number(c.term_months),
+                        start_date: c.start_date as unknown as string,
+                      })}
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-1" />Renovar
+                    </Button>
+                  )}
+                </div>
               );
             })}
           </CardContent>
         </Card>
+
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">

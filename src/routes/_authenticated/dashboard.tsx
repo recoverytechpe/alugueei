@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ExportReports } from "@/components/ExportReports";
 import { useViewAs } from "@/lib/view-as";
 
 /**
@@ -191,6 +192,8 @@ function Dashboard() {
             </CardDescription>
           </CardHeader>
         </Card>
+
+        <ExportReports />
       </main>
     </div>
   );

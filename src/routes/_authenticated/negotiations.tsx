@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,10 +114,66 @@ function NegotiationsPage() {
           ))}
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase text-muted-foreground">Propostas</h2>
-          {data.proposals.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma proposta.</p>}
-          {data.proposals.map((p) => (
+        <ProposalsSection
+          proposals={data.proposals}
+          userId={data.userId}
+          setProposalStatus={setProposalStatus}
+        />
+      </main>
+    </div>
+  );
+}
+
+type ProposalFilter = "all" | "pending" | "accepted" | "rejected";
+
+function ProposalsSection({
+  proposals,
+  userId,
+  setProposalStatus,
+}: {
+  proposals: Proposal[];
+  userId: string;
+  setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
+}) {
+  const [filter, setFilter] = useState<ProposalFilter>("all");
+  const counts = useMemo(() => ({
+    all: proposals.length,
+    pending: proposals.filter((p) => p.status === "pending").length,
+    accepted: proposals.filter((p) => p.status === "accepted").length,
+    rejected: proposals.filter((p) => p.status === "rejected" || p.status === "withdrawn").length,
+  }), [proposals]);
+  const visible = useMemo(() => {
+    if (filter === "all") return proposals;
+    if (filter === "rejected") return proposals.filter((p) => p.status === "rejected" || p.status === "withdrawn");
+    return proposals.filter((p) => p.status === filter);
+  }, [proposals, filter]);
+
+  const tabs: { key: ProposalFilter; label: string }[] = [
+    { key: "all", label: "Todas" },
+    { key: "pending", label: "Pendentes" },
+    { key: "accepted", label: "Aceitas" },
+    { key: "rejected", label: "Recusadas" },
+  ];
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="text-sm font-semibold uppercase text-muted-foreground">Propostas</h2>
+        <div className="flex gap-1 flex-wrap">
+          {tabs.map((t) => (
+            <Button
+              key={t.key}
+              size="sm"
+              variant={filter === t.key ? "default" : "outline"}
+              onClick={() => setFilter(t.key)}
+            >
+              {t.label} <span className="ml-1 text-xs opacity-70">({counts[t.key]})</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+      {visible.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma proposta.</p>}
+      {visible.map((p) => (
             <Card key={p.id}>
               <CardHeader className="flex flex-row items-start justify-between gap-2">
                 <div>
@@ -134,9 +190,9 @@ function NegotiationsPage() {
                   <div className="inline-flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
                     <ShieldCheck className="size-4 shrink-0" />
                     <span>
-                      {data.userId === p.tenant_id ? "Sua pré-aprovação anexada" : "Locatário pré-aprovado"}
+                      {userId === p.tenant_id ? "Sua pré-aprovação anexada" : "Locatário pré-aprovado"}
                       {" "}até <strong>{formatBRL(Number(p.tenant_preapproval_max_rent))}</strong>
-                      {p.tenant_preapproval_income && data.userId !== p.tenant_id
+                      {p.tenant_preapproval_income && userId !== p.tenant_id
                         ? ` · renda ${formatBRL(Number(p.tenant_preapproval_income))}`
                         : ""}
                     </span>
@@ -146,13 +202,13 @@ function NegotiationsPage() {
 
               <CardContent className="flex gap-2 flex-wrap">
 
-                {p.status === "pending" && data.userId === p.owner_id && (
+                {p.status === "pending" && userId === p.owner_id && (
                   <>
                     <Button size="sm" onClick={() => setProposalStatus(p.id, "accepted")}>Aceitar</Button>
                     <Button size="sm" variant="outline" onClick={() => setProposalStatus(p.id, "rejected")}>Recusar</Button>
                   </>
                 )}
-                {p.status === "pending" && data.userId === p.tenant_id && (
+                {p.status === "pending" && userId === p.tenant_id && (
                   <Button size="sm" variant="ghost" onClick={() => setProposalStatus(p.id, "withdrawn")}>Retirar</Button>
                 )}
                 {p.status === "accepted" && (
@@ -161,8 +217,6 @@ function NegotiationsPage() {
               </CardContent>
             </Card>
           ))}
-        </section>
-      </main>
-    </div>
+    </section>
   );
 }

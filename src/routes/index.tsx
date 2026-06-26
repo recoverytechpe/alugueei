@@ -103,28 +103,28 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Mobile-style centered frame on desktop */}
-      <div className="mx-auto max-w-[440px] min-h-screen bg-background shadow-xl pb-24 relative">
+      {/* Mobile uses a centered 440px frame; desktop expands to a full container. */}
+      <div className="mx-auto w-full max-w-[440px] md:max-w-6xl min-h-screen bg-background shadow-xl md:shadow-none pb-24 md:pb-12 relative">
         {/* Hero */}
-        <section className="px-6 pt-10 pb-6 bg-gradient-to-br from-primary/95 to-primary text-primary-foreground rounded-b-3xl">
+        <section className="px-6 md:px-10 pt-10 md:pt-16 pb-6 md:pb-10 bg-gradient-to-br from-primary/95 to-primary text-primary-foreground rounded-b-3xl md:rounded-b-[2rem]">
           <p className="text-sm/none opacity-80">Olá,</p>
-          <h1 className="text-3xl font-bold leading-tight mt-1">
-            Encontre seu próximo<br />lar perfeito
+          <h1 className="text-3xl md:text-5xl font-bold leading-tight mt-1 md:max-w-2xl">
+            Encontre seu próximo<br className="md:hidden" /> lar perfeito
           </h1>
 
           {/* Search bar */}
-          <div className="mt-6 relative">
+          <div className="mt-6 md:mt-8 relative md:max-w-2xl">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               value={filters.q}
               onChange={(e) => setFilters({ ...filters, q: e.target.value })}
               placeholder="Buscar por local, imóvel ou palavra-chave"
-              className="pl-10 h-12 rounded-2xl bg-background text-foreground border-0 shadow-md"
+              className="pl-10 h-12 md:h-14 rounded-2xl bg-background text-foreground border-0 shadow-md"
             />
           </div>
 
           {/* Filter pills */}
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mt-3 md:mt-4 flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 md:flex-wrap md:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <FilterPill icon={<SlidersHorizontal className="size-3.5" />} label="Preço">
               <Select
                 value={filters.maxPrice}
@@ -179,15 +179,16 @@ function Home() {
         </section>
 
         {/* Featured */}
-        <section className="px-6 pt-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold">Imóveis em destaque</h2>
-            <Link to="/properties" className="text-xs font-medium text-primary hover:underline">
+        <section className="px-6 md:px-10 pt-6 md:pt-10">
+          <div className="flex items-center justify-between mb-3 md:mb-6">
+            <h2 className="text-lg md:text-2xl font-semibold">Imóveis em destaque</h2>
+            <Link to="/properties" className="text-xs md:text-sm font-medium text-primary hover:underline">
               Ver todos
             </Link>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
+
             {isLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-64 w-full rounded-2xl" />
@@ -252,7 +253,7 @@ function Home() {
         </section>
 
         {/* Bottom nav */}
-        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] border-t bg-background/95 backdrop-blur z-10">
+        <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] border-t bg-background/95 backdrop-blur z-10 md:hidden">
           <div className="grid grid-cols-4 px-2 py-2">
             <NavItem icon={<HomeIcon className="size-5" />} label="Início" to="/" active />
             <NavItem icon={<Search className="size-5" />} label="Buscar" to="/properties" />
@@ -262,6 +263,7 @@ function Home() {
         </nav>
       </div>
     </div>
+
   );
 }
 

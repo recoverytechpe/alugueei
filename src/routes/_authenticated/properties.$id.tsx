@@ -83,6 +83,22 @@ function PropertyDetail() {
   const userId = data?.userId ?? null;
   const isTenant = data?.userRole === "locatario";
 
+  // Track in recents (localStorage) on load
+  useEffect(() => {
+    if (!data) return;
+    const cover = data.photoUrls[0] ?? null;
+    pushRecent({
+      id: data.id,
+      title: data.title,
+      city: data.city ?? null,
+      neighborhood: data.neighborhood ?? null,
+      rent_value: Number(data.rent_value),
+      property_type: data.property_type,
+      cover,
+    });
+  }, [data]);
+
+
   // Favorite
   const { data: isFav } = useQuery({
     queryKey: ["favorite", id, userId],

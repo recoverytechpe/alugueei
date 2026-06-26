@@ -112,8 +112,8 @@ function PropertiesList() {
                 <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
-                  {locations?.map((l) => (
-                    <SelectItem key={l.city} value={l.city}>{l.city}</SelectItem>
+                  {cities.map((l) => (
+                    <SelectItem key={`${l.city}|${l.state}`} value={l.city}>{l.city}{l.state ? ` · ${l.state}` : ""}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

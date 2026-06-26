@@ -56,7 +56,7 @@ export const Route = createFileRoute("/_authenticated/properties/")({
 });
 
 function PropertiesList() {
-  const navigate = useNavigate({ from: "/properties" });
+  const navigate = useNavigate({ from: "/_authenticated/properties/" });
   const f = Route.useSearch();
   const [isOwner, setIsOwner] = useState(false);
   const [compareIds, setCompareIds] = useState<string[]>([]);

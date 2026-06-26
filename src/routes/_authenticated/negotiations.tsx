@@ -10,8 +10,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatBRL } from "@/lib/property-helpers";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, MessageSquareReply } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 
 export const Route = createFileRoute("/_authenticated/negotiations")({

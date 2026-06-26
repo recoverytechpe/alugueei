@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { jsPDF } from "jspdf";
+import { Download } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/contracts/$id")({
   head: () => ({ meta: [{ title: "Contrato | Plataforma de Aluguel" }] }),
@@ -82,6 +84,53 @@ function ContractDetail() {
     qc.invalidateQueries({ queryKey: ["contract", id] });
   }
 
+  function downloadPdf() {
+    if (!data?.contract) return;
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const margin = 48;
+    const width = doc.internal.pageSize.getWidth() - margin * 2;
+    const pageH = doc.internal.pageSize.getHeight();
+    let y = margin;
+
+    doc.setFont("helvetica", "bold").setFontSize(16);
+    doc.text("Contrato de Locação", margin, y);
+    y += 20;
+    doc.setFont("helvetica", "normal").setFontSize(10);
+    doc.text(`Imóvel: ${c.properties?.title ?? "—"}`, margin, y); y += 14;
+    doc.text(`Status: ${c.status}`, margin, y); y += 14;
+    doc.text(`Contrato ID: ${c.id}`, margin, y); y += 20;
+
+    doc.setFont("helvetica", "bold").setFontSize(12);
+    doc.text("Termos", margin, y); y += 16;
+    doc.setFont("helvetica", "normal").setFontSize(10);
+    const lines = doc.splitTextToSize(c.contract_text ?? "", width);
+    for (const line of lines) {
+      if (y > pageH - margin) { doc.addPage(); y = margin; }
+      doc.text(line, margin, y);
+      y += 13;
+    }
+
+    y += 10;
+    if (y > pageH - margin - 60) { doc.addPage(); y = margin; }
+    doc.setFont("helvetica", "bold").setFontSize(12);
+    doc.text("Assinaturas eletrônicas", margin, y); y += 16;
+    doc.setFont("helvetica", "normal").setFontSize(10);
+    if (data.signatures.length === 0) {
+      doc.text("Nenhuma assinatura registrada.", margin, y); y += 14;
+    }
+    for (const s of data.signatures) {
+      if (y > pageH - margin - 40) { doc.addPage(); y = margin; }
+      doc.setFont("helvetica", "bold");
+      doc.text(`${s.signer_role.toUpperCase()}`, margin, y); y += 13;
+      doc.setFont("helvetica", "normal");
+      doc.text(`"${s.signature_text}"`, margin, y); y += 13;
+      doc.text(`Assinado em ${new Date(s.signed_at).toLocaleString("pt-BR")}`, margin, y); y += 13;
+      doc.text(`Hash: ${s.id}`, margin, y); y += 18;
+    }
+
+    doc.save(`contrato-${c.id.slice(0, 8)}.pdf`);
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -92,6 +141,9 @@ function ContractDetail() {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={c.status === "closed" ? "default" : "secondary"} className="capitalize">{c.status}</Badge>
+            <Button variant="outline" size="sm" onClick={downloadPdf}>
+              <Download className="size-4 mr-1" /> PDF
+            </Button>
             <Button asChild variant="outline" size="sm"><Link to="/contracts">Voltar</Link></Button>
           </div>
         </div>

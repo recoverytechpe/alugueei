@@ -489,6 +489,7 @@ export type Database = {
           terms_accepted_at: string | null
           updated_at: string
           user_id: string
+          warning_sent_at: string | null
         }
         Insert: {
           amount_cents?: number
@@ -503,6 +504,7 @@ export type Database = {
           terms_accepted_at?: string | null
           updated_at?: string
           user_id: string
+          warning_sent_at?: string | null
         }
         Update: {
           amount_cents?: number
@@ -517,6 +519,7 @@ export type Database = {
           terms_accepted_at?: string | null
           updated_at?: string
           user_id?: string
+          warning_sent_at?: string | null
         }
         Relationships: [
           {

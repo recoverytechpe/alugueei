@@ -1,0 +1,1 @@
+ALTER TABLE public.property_unlocks ADD COLUMN IF NOT EXISTS warning_sent_at timestamptz;

@@ -43,6 +43,21 @@ function ProfilePage() {
     },
   });
 
+  const { data: unlocks } = useQuery({
+    queryKey: ["me", "unlocks"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return [];
+      const { data } = await supabase
+        .from("property_unlocks")
+        .select("id, status, amount_cents, paid_at, expires_at, created_at, property_id, properties(title, city, state)")
+        .eq("user_id", u.user.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return data ?? [];
+    },
+  });
+
   const [form, setForm] = useState({ full_name: "", phone: "", cpf_cnpj: "", bio: "" });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -159,6 +174,53 @@ function ProfilePage() {
               </div>
               <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar"}</Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Histórico de desbloqueios</CardTitle>
+            <CardDescription>Imóveis cujos contatos você liberou.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!unlocks || unlocks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Você ainda não desbloqueou nenhum imóvel.</p>
+            ) : (
+              <ul className="divide-y">
+                {unlocks.map((u) => {
+                  const p = u.properties as { title?: string; city?: string; state?: string } | null;
+                  const expired = u.expires_at && new Date(u.expires_at) < new Date();
+                  const label =
+                    u.status === "refunded" ? "Reembolsado"
+                    : u.status === "paid" && expired ? "Expirado"
+                    : u.status === "paid" ? "Ativo"
+                    : u.status === "pending" ? "Pendente"
+                    : u.status;
+                  return (
+                    <li key={u.id} className="py-3 flex items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <Link
+                          to="/properties/$id"
+                          params={{ id: u.property_id }}
+                          className="font-medium truncate block hover:underline"
+                        >
+                          {p?.title ?? "Imóvel"}
+                        </Link>
+                        <p className="text-xs text-muted-foreground">
+                          {p?.city}{p?.state ? `/${p.state}` : ""} ·{" "}
+                          {u.paid_at ? `Pago em ${new Date(u.paid_at).toLocaleDateString("pt-BR")}` : `Criado em ${new Date(u.created_at).toLocaleDateString("pt-BR")}`}
+                          {u.expires_at && u.status === "paid" && !expired ? ` · expira ${new Date(u.expires_at).toLocaleDateString("pt-BR")}` : ""}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-medium">R$ {(u.amount_cents / 100).toFixed(2).replace(".", ",")}</p>
+                        <p className={`text-xs ${u.status === "paid" && !expired ? "text-emerald-600" : "text-muted-foreground"}`}>{label}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </main>

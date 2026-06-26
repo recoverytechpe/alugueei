@@ -165,13 +165,13 @@ function PropertiesList() {
         </Card>
 
         {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-72" />)}
           </div>
         ) : empty ? (
           <div className="py-16 text-center text-muted-foreground">Nenhum imóvel encontrado.</div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {data!.map((p) => (
               <button
                 key={p.id}

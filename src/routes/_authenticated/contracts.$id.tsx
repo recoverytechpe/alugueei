@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";
-import { Download, CreditCard, CheckCircle2, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { Download, CreditCard, CheckCircle2, Clock, AlertCircle, Loader2, Receipt } from "lucide-react";
 import { createMpPreference } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/contracts/$id")({

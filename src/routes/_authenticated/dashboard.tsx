@@ -17,6 +17,7 @@ import {
 import { PushToggle } from "@/components/PushToggle";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ExportReports } from "@/components/ExportReports";
+import { UnreadChatBadge } from "@/components/UnreadChatBadge";
 import { useViewAs } from "@/lib/view-as";
 
 /**

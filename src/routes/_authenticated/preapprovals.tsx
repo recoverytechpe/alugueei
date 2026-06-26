@@ -80,6 +80,21 @@ function PreapprovalsPage() {
     qc.invalidateQueries({ queryKey: ["preapproval"] });
   }
 
+  async function revoke() {
+    if (!data?.userId) return;
+    if (!confirm("Tem certeza? Sua pré-aprovação será removida e suas próximas propostas não terão o selo.")) return;
+    setBusy(true);
+    const { error } = await supabase.from("tenant_preapprovals").delete().eq("user_id", data.userId);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Pré-aprovação revogada");
+    setIncome("");
+    setGuarantee("");
+    qc.invalidateQueries({ queryKey: ["my-preapproval"] });
+    qc.invalidateQueries({ queryKey: ["preapproval"] });
+  }
+
+
   return (
     <div className="min-h-screen bg-muted/30">
       <div className="mx-auto max-w-[440px] min-h-screen bg-background shadow-xl">
@@ -118,8 +133,15 @@ function PreapprovalsPage() {
                 <Row label="Renda mensal" value={formatBRL(Number(data.preapproval.monthly_income))} />
                 <Row label="Aluguel máximo" value={formatBRL(Number(data.preapproval.max_rent))} bold />
                 <Row label="Garantia" value={GUARANTEE_LABEL[data.preapproval.guarantee_type as GuaranteeType] ?? "—"} />
+                <div className="pt-2">
+                  <Button type="button" variant="ghost" size="sm" onClick={revoke} disabled={busy}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 px-2">
+                    Revogar pré-aprovação
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+
           ) : (
             <Card className="border-dashed">
               <CardContent className="p-6 text-center space-y-2">

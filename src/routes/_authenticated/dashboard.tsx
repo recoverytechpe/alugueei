@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -468,64 +468,136 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
       </div>
 
       {/* Propostas recebidas */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">Propostas recebidas</h3>
-          <Link to="/negotiations" className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1">
-            Ver todas <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
-        {data.proposals.length === 0 ? (
-          <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Nenhuma proposta recebida ainda.</CardContent></Card>
-        ) : (
-          <div className="space-y-3">
-            {data.proposals.slice(0, 5).map((p) => {
-              const prop = (p as unknown as { property: { id: string; title: string; city: string | null; neighborhood: string | null } | null }).property;
-              const pp = p as unknown as {
-                tenant_preapproval_income: number | null;
-                tenant_preapproval_max_rent: number | null;
-                tenant_preapproval_guarantee: string | null;
-                term_months: number | null;
-                start_date: string | null;
-              };
-              const preapproved = pp.tenant_preapproval_max_rent != null;
-              const status = mapProposalStatus(p.status);
-              return (
-                <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-start gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold truncate">{prop?.title ?? "Imóvel"}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {[prop?.neighborhood, prop?.city].filter(Boolean).join(", ") || "—"}
-                        </p>
-                        <p className="text-sm mt-1">
-                          <strong>{brl(p.rent_offer)}</strong>
-                          <span className="text-muted-foreground"> /mês · {pp.term_months ?? "—"} meses</span>
-                        </p>
-                      </div>
-                      <StatusPill status={status} />
-                    </div>
-                    {preapproved && (
-                      <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
-                        <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
-                        <span>
-                          Locatário <strong>pré-aprovado</strong> até {brl(Number(pp.tenant_preapproval_max_rent))}
-                          {pp.tenant_preapproval_income ? ` · renda ${brl(Number(pp.tenant_preapproval_income))}` : ""}
-                        </span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      <OwnerProposals proposals={data.proposals} />
+
     </div>
   );
 }
+
+type OwnerProposal = {
+  id: string;
+  status: string | null;
+  rent_offer: number;
+  term_months: number | null;
+  start_date: string | null;
+  created_at: string;
+  tenant_preapproval_income: number | null;
+  tenant_preapproval_max_rent: number | null;
+  tenant_preapproval_guarantee: string | null;
+  property: { id: string; title: string; city: string | null; neighborhood: string | null } | null;
+};
+
+type ProposalSort = "preapproved" | "highest" | "lowest" | "newest";
+type ProposalFilter = "all" | "pending" | "preapproved";
+
+function OwnerProposals({ proposals }: { proposals: unknown[] }) {
+  const list = proposals as OwnerProposal[];
+  const [sort, setSort] = useState<ProposalSort>("preapproved");
+  const [filter, setFilter] = useState<ProposalFilter>("all");
+
+  const visible = useMemo(() => {
+    const filtered = list.filter((p) => {
+      if (filter === "pending") return p.status === "pending" || p.status === "negotiating" || p.status === "countered";
+      if (filter === "preapproved") return p.tenant_preapproval_max_rent != null;
+      return true;
+    });
+    const sorted = [...filtered].sort((a, b) => {
+      if (sort === "highest") return Number(b.rent_offer) - Number(a.rent_offer);
+      if (sort === "lowest") return Number(a.rent_offer) - Number(b.rent_offer);
+      if (sort === "newest") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      // preapproved first, then by value desc
+      const pa = a.tenant_preapproval_max_rent != null ? 1 : 0;
+      const pb = b.tenant_preapproval_max_rent != null ? 1 : 0;
+      if (pa !== pb) return pb - pa;
+      return Number(b.rent_offer) - Number(a.rent_offer);
+    });
+    return sorted.slice(0, 5);
+  }, [list, sort, filter]);
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h3 className="text-xl font-bold">Propostas recebidas</h3>
+        <Link to="/negotiations" className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1">
+          Ver todas <ChevronRight className="h-4 w-4" />
+        </Link>
+      </div>
+      {list.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={filter} onValueChange={(v) => setFilter(v as ProposalFilter)}>
+            <SelectTrigger className="h-8 w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as propostas</SelectItem>
+              <SelectItem value="pending">Apenas pendentes</SelectItem>
+              <SelectItem value="preapproved">Apenas pré-aprovados</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sort} onValueChange={(v) => setSort(v as ProposalSort)}>
+            <SelectTrigger className="h-8 w-[200px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="preapproved">Pré-aprovados primeiro</SelectItem>
+              <SelectItem value="highest">Maior valor</SelectItem>
+              <SelectItem value="lowest">Menor valor</SelectItem>
+              <SelectItem value="newest">Mais recentes</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      {visible.length === 0 ? (
+        <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">
+          {list.length === 0 ? "Nenhuma proposta recebida ainda." : "Nenhuma proposta corresponde ao filtro."}
+        </CardContent></Card>
+      ) : (
+        <div className="space-y-3">
+          {visible.map((p: OwnerProposal) => {
+            const preapproved = p.tenant_preapproval_max_rent != null;
+            const status = mapProposalStatus(p.status);
+            return (
+              <Card
+                key={p.id}
+                className={`overflow-hidden hover:shadow-md transition-shadow ${preapproved ? "ring-1 ring-sky-200" : ""}`}
+              >
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-semibold truncate">{p.property?.title ?? "Imóvel"}</p>
+                        {preapproved && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 text-sky-800 border border-sky-200 px-2 py-0.5 text-[10px] font-medium">
+                            <ShieldCheck className="h-3 w-3" /> Pré-aprovado
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {[p.property?.neighborhood, p.property?.city].filter(Boolean).join(", ") || "—"}
+                      </p>
+                      <p className="text-sm mt-1">
+                        <strong>{brl(p.rent_offer)}</strong>
+                        <span className="text-muted-foreground"> /mês · {p.term_months ?? "—"} meses</span>
+                      </p>
+                    </div>
+                    <StatusPill status={status} />
+                  </div>
+                  {preapproved && (
+                    <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
+                      <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span>
+                        Locatário <strong>pré-aprovado</strong> até {brl(Number(p.tenant_preapproval_max_rent))}
+                        {p.tenant_preapproval_income ? ` · renda ${brl(Number(p.tenant_preapproval_income))}` : ""}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
 
 
 type ReferralStatus = "Pendente" | "Em Progresso" | "Concluído";

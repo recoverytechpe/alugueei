@@ -27,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
-import { Scale, BookmarkPlus, Bookmark, X, History, Trash2, SlidersHorizontal, Plus } from "lucide-react";
+import { Scale, BookmarkPlus, Bookmark, X, History, Trash2, SlidersHorizontal, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const searchSchema = z.object({

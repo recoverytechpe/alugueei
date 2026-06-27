@@ -315,6 +315,17 @@ function PropertyDetail() {
                   <DropdownMenuItem onClick={shareWhatsApp}><MessageSquare className="size-4" /> WhatsApp</DropdownMenuItem>
                   <DropdownMenuItem onClick={shareEmail}><Mail className="size-4" /> E-mail</DropdownMenuItem>
                   <DropdownMenuItem onClick={copyLink}><LinkIcon className="size-4" /> Copiar link</DropdownMenuItem>
+                  {userId && !data.isOwner && (
+                    <ReportDialog
+                      targetType="property"
+                      targetId={data.id}
+                      trigger={
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Flag className="size-4" /> Reportar imóvel
+                        </DropdownMenuItem>
+                      }
+                    />
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

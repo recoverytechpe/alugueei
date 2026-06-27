@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -8,11 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { Building2, User, Briefcase } from "lucide-react";
+import { Building2, User, Briefcase, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const TERMS_VERSION = "2026-06-27";
+const PRIVACY_VERSION = "2026-06-27";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({ meta: [{ title: "Complete seu cadastro | Alugueei" }] }),
@@ -70,12 +74,18 @@ function OnboardingWizard() {
     cpf_cnpj: profile?.profile?.cpf_cnpj ?? "",
     bio: profile?.profile?.bio ?? "",
   });
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!profile?.uid) throw new Error("Sessão expirada");
       if (!userType) throw new Error("Selecione o tipo de usuário");
+      if (!acceptTerms || !acceptPrivacy) {
+        throw new Error("Você precisa aceitar os Termos e a Política de Privacidade");
+      }
       const parsed = profileSchema.parse(form);
+      const now = new Date().toISOString();
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -84,7 +94,11 @@ function OnboardingWizard() {
           cpf_cnpj: parsed.cpf_cnpj,
           bio: parsed.bio ?? null,
           user_type: userType,
-          onboarded_at: new Date().toISOString(),
+          onboarded_at: now,
+          terms_accepted_at: now,
+          terms_version: TERMS_VERSION,
+          privacy_accepted_at: now,
+          privacy_version: PRIVACY_VERSION,
         })
         .eq("id", profile.uid);
       if (error) throw error;
@@ -107,7 +121,7 @@ function OnboardingWizard() {
     );
   }
 
-  const totalSteps = 2;
+  const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
 
   return (
@@ -213,8 +227,69 @@ function OnboardingWizard() {
               <Button variant="ghost" onClick={() => setStep(1)}>
                 Voltar
               </Button>
-              <Button onClick={() => save.mutate()} disabled={save.isPending}>
-                {save.isPending ? "Salvando..." : "Concluir"}
+              <Button onClick={() => setStep(3)}>
+                Continuar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 3 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheck className="size-5 text-primary" />
+              Termos e Privacidade
+            </CardTitle>
+            <CardDescription>
+              Para usar a plataforma, você precisa aceitar nossos termos e a política de privacidade (LGPD).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={acceptTerms}
+                  onCheckedChange={(v) => setAcceptTerms(v === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-sm leading-relaxed">
+                  Li e aceito os{" "}
+                  <Link to="/terms" target="_blank" className="underline text-primary">
+                    Termos de Uso
+                  </Link>{" "}
+                  (versão {TERMS_VERSION}).
+                </span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={acceptPrivacy}
+                  onCheckedChange={(v) => setAcceptPrivacy(v === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-sm leading-relaxed">
+                  Li e concordo com a{" "}
+                  <Link to="/privacy" target="_blank" className="underline text-primary">
+                    Política de Privacidade
+                  </Link>{" "}
+                  e autorizo o tratamento dos meus dados pessoais conforme a LGPD (versão {PRIVACY_VERSION}).
+                </span>
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Você pode revogar o consentimento a qualquer momento solicitando a exclusão da conta em
+              privacidade@alugueei.com.br.
+            </p>
+            <div className="flex justify-between pt-2">
+              <Button variant="ghost" onClick={() => setStep(2)}>
+                Voltar
+              </Button>
+              <Button
+                onClick={() => save.mutate()}
+                disabled={save.isPending || !acceptTerms || !acceptPrivacy}
+              >
+                {save.isPending ? "Salvando..." : "Aceitar e concluir"}
               </Button>
             </div>
           </CardContent>

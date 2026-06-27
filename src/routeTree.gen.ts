@@ -32,6 +32,7 @@ import { Route as AuthenticatedPropertiesIdRouteImport } from './routes/_authent
 import { Route as AuthenticatedContractsIdRouteImport } from './routes/_authenticated/contracts.$id'
 import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated/chat.$id'
 import { Route as ApiPublicHooksUnlockExpiryWarningRouteImport } from './routes/api/public/hooks/unlock-expiry-warning'
+import { Route as AuthenticatedPropertiesIdEditRouteImport } from './routes/_authenticated/properties.$id.edit'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -157,6 +158,12 @@ const ApiPublicHooksUnlockExpiryWarningRoute =
     path: '/api/public/hooks/unlock-expiry-warning',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedPropertiesIdEditRoute =
+  AuthenticatedPropertiesIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedPropertiesIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -170,7 +177,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
-  '/properties/$id': typeof AuthenticatedPropertiesIdRoute
+  '/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/properties/compare': typeof AuthenticatedPropertiesCompareRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/chat/': typeof AuthenticatedChatIndexRoute
   '/contracts/': typeof AuthenticatedContractsIndexRoute
   '/properties/': typeof AuthenticatedPropertiesIndexRoute
+  '/properties/$id/edit': typeof AuthenticatedPropertiesIdEditRoute
   '/api/public/hooks/unlock-expiry-warning': typeof ApiPublicHooksUnlockExpiryWarningRoute
 }
 export interface FileRoutesByTo {
@@ -194,7 +202,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
-  '/properties/$id': typeof AuthenticatedPropertiesIdRoute
+  '/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/properties/compare': typeof AuthenticatedPropertiesCompareRoute
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
@@ -204,6 +212,7 @@ export interface FileRoutesByTo {
   '/chat': typeof AuthenticatedChatIndexRoute
   '/contracts': typeof AuthenticatedContractsIndexRoute
   '/properties': typeof AuthenticatedPropertiesIndexRoute
+  '/properties/$id/edit': typeof AuthenticatedPropertiesIdEditRoute
   '/api/public/hooks/unlock-expiry-warning': typeof ApiPublicHooksUnlockExpiryWarningRoute
 }
 export interface FileRoutesById {
@@ -220,7 +229,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/contracts/$id': typeof AuthenticatedContractsIdRoute
-  '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRoute
+  '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
   '/_authenticated/properties/compare': typeof AuthenticatedPropertiesCompareRoute
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRoute
@@ -230,6 +239,7 @@ export interface FileRoutesById {
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
   '/_authenticated/contracts/': typeof AuthenticatedContractsIndexRoute
   '/_authenticated/properties/': typeof AuthenticatedPropertiesIndexRoute
+  '/_authenticated/properties/$id/edit': typeof AuthenticatedPropertiesIdEditRoute
   '/api/public/hooks/unlock-expiry-warning': typeof ApiPublicHooksUnlockExpiryWarningRoute
 }
 export interface FileRouteTypes {
@@ -256,6 +266,7 @@ export interface FileRouteTypes {
     | '/chat/'
     | '/contracts/'
     | '/properties/'
+    | '/properties/$id/edit'
     | '/api/public/hooks/unlock-expiry-warning'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -280,6 +291,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contracts'
     | '/properties'
+    | '/properties/$id/edit'
     | '/api/public/hooks/unlock-expiry-warning'
   id:
     | '__root__'
@@ -305,6 +317,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chat/'
     | '/_authenticated/contracts/'
     | '/_authenticated/properties/'
+    | '/_authenticated/properties/$id/edit'
     | '/api/public/hooks/unlock-expiry-warning'
   fileRoutesById: FileRoutesById
 }
@@ -481,8 +494,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksUnlockExpiryWarningRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/properties/$id/edit': {
+      id: '/_authenticated/properties/$id/edit'
+      path: '/edit'
+      fullPath: '/properties/$id/edit'
+      preLoaderRoute: typeof AuthenticatedPropertiesIdEditRouteImport
+      parentRoute: typeof AuthenticatedPropertiesIdRoute
+    }
   }
 }
+
+interface AuthenticatedPropertiesIdRouteChildren {
+  AuthenticatedPropertiesIdEditRoute: typeof AuthenticatedPropertiesIdEditRoute
+}
+
+const AuthenticatedPropertiesIdRouteChildren: AuthenticatedPropertiesIdRouteChildren =
+  {
+    AuthenticatedPropertiesIdEditRoute: AuthenticatedPropertiesIdEditRoute,
+  }
+
+const AuthenticatedPropertiesIdRouteWithChildren =
+  AuthenticatedPropertiesIdRoute._addFileChildren(
+    AuthenticatedPropertiesIdRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
@@ -494,7 +528,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
   AuthenticatedContractsIdRoute: typeof AuthenticatedContractsIdRoute
-  AuthenticatedPropertiesIdRoute: typeof AuthenticatedPropertiesIdRoute
+  AuthenticatedPropertiesIdRoute: typeof AuthenticatedPropertiesIdRouteWithChildren
   AuthenticatedPropertiesCompareRoute: typeof AuthenticatedPropertiesCompareRoute
   AuthenticatedPropertiesNewRoute: typeof AuthenticatedPropertiesNewRoute
   AuthenticatedUsersIdRoute: typeof AuthenticatedUsersIdRoute
@@ -513,7 +547,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
   AuthenticatedContractsIdRoute: AuthenticatedContractsIdRoute,
-  AuthenticatedPropertiesIdRoute: AuthenticatedPropertiesIdRoute,
+  AuthenticatedPropertiesIdRoute: AuthenticatedPropertiesIdRouteWithChildren,
   AuthenticatedPropertiesCompareRoute: AuthenticatedPropertiesCompareRoute,
   AuthenticatedPropertiesNewRoute: AuthenticatedPropertiesNewRoute,
   AuthenticatedUsersIdRoute: AuthenticatedUsersIdRoute,

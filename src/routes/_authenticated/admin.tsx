@@ -106,7 +106,7 @@ function AdminPanel() {
         .from("reports")
         .update({
           status,
-          resolved_at: status === "pending" ? null : new Date().toISOString(),
+          resolved_at: new Date().toISOString(),
           resolved_by: u.user?.id ?? null,
         })
         .eq("id", id);

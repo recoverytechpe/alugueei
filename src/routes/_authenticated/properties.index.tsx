@@ -212,183 +212,209 @@ function PropertiesList() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <header className="border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-4 flex items-center justify-between gap-3">
-          <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground shrink-0">← Dashboard</Link>
-          <h1 className="text-lg md:text-xl font-semibold truncate">Imóveis disponíveis</h1>
-          {isOwner ? (
-            <Button asChild size="sm"><Link to="/properties/new">Cadastrar imóvel</Link></Button>
-          ) : <div className="w-32" />}
+  return (
+    <div className="min-h-screen bg-background">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10 py-4 md:py-8 space-y-4">
+
+        {/* Title + primary action */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight truncate">Imóveis disponíveis</h1>
+            <p className="text-xs text-muted-foreground">{isLoading ? "Buscando…" : `${data?.length ?? 0} resultado(s)`}</p>
+          </div>
+          {isOwner && (
+            <Button asChild size="sm" className="shrink-0 gap-1.5">
+              <Link to="/properties/new"><Plus className="size-4" />Cadastrar</Link>
+            </Button>
+          )}
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-6 md:py-10 space-y-6">
-
-        <Card>
-          <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
-            <CardTitle className="text-base">Filtros</CardTitle>
-            <div className="flex items-center gap-2 flex-wrap">
-              {hasFilters && (
-                <Button size="sm" variant="ghost" onClick={clearFilters}>
-                  <X className="size-4 mr-1" />Limpar
+        {/* Toolbar: Filters (sheet) + Sort + Saved searches */}
+        <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="sm" variant="outline" className="shrink-0 gap-1.5 h-10">
+                <SlidersHorizontal className="size-4" />
+                Filtros
+                {activeFilterCount > 0 && (
+                  <span className="ml-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              className="h-[88dvh] rounded-t-2xl p-0 flex flex-col"
+            >
+              <SheetHeader className="px-5 pt-5 pb-3 border-b">
+                <SheetTitle>Filtros</SheetTitle>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-5 py-4 grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Cidade</Label>
+                  <Select value={f.city} onValueChange={(v) => update({ city: v, neighborhood: "all" })}>
+                    <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      {cities.map((l) => (
+                        <SelectItem key={`${l.city}|${l.state}`} value={l.city}>{l.city}{l.state ? ` · ${l.state}` : ""}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Bairro</Label>
+                  <Select value={f.neighborhood} onValueChange={(v) => update({ neighborhood: v })} disabled={!neighborhoodOptions.length}>
+                    <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {neighborhoodOptions.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Tipo</Label>
+                  <Select value={f.type} onValueChange={(v) => update({ type: v as "all" | "casa" | "apartamento" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="casa">Casa</SelectItem>
+                      <SelectItem value="apartamento">Apartamento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Acesso</Label>
+                  <Select value={f.unlocked} onValueChange={(v) => update({ unlocked: v as "all" | "mine" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os imóveis</SelectItem>
+                      <SelectItem value="mine">Só desbloqueados</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Quartos (mín.)</Label>
+                  <Select value={f.bedrooms} onValueChange={(v) => update({ bedrooms: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Qualquer</SelectItem>
+                      {[1, 2, 3, 4].map((n) => <SelectItem key={n} value={String(n)}>{n}+</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Banheiros (mín.)</Label>
+                  <Select value={f.bathrooms} onValueChange={(v) => update({ bathrooms: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Qualquer</SelectItem>
+                      {[1, 2, 3].map((n) => <SelectItem key={n} value={String(n)}>{n}+</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Vagas (mín.)</Label>
+                  <Select value={f.parking} onValueChange={(v) => update({ parking: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Qualquer</SelectItem>
+                      {[0, 1, 2, 3].map((n) => <SelectItem key={n} value={String(n)}>{n}+</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="f-min">Aluguel mín. (R$)</Label>
+                  <Input id="f-min" type="number" inputMode="numeric" value={f.min} onChange={(e) => update({ min: e.target.value })} placeholder="1000" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="f-max">Aluguel máx. (R$)</Label>
+                  <Input id="f-max" type="number" inputMode="numeric" value={f.max} onChange={(e) => update({ max: e.target.value })} placeholder="5000" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="f-amin">Área mín. (m²)</Label>
+                  <Input id="f-amin" type="number" inputMode="numeric" value={f.minArea} onChange={(e) => update({ minArea: e.target.value })} placeholder="40" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="f-amax">Área máx. (m²)</Label>
+                  <Input id="f-amax" type="number" inputMode="numeric" value={f.maxArea} onChange={(e) => update({ maxArea: e.target.value })} placeholder="120" />
+                </div>
+              </div>
+              <SheetFooter className="px-5 py-3 border-t flex-row gap-2 sm:flex-row" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
+                <Button variant="ghost" className="flex-1" onClick={clearFilters} disabled={!hasFilters}>
+                  Limpar
                 </Button>
+                <SheetClose asChild>
+                  <Button className="flex-1">Ver {data?.length ?? 0} imóveis</Button>
+                </SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+
+          <Select value={f.sort} onValueChange={(v) => update({ sort: v as typeof f.sort })}>
+            <SelectTrigger className="h-10 w-auto shrink-0 gap-1.5"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Mais recentes</SelectItem>
+              <SelectItem value="price_asc">Menor preço</SelectItem>
+              <SelectItem value="price_desc">Maior preço</SelectItem>
+              <SelectItem value="area_desc">Maior área</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" className="shrink-0 h-10 gap-1.5" disabled={!hasFilters}>
+                <BookmarkPlus className="size-4" /><span className="hidden sm:inline">Salvar</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Salvar esta busca</DialogTitle></DialogHeader>
+              <div className="space-y-2">
+                <Label htmlFor="save-name">Nome</Label>
+                <Input id="save-name" value={saveName} onChange={(e) => setSaveName(e.target.value)} placeholder="Ex.: 2qts em Pinheiros até 4k" autoFocus />
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setSaveOpen(false)}>Cancelar</Button>
+                <Button onClick={handleSaveSearch}>Salvar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" className="shrink-0 h-10 gap-1.5">
+                <Bookmark className="size-4" />
+                <span className="hidden sm:inline">Salvas</span>
+                <span className="text-xs text-muted-foreground">({saved.length})</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel>Buscas salvas</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {saved.length === 0 && (
+                <div className="px-2 py-3 text-xs text-muted-foreground">Nenhuma busca salva ainda.</div>
               )}
-              <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline" disabled={!hasFilters}>
-                    <BookmarkPlus className="size-4 mr-1" />Salvar busca
+              {saved.map((s) => (
+                <div key={s.id} className="flex items-center gap-1 px-1">
+                  <DropdownMenuItem className="flex-1 cursor-pointer" onSelect={() => applySaved(s)}>
+                    {s.name}
+                  </DropdownMenuItem>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0"
+                    onClick={(e) => { e.stopPropagation(); removeSaved(s.id); }}>
+                    <Trash2 className="size-3.5" />
                   </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader><DialogTitle>Salvar esta busca</DialogTitle></DialogHeader>
-                  <div className="space-y-2">
-                    <Label htmlFor="save-name">Nome</Label>
-                    <Input id="save-name" value={saveName} onChange={(e) => setSaveName(e.target.value)}
-                      placeholder="Ex.: 2qts em Pinheiros até 4k" autoFocus />
-                  </div>
-                  <DialogFooter>
-                    <Button variant="ghost" onClick={() => setSaveOpen(false)}>Cancelar</Button>
-                    <Button onClick={handleSaveSearch}>Salvar</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    <Bookmark className="size-4 mr-1" />Minhas buscas ({saved.length})
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuLabel>Buscas salvas</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {saved.length === 0 && (
-                    <div className="px-2 py-3 text-xs text-muted-foreground">Nenhuma busca salva ainda.</div>
-                  )}
-                  {saved.map((s) => (
-                    <div key={s.id} className="flex items-center gap-1 px-1">
-                      <DropdownMenuItem className="flex-1 cursor-pointer" onSelect={() => applySaved(s)}>
-                        {s.name}
-                      </DropdownMenuItem>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0"
-                        onClick={(e) => { e.stopPropagation(); removeSaved(s.id); }}>
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    </div>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-4 lg:grid-cols-6">
-            <div className="space-y-1.5">
-              <Label>Cidade</Label>
-              <Select value={f.city} onValueChange={(v) => update({ city: v, neighborhood: "all" })}>
-                <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {cities.map((l) => (
-                    <SelectItem key={`${l.city}|${l.state}`} value={l.city}>{l.city}{l.state ? ` · ${l.state}` : ""}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Bairro</Label>
-              <Select value={f.neighborhood} onValueChange={(v) => update({ neighborhood: v })}
-                disabled={!neighborhoodOptions.length}>
-                <SelectTrigger><SelectValue placeholder="Todos" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {neighborhoodOptions.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Tipo</Label>
-              <Select value={f.type} onValueChange={(v) => update({ type: v as "all" | "casa" | "apartamento" })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="casa">Casa</SelectItem>
-                  <SelectItem value="apartamento">Apartamento</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Quartos (mín.)</Label>
-              <Select value={f.bedrooms} onValueChange={(v) => update({ bedrooms: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Qualquer</SelectItem>
-                  {[1, 2, 3, 4].map((n) => <SelectItem key={n} value={String(n)}>{n}+</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Banheiros (mín.)</Label>
-              <Select value={f.bathrooms} onValueChange={(v) => update({ bathrooms: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Qualquer</SelectItem>
-                  {[1, 2, 3].map((n) => <SelectItem key={n} value={String(n)}>{n}+</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Vagas (mín.)</Label>
-              <Select value={f.parking} onValueChange={(v) => update({ parking: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Qualquer</SelectItem>
-                  {[0, 1, 2, 3].map((n) => <SelectItem key={n} value={String(n)}>{n}+</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="f-min">Aluguel mín. (R$)</Label>
-              <Input id="f-min" type="number" inputMode="numeric" value={f.min}
-                onChange={(e) => update({ min: e.target.value })} placeholder="1000" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="f-max">Aluguel máx. (R$)</Label>
-              <Input id="f-max" type="number" inputMode="numeric" value={f.max}
-                onChange={(e) => update({ max: e.target.value })} placeholder="5000" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="f-amin">Área mín. (m²)</Label>
-              <Input id="f-amin" type="number" inputMode="numeric" value={f.minArea}
-                onChange={(e) => update({ minArea: e.target.value })} placeholder="40" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="f-amax">Área máx. (m²)</Label>
-              <Input id="f-amax" type="number" inputMode="numeric" value={f.maxArea}
-                onChange={(e) => update({ maxArea: e.target.value })} placeholder="120" />
-            </div>
-            <div className="space-y-1.5 md:col-span-2">
-              <Label>Ordenar por</Label>
-              <Select value={f.sort} onValueChange={(v) => update({ sort: v as typeof f.sort })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Mais recentes</SelectItem>
-                  <SelectItem value="price_asc">Menor preço</SelectItem>
-                  <SelectItem value="price_desc">Maior preço</SelectItem>
-                  <SelectItem value="area_desc">Maior área</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5 md:col-span-2">
-              <Label>Acesso</Label>
-              <Select value={f.unlocked} onValueChange={(v) => update({ unlocked: v as "all" | "mine" })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os imóveis</SelectItem>
-                  <SelectItem value="mine">Só os que já desbloqueei</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {hasFilters && (
+            <Button size="sm" variant="ghost" className="shrink-0 h-10" onClick={clearFilters}>
+              <X className="size-4 mr-1" />Limpar
+            </Button>
+          )}
+        </div>
 
         {!hasFilters && recents.length > 0 && (
           <section className="space-y-2">

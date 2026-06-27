@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { ViewAsProvider } from "../lib/view-as";
 import { ViewAsBar } from "../components/ViewAsBar";
 import { registerAppServiceWorker } from "../lib/register-sw";
+import { installOfflineQueue } from "../lib/offline-queue";
 
 function NotFoundComponent() {
   return (
@@ -130,6 +131,7 @@ function RootComponent() {
 
   useEffect(() => {
     registerAppServiceWorker();
+    installOfflineQueue();
   }, []);
 
   return (

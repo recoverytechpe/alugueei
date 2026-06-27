@@ -85,6 +85,40 @@ function AdminPanel() {
     },
   });
 
+  const { data: reports, isLoading: loadingReports } = useQuery({
+    queryKey: ["admin-reports"],
+    enabled: !!isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("id, reporter_id, target_type, target_id, reason, details, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const updateReport = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "reviewing" | "resolved" | "dismissed" }) => {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("reports")
+        .update({
+          status,
+          resolved_at: status === "pending" ? null : new Date().toISOString(),
+          resolved_by: u.user?.id ?? null,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Denúncia atualizada");
+      qc.invalidateQueries({ queryKey: ["admin-reports"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   useEffect(() => {
     if (!isAdmin) return;
     const channel = supabase

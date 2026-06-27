@@ -89,6 +89,9 @@ function PublicProfile() {
                 </div>
               )}
             </div>
+            <div className="ml-auto">
+              <ReportDialog targetType="user" targetId={id} />
+            </div>
           </CardHeader>
           {data.profile.bio && (
             <CardContent><p className="text-sm whitespace-pre-line">{data.profile.bio}</p></CardContent>

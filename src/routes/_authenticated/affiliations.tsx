@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -189,6 +189,7 @@ function AgentView({ userId }: { userId: string }) {
 
 function OwnerView({ userId }: { userId: string }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [reviewing, setReviewing] = useState<Affiliation | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -241,9 +242,9 @@ function OwnerView({ userId }: { userId: string }) {
   async function chatWith(agentId: string, propertyId: string) {
     try {
       const cid = await getOrCreateConversation({ propertyId, otherUserId: agentId });
-      // Open chat — let owner unlock contact freely once approved
+      // Liberar contatos automaticamente entre dono e agente afiliado
       await supabase.from("conversations").update({ contacts_unlocked: true }).eq("id", cid);
-      window.location.href = `/chat/${cid}`;
+      navigate({ to: "/chat/$id", params: { id: cid } });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao abrir chat");
     }
@@ -320,9 +321,13 @@ function OwnerView({ userId }: { userId: string }) {
         <ApproveDialog
           affiliation={reviewing}
           onClose={() => setReviewing(null)}
-          onDone={() => {
+          onDone={async (approved) => {
+            const aff = reviewing;
             setReviewing(null);
             qc.invalidateQueries({ queryKey: ["affiliations-owner", userId] });
+            if (approved) {
+              await chatWith(aff.agent_id, aff.property_id);
+            }
           }}
         />
       )}
@@ -333,7 +338,7 @@ function OwnerView({ userId }: { userId: string }) {
 function ApproveDialog({ affiliation, onClose, onDone }: {
   affiliation: Affiliation;
   onClose: () => void;
-  onDone: () => void;
+  onDone: (approved: boolean) => void;
 }) {
   const [ownerPct, setOwnerPct] = useState(String(affiliation.owner_commission_pct));
   const [tenantPct, setTenantPct] = useState(String(affiliation.tenant_commission_pct));
@@ -353,8 +358,8 @@ function ApproveDialog({ affiliation, onClose, onDone }: {
       .eq("id", affiliation.id);
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success("Afiliação aprovada");
-    onDone();
+    toast.success("Afiliação aprovada — abrindo chat com o agente");
+    onDone(true);
   }
 
   return (

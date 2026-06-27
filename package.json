@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test:e2e:prepare": "bun scripts/e2e-prepare.ts",
-    "test:e2e": "bun scripts/e2e-prepare.ts && dotenv -e .env.test -- playwright test"
+    "test:e2e": "bun scripts/e2e-prepare.ts && dotenv -e .env.test -- playwright test",
+    "test": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

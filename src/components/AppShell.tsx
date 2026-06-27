@@ -5,6 +5,7 @@ import { Home, Building2, MessageCircle, Handshake, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { BackButton } from "@/components/BackButton";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { cn } from "@/lib/utils";
 
 function useOnboardingGate() {

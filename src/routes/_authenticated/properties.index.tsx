@@ -212,7 +212,6 @@ function PropertiesList() {
   }
 
   return (
-  return (
     <div className="min-h-screen bg-background">
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10 py-4 md:py-8 space-y-4">
 

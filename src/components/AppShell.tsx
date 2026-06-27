@@ -150,6 +150,7 @@ export function AppShell() {
           })}
         </ul>
       </nav>
+      <InstallPrompt />
     </div>
   );
 }

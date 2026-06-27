@@ -68,6 +68,8 @@ function useUnreadChatCount() {
 export function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: unread = 0 } = useUnreadChatCount();
+  useOnboardingGate();
+
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col">

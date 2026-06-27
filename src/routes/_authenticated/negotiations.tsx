@@ -226,11 +226,13 @@ function ProposalsSection({
   counters,
   userId,
   setProposalStatus,
+  acceptingId,
 }: {
   proposals: Proposal[];
   counters: Counter[];
   userId: string;
   setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
+  acceptingId: string | null;
 }) {
   const countersByProposal = useMemo(() => {
     const map = new Map<string, Counter[]>();

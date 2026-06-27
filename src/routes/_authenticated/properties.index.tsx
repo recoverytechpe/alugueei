@@ -494,7 +494,10 @@ function PropertiesList() {
       </main>
 
       {compareIds.length > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-foreground text-background rounded-full shadow-lg px-4 py-2 flex items-center gap-3">
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-40 bg-foreground text-background rounded-full shadow-lg px-4 py-2 flex items-center gap-3"
+          style={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }}
+        >
           <Scale className="size-4" />
           <span className="text-sm font-medium">{compareIds.length} para comparar</span>
           <Button asChild size="sm" variant="secondary" disabled={compareIds.length < 2}>

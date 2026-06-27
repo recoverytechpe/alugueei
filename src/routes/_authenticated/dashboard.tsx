@@ -1135,15 +1135,39 @@ function TenantDashboard({ userId }: { userId: string }) {
             </CardContent>
           </Card>
         ) : loadingRegional ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-live="polite">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-64 rounded-2xl" />
+              <div key={i} className="rounded-2xl overflow-hidden bg-card border">
+                <Skeleton className="aspect-[16/10] w-full rounded-none" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <div className="flex gap-2 pt-1">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         ) : (regional ?? []).length === 0 ? (
           <Card className="border-dashed">
-            <CardContent className="p-8 text-center text-sm text-muted-foreground">
-              Ainda não temos imóveis disponíveis em {selectedCity}. Em breve, novidades.
+            <CardContent className="p-8 text-center space-y-3">
+              <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                <Home className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium">Nenhum imóvel disponível em {selectedCity}</p>
+              <p className="text-xs text-muted-foreground">
+                Tente outra cidade no seletor acima ou veja todos os imóveis publicados.
+              </p>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/properties">Ver todos os imóveis</Link>
+              </Button>
             </CardContent>
           </Card>
         ) : (

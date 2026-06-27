@@ -227,8 +227,69 @@ function OnboardingWizard() {
               <Button variant="ghost" onClick={() => setStep(1)}>
                 Voltar
               </Button>
-              <Button onClick={() => save.mutate()} disabled={save.isPending}>
-                {save.isPending ? "Salvando..." : "Concluir"}
+              <Button onClick={() => setStep(3)}>
+                Continuar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 3 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShieldCheck className="size-5 text-primary" />
+              Termos e Privacidade
+            </CardTitle>
+            <CardDescription>
+              Para usar a plataforma, você precisa aceitar nossos termos e a política de privacidade (LGPD).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg border p-4 space-y-3 bg-muted/30">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={acceptTerms}
+                  onCheckedChange={(v) => setAcceptTerms(v === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-sm leading-relaxed">
+                  Li e aceito os{" "}
+                  <Link to="/terms" target="_blank" className="underline text-primary">
+                    Termos de Uso
+                  </Link>{" "}
+                  (versão {TERMS_VERSION}).
+                </span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={acceptPrivacy}
+                  onCheckedChange={(v) => setAcceptPrivacy(v === true)}
+                  className="mt-0.5"
+                />
+                <span className="text-sm leading-relaxed">
+                  Li e concordo com a{" "}
+                  <Link to="/privacy" target="_blank" className="underline text-primary">
+                    Política de Privacidade
+                  </Link>{" "}
+                  e autorizo o tratamento dos meus dados pessoais conforme a LGPD (versão {PRIVACY_VERSION}).
+                </span>
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Você pode revogar o consentimento a qualquer momento solicitando a exclusão da conta em
+              privacidade@alugueei.com.br.
+            </p>
+            <div className="flex justify-between pt-2">
+              <Button variant="ghost" onClick={() => setStep(2)}>
+                Voltar
+              </Button>
+              <Button
+                onClick={() => save.mutate()}
+                disabled={save.isPending || !acceptTerms || !acceptPrivacy}
+              >
+                {save.isPending ? "Salvando..." : "Aceitar e concluir"}
               </Button>
             </div>
           </CardContent>

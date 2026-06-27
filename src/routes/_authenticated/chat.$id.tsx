@@ -163,9 +163,9 @@ function ChatThread() {
           <Link
             to="/properties/$id"
             params={{ id: data.conv.property_id }}
-            className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0 overflow-hidden"
+            className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden"
           >
-            <HomeIcon className="h-5 w-5 text-blue-700" />
+            <HomeIcon className="h-5 w-5 text-primary" />
           </Link>
           <div className="flex-1 min-w-0">
             <h1 className="text-sm font-bold truncate">{data.conv.properties?.title ?? "Imóvel"}</h1>
@@ -194,8 +194,8 @@ function ChatThread() {
       <main className="flex-1 bg-background pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <div className="max-w-3xl mx-auto px-3 py-3 space-y-3">
           {/* Security banner */}
-          <div className="flex items-start gap-3 rounded-2xl bg-blue-50 border border-blue-100 px-3 py-2.5">
-            <ShieldCheck className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" strokeWidth={1.8} />
+          <div className="flex items-start gap-3 rounded-2xl bg-primary/5 border border-primary/15 px-3 py-2.5">
+            <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" strokeWidth={1.8} />
             <p className="text-xs text-foreground leading-snug">
               Mantenha a comunicação dentro da plataforma para sua segurança.
               {!unlocked && " Telefones e e-mails são ocultados até a liberação."}
@@ -222,19 +222,19 @@ function ChatThread() {
                 return (
                   <div key={m.id} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
                     {!mine && (
-                      <div className={`h-8 w-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 ${showAvatar ? "" : "invisible"}`}>
+                      <div className={`h-8 w-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-semibold flex-shrink-0 ${showAvatar ? "" : "invisible"}`}>
                         {(data.other?.full_name ?? "U").charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div
                       className={`max-w-[80%] rounded-2xl px-3.5 py-2 ${
                         mine
-                          ? "bg-blue-600 text-white rounded-br-md"
+                          ? "bg-primary text-primary-foreground rounded-br-md"
                           : "bg-muted text-foreground rounded-bl-md"
                       }`}
                     >
                       <p className="whitespace-pre-wrap break-words text-[15px] leading-snug">{display}</p>
-                      <div className={`mt-1 flex items-center justify-end gap-1 text-[11px] ${mine ? "text-white/80" : "text-muted-foreground"}`}>
+                      <div className={`mt-1 flex items-center justify-end gap-1 text-[11px] ${mine ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                         <span>{time}</span>
                         {mine && (m.read_at
                           ? <CheckCheck className="h-3.5 w-3.5" />
@@ -258,13 +258,13 @@ function ChatThread() {
         <form onSubmit={send} className="max-w-3xl mx-auto px-3 py-2 flex items-end gap-2">
           <button
             type="button"
-            className="h-10 w-10 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center flex-shrink-0"
+            className="h-10 w-10 rounded-full border border-primary/30 text-primary hover:bg-primary/5 flex items-center justify-center flex-shrink-0"
             aria-label="Anexar foto"
             onClick={() => toast.info("Anexos em breve")}
           >
             <Camera className="h-5 w-5" />
           </button>
-          <div className="flex-1 rounded-2xl border bg-background px-3 py-1.5 focus-within:ring-2 focus-within:ring-blue-200">
+          <div className="flex-1 rounded-2xl border bg-background px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary/30">
             <textarea
               ref={inputRef}
               value={text}
@@ -290,7 +290,7 @@ function ChatThread() {
           <button
             type="submit"
             disabled={sending || !text.trim()}
-            className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95"
+            className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex items-center justify-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95"
             aria-label="Enviar"
           >
             <Send className="h-5 w-5" />

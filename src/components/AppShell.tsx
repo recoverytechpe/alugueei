@@ -53,7 +53,7 @@ export function AppShell() {
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:px-6">
           <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white font-bold">
+            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">
               A
             </div>
             <span className="truncate text-base font-semibold tracking-tight">Alugueei</span>

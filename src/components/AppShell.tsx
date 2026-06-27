@@ -3,7 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Home, Building2, MessageCircle, Handshake, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
+import { BackButton } from "@/components/BackButton";
 import { cn } from "@/lib/utils";
+
 
 type NavItem = {
   to: "/dashboard" | "/properties" | "/chat" | "/negotiations" | "/profile";
@@ -52,13 +54,17 @@ export function AppShell() {
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4 sm:px-6">
-          <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">
-              A
-            </div>
-            <span className="truncate text-base font-semibold tracking-tight">Alugueei</span>
-          </Link>
+          <div className="flex items-center gap-1 min-w-0">
+            <BackButton />
+            <Link to="/dashboard" className="flex items-center gap-2 min-w-0">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">
+                A
+              </div>
+              <span className="truncate text-base font-semibold tracking-tight">Alugueei</span>
+            </Link>
+          </div>
           <div className="flex items-center gap-1">
+
             <NotificationBell />
           </div>
         </div>

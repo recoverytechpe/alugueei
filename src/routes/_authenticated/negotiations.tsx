@@ -105,9 +105,8 @@ function NegotiationsPage() {
     }
     await qc.invalidateQueries({ queryKey: ["negotiations"] });
     if (contractId) {
-      toast.success("Proposta aceita — contrato gerado", {
-        action: { label: "Abrir contrato", onClick: () => { window.location.href = `/contracts/${contractId}`; } },
-      });
+      toast.success("Proposta aceita — abrindo contrato…");
+      navigate({ to: "/contracts/$id", params: { id: contractId } });
     } else {
       toast.warning("Proposta aceita, mas o contrato ainda não apareceu. Verifique em Contratos em instantes.");
     }

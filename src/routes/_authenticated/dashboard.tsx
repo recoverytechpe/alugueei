@@ -336,7 +336,7 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
   return (
     <div className="space-y-6">
       {/* Hero header */}
-      <div className="relative -mx-6 -mt-8 mb-2 bg-gradient-to-br from-blue-600 to-blue-700 px-6 pt-8 pb-16 text-white">
+      <div className="relative -mx-4 sm:-mx-6 -mt-6 sm:-mt-8 mb-2 bg-gradient-to-br from-blue-600 to-blue-700 px-4 sm:px-6 pt-6 sm:pt-8 pb-16 text-white">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-white/15 flex items-center justify-center">

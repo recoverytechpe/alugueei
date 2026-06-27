@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatBRL } from "@/lib/property-helpers";
-import { ShieldCheck, MessageSquareReply } from "lucide-react";
+import { ShieldCheck, MessageSquareReply, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +49,7 @@ type Counter = {
 function NegotiationsPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["negotiations"],
     queryFn: async () => {
@@ -92,23 +93,29 @@ function NegotiationsPage() {
       return;
     }
 
-    // Confirma que o trigger DB gerou o rental_contract antes de avisar o usuário
-    let contractId: string | null = null;
-    for (let i = 0; i < 5; i++) {
-      const { data: c } = await supabase
-        .from("rental_contracts")
-        .select("id")
-        .eq("proposal_id", id)
-        .maybeSingle();
-      if (c?.id) { contractId = c.id; break; }
-      await new Promise((r) => setTimeout(r, 400));
-    }
-    await qc.invalidateQueries({ queryKey: ["negotiations"] });
-    if (contractId) {
-      toast.success("Proposta aceita — abrindo contrato…");
-      navigate({ to: "/contracts/$id", params: { id: contractId } });
-    } else {
-      toast.warning("Proposta aceita, mas o contrato ainda não apareceu. Verifique em Contratos em instantes.");
+    setAcceptingId(id);
+    const loadingToast = toast.loading("Gerando contrato…");
+    try {
+      let contractId: string | null = null;
+      for (let i = 0; i < 8; i++) {
+        const { data: c } = await supabase
+          .from("rental_contracts")
+          .select("id")
+          .eq("proposal_id", id)
+          .maybeSingle();
+        if (c?.id) { contractId = c.id; break; }
+        await new Promise((r) => setTimeout(r, 500));
+      }
+      await qc.invalidateQueries({ queryKey: ["negotiations"] });
+      toast.dismiss(loadingToast);
+      if (contractId) {
+        toast.success("Proposta aceita — abrindo contrato…");
+        navigate({ to: "/contracts/$id", params: { id: contractId } });
+      } else {
+        toast.warning("Proposta aceita, mas o contrato ainda não apareceu. Verifique em Contratos em instantes.");
+      }
+    } finally {
+      setAcceptingId(null);
     }
   }
 
@@ -128,6 +135,7 @@ function NegotiationsPage() {
         counters={data.counters}
         userId={data.userId}
         setProposalStatus={setProposalStatus}
+        acceptingId={acceptingId}
       />
     </div>
   );
@@ -218,11 +226,13 @@ function ProposalsSection({
   counters,
   userId,
   setProposalStatus,
+  acceptingId,
 }: {
   proposals: Proposal[];
   counters: Counter[];
   userId: string;
   setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
+  acceptingId: string | null;
 }) {
   const countersByProposal = useMemo(() => {
     const map = new Map<string, Counter[]>();
@@ -301,6 +311,8 @@ function ProposalsSection({
           counters={countersByProposal.get(p.id) ?? []}
           userId={userId}
           setProposalStatus={setProposalStatus}
+          isAccepting={acceptingId === p.id}
+          anyAccepting={acceptingId !== null}
         />
       ))}
     </section>
@@ -312,11 +324,15 @@ function ProposalCard({
   counters,
   userId,
   setProposalStatus,
+  isAccepting,
+  anyAccepting,
 }: {
   proposal: Proposal;
   counters: Counter[];
   userId: string;
   setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
+  isAccepting: boolean;
+  anyAccepting: boolean;
 }) {
   const isParticipant = userId === p.owner_id || userId === p.tenant_id;
   const lastCounter = counters[counters.length - 1];
@@ -413,12 +429,14 @@ function ProposalCard({
       <CardContent className="flex gap-2 flex-wrap">
         {p.status === "pending" && userId === p.owner_id && (
           <>
-            <Button size="sm" onClick={() => setProposalStatus(p.id, "accepted")}>Aceitar</Button>
-            <Button size="sm" variant="outline" onClick={() => setProposalStatus(p.id, "rejected")}>Recusar</Button>
+            <Button size="sm" disabled={anyAccepting} onClick={() => setProposalStatus(p.id, "accepted")}>
+              {isAccepting ? (<><Loader2 className="size-4 mr-1 animate-spin" />Gerando contrato…</>) : "Aceitar"}
+            </Button>
+            <Button size="sm" variant="outline" disabled={anyAccepting} onClick={() => setProposalStatus(p.id, "rejected")}>Recusar</Button>
           </>
         )}
         {p.status === "pending" && userId === p.tenant_id && (
-          <Button size="sm" variant="ghost" onClick={() => setProposalStatus(p.id, "withdrawn")}>Retirar</Button>
+          <Button size="sm" variant="ghost" disabled={anyAccepting} onClick={() => setProposalStatus(p.id, "withdrawn")}>Retirar</Button>
         )}
         {canCounter && (
           <Button size="sm" variant="outline" onClick={() => setShowForm((s) => !s)}>

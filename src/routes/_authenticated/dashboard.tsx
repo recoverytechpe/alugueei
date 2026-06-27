@@ -1060,21 +1060,29 @@ function TenantDashboard({ userId }: { userId: string }) {
 
           <div className="w-full md:w-72 space-y-1.5">
             <label className="text-xs text-white/70 font-medium">Sua localidade preferida</label>
-            <Select
-              value={selectedCity ?? ""}
-              onValueChange={(v) => setSelectedCity(v)}
-            >
-              <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white hover:bg-white/15 [&>span]:text-white">
-                <SelectValue placeholder="Selecione uma cidade" />
-              </SelectTrigger>
-              <SelectContent>
-                {(cities ?? []).map((c) => (
-                  <SelectItem key={`${c.city}-${c.state ?? ""}`} value={c.city}>
-                    {c.city}{c.state ? ` · ${c.state}` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {loadingCities ? (
+              <Skeleton className="h-11 w-full rounded-md bg-white/15" />
+            ) : (cities ?? []).length === 0 ? (
+              <div className="h-11 flex items-center px-3 rounded-md bg-white/10 border border-white/20 text-xs text-white/70">
+                Nenhuma cidade disponível ainda
+              </div>
+            ) : (
+              <Select
+                value={selectedCity ?? ""}
+                onValueChange={(v) => setSelectedCity(v)}
+              >
+                <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white hover:bg-white/15 [&>span]:text-white">
+                  <SelectValue placeholder="Selecione uma cidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(cities ?? []).map((c) => (
+                    <SelectItem key={`${c.city}-${c.state ?? ""}`} value={c.city}>
+                      {c.city}{c.state ? ` · ${c.state}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
       </section>

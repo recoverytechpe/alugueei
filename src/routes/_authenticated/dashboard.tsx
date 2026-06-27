@@ -205,12 +205,12 @@ function Dashboard() {
 
 function Stat({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl">{value}</CardTitle>
+    <Card className="min-w-0">
+      <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-2 space-y-1">
+        <CardDescription className="text-xs sm:text-sm leading-tight">{label}</CardDescription>
+        <CardTitle className="text-xl sm:text-2xl">{value}</CardTitle>
       </CardHeader>
-      {hint && <CardContent className="text-xs text-muted-foreground">{hint}</CardContent>}
+      {hint && <CardContent className="p-4 sm:p-6 pt-0 text-[11px] sm:text-xs text-muted-foreground leading-snug">{hint}</CardContent>}
     </Card>
   );
 }

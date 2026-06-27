@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +36,11 @@ import { Route as AuthenticatedChatIdRouteImport } from './routes/_authenticated
 import { Route as ApiPublicHooksUnlockExpiryWarningRouteImport } from './routes/api/public/hooks/unlock-expiry-warning'
 import { Route as AuthenticatedPropertiesIdEditRouteImport } from './routes/_authenticated/properties.$id.edit'
 
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -174,6 +180,7 @@ const AuthenticatedPropertiesIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/search': typeof SearchRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/affiliations': typeof AuthenticatedAffiliationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/search': typeof SearchRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/affiliations': typeof AuthenticatedAffiliationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -228,6 +236,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/search': typeof SearchRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/affiliations': typeof AuthenticatedAffiliationsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -256,6 +265,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/search'
     | '/admin'
     | '/affiliations'
     | '/dashboard'
@@ -282,6 +292,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/search'
     | '/admin'
     | '/affiliations'
     | '/dashboard'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/search'
     | '/_authenticated/admin'
     | '/_authenticated/affiliations'
     | '/_authenticated/dashboard'
@@ -337,6 +349,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  SearchRoute: typeof SearchRoute
   ApiPublicCitiesRoute: typeof ApiPublicCitiesRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicNeighborhoodsRoute: typeof ApiPublicNeighborhoodsRoute
@@ -345,6 +358,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -584,6 +604,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  SearchRoute: SearchRoute,
   ApiPublicCitiesRoute: ApiPublicCitiesRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicNeighborhoodsRoute: ApiPublicNeighborhoodsRoute,

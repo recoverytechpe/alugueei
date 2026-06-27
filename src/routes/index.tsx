@@ -192,10 +192,11 @@ function Home() {
         <section className="px-6 md:px-10 pt-6 md:pt-10">
           <div className="flex items-center justify-between mb-3 md:mb-6">
             <h2 className="text-lg md:text-2xl font-semibold">Imóveis em destaque</h2>
-            <Link to="/properties" className="text-xs md:text-sm font-medium text-primary hover:underline">
-              Ver todos
+            <Link to="/search" className="text-xs md:text-sm font-medium text-primary hover:underline">
+              Busca avançada
             </Link>
           </div>
+
 
           <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
 

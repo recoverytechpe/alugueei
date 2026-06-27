@@ -196,9 +196,9 @@ function UnlockDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="gap-2">
+        <Button size="sm" className="gap-2" variant={expired ? "default" : "default"}>
           <Lock className="size-4" />
-          Desbloquear imóvel · R$ {(UNLOCK_PRICE_CENTS / 100).toFixed(2).replace(".", ",")}
+          {expired ? "Renovar acesso" : "Desbloquear imóvel"} · R$ {(UNLOCK_PRICE_CENTS / 100).toFixed(2).replace(".", ",")}
         </Button>
       </DialogTrigger>
       <DialogContent>

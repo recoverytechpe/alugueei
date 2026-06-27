@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPreapprovalsRouteImport } from './routes/_authenticated/preapprovals'
 import { Route as AuthenticatedNegotiationsRouteImport } from './routes/_authenticated/negotiations'
+import { Route as AuthenticatedFinancialsRouteImport } from './routes/_authenticated/financials'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAffiliationsRouteImport } from './routes/_authenticated/affiliations'
@@ -65,6 +66,11 @@ const AuthenticatedNegotiationsRoute =
     path: '/negotiations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFinancialsRoute = AuthenticatedFinancialsRouteImport.update({
+  id: '/financials',
+  path: '/financials',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/affiliations': typeof AuthenticatedAffiliationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
+  '/financials': typeof AuthenticatedFinancialsRoute
   '/negotiations': typeof AuthenticatedNegotiationsRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/affiliations': typeof AuthenticatedAffiliationsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
+  '/financials': typeof AuthenticatedFinancialsRoute
   '/negotiations': typeof AuthenticatedNegotiationsRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/_authenticated/affiliations': typeof AuthenticatedAffiliationsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
+  '/_authenticated/financials': typeof AuthenticatedFinancialsRoute
   '/_authenticated/negotiations': typeof AuthenticatedNegotiationsRoute
   '/_authenticated/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/affiliations'
     | '/dashboard'
     | '/favorites'
+    | '/financials'
     | '/negotiations'
     | '/preapprovals'
     | '/profile'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/affiliations'
     | '/dashboard'
     | '/favorites'
+    | '/financials'
     | '/negotiations'
     | '/preapprovals'
     | '/profile'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '/_authenticated/affiliations'
     | '/_authenticated/dashboard'
     | '/_authenticated/favorites'
+    | '/_authenticated/financials'
     | '/_authenticated/negotiations'
     | '/_authenticated/preapprovals'
     | '/_authenticated/profile'
@@ -373,6 +385,13 @@ declare module '@tanstack/react-router' {
       path: '/negotiations'
       fullPath: '/negotiations'
       preLoaderRoute: typeof AuthenticatedNegotiationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financials': {
+      id: '/_authenticated/financials'
+      path: '/financials'
+      fullPath: '/financials'
+      preLoaderRoute: typeof AuthenticatedFinancialsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/favorites': {
@@ -523,6 +542,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAffiliationsRoute: typeof AuthenticatedAffiliationsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
+  AuthenticatedFinancialsRoute: typeof AuthenticatedFinancialsRoute
   AuthenticatedNegotiationsRoute: typeof AuthenticatedNegotiationsRoute
   AuthenticatedPreapprovalsRoute: typeof AuthenticatedPreapprovalsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -542,6 +562,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAffiliationsRoute: AuthenticatedAffiliationsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
+  AuthenticatedFinancialsRoute: AuthenticatedFinancialsRoute,
   AuthenticatedNegotiationsRoute: AuthenticatedNegotiationsRoute,
   AuthenticatedPreapprovalsRoute: AuthenticatedPreapprovalsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,

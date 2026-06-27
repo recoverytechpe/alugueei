@@ -121,7 +121,7 @@ function OnboardingWizard() {
     );
   }
 
-  const totalSteps = 2;
+  const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
 
   return (

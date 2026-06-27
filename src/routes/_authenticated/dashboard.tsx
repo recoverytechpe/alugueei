@@ -1184,9 +1184,41 @@ function TenantDashboard({ userId }: { userId: string }) {
           </div>
         )}
       </section>
+
+      <Dialog open={welcomeOpen} onOpenChange={(o) => { if (!o) closeWelcome(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bem-vindo! Onde você procura imóveis?</DialogTitle>
+            <DialogDescription>
+              Escolha sua localidade preferida para vermos imóveis verificados próximos de você.
+              Você pode mudar depois no seletor do topo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Cidade</label>
+            <Select value={welcomeChoice} onValueChange={setWelcomeChoice}>
+              <SelectTrigger className="h-11">
+                <SelectValue placeholder="Selecione uma cidade" />
+              </SelectTrigger>
+              <SelectContent>
+                {(cities ?? []).map((c) => (
+                  <SelectItem key={`${c.city}-${c.state ?? ""}`} value={c.city}>
+                    {c.city}{c.state ? ` · ${c.state}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="ghost" onClick={() => closeWelcome(false)}>Agora não</Button>
+            <Button onClick={() => closeWelcome(true)} disabled={!welcomeChoice}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function useTenantCity(storageKey: string) {
   const [value, setValue] = useState<string | null>(() => {

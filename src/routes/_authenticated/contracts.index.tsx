@@ -44,9 +44,20 @@ function ContractsPage() {
         .eq("rater_id", u.user.id);
       const ratingsByContract: Record<string, { stars: number; comment: string }> = {};
       for (const r of ratings ?? []) ratingsByContract[r.contract_id] = { stars: r.stars, comment: r.comment };
-      return { userId: u.user.id, contracts: (contracts ?? []) as unknown as Contract[], ratingsByContract };
+
+      const { data: tRatings } = await supabase
+        .from("tenant_ratings" as never)
+        .select("contract_id, stars, comment")
+        .eq("rater_id", u.user.id);
+      const tenantRatingsByContract: Record<string, { stars: number; comment: string }> = {};
+      for (const r of (tRatings ?? []) as Array<{ contract_id: string; stars: number; comment: string }>) {
+        tenantRatingsByContract[r.contract_id] = { stars: r.stars, comment: r.comment };
+      }
+
+      return { userId: u.user.id, contracts: (contracts ?? []) as unknown as Contract[], ratingsByContract, tenantRatingsByContract };
     },
   });
+
 
   if (isLoading || !data) {
     return <div className="p-8 space-y-4"><Skeleton className="h-10 w-64" /><Skeleton className="h-40 w-full max-w-2xl" /></div>;
@@ -70,22 +81,26 @@ function ContractsPage() {
             contract={c}
             userId={data.userId}
             existing={data.ratingsByContract[c.id]}
+            existingTenantRating={data.tenantRatingsByContract[c.id]}
             onSaved={() => qc.invalidateQueries({ queryKey: ["my-contracts"] })}
           />
         ))}
+
       </main>
     </div>
   );
 }
 
 function ContractCard({
-  contract, userId, existing, onSaved,
+  contract, userId, existing, existingTenantRating, onSaved,
 }: {
   contract: Contract;
   userId: string;
   existing?: { stars: number; comment: string };
+  existingTenantRating?: { stars: number; comment: string };
   onSaved: () => void;
 }) {
+
   const canRate =
     contract.status === "closed" &&
     contract.agent_id &&
@@ -171,7 +186,68 @@ function ContractCard({
               : "Avaliação liberada após o contrato ser fechado."}
           </p>
         )}
+        {contract.status === "closed" && userId === contract.owner_id && (
+          <TenantRatingForm
+            contractId={contract.id}
+            tenantId={contract.tenant_id}
+            raterId={userId}
+            existing={existingTenantRating}
+            onSaved={onSaved}
+          />
+        )}
       </CardContent>
     </Card>
   );
 }
+
+function TenantRatingForm({
+  contractId, tenantId, raterId, existing, onSaved,
+}: {
+  contractId: string;
+  tenantId: string;
+  raterId: string;
+  existing?: { stars: number; comment: string };
+  onSaved: () => void;
+}) {
+  const [stars, setStars] = useState(existing?.stars ?? 0);
+  const [comment, setComment] = useState(existing?.comment ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (stars < 1 || stars > 5) return toast.error("Selecione de 1 a 5 estrelas");
+    setSaving(true);
+    const { error } = await supabase.from("tenant_ratings" as never).upsert(
+      {
+        contract_id: contractId,
+        tenant_id: tenantId,
+        rater_id: raterId,
+        stars,
+        comment: comment.trim().slice(0, 1000),
+      } as never,
+      { onConflict: "contract_id" },
+    );
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success(existing ? "Avaliação do locatário atualizada" : "Locatário avaliado");
+    onSaved();
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-3 border-t pt-3">
+      <p className="text-sm font-medium">
+        {existing ? "Atualizar avaliação do locatário" : "Avaliar o locatário"}
+      </p>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" onClick={() => setStars(n)} aria-label={`${n} estrelas`} className="p-1">
+            <Star className={`h-6 w-6 ${n <= stars ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+          </button>
+        ))}
+      </div>
+      <Textarea rows={3} maxLength={1000} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Como foi a experiência com este locatário?" />
+      <Button type="submit" disabled={saving}>{saving ? "Enviando..." : "Enviar avaliação"}</Button>
+    </form>
+  );
+}
+

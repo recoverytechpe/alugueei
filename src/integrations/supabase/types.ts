@@ -90,6 +90,35 @@ export type Database = {
           },
         ]
       }
+      conversation_archives: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_archives_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           contacts_unlocked: boolean
@@ -864,6 +893,68 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_ratings: {
+        Row: {
+          comment: string
+          contract_id: string
+          created_at: string
+          id: string
+          rater_id: string
+          stars: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string
+          contract_id: string
+          created_at?: string
+          id?: string
+          rater_id: string
+          stars: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string
+          contract_id?: string
+          created_at?: string
+          id?: string
+          rater_id?: string
+          stars?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_ratings_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: true
+            referencedRelation: "rental_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -985,6 +1076,13 @@ export type Database = {
         Returns: {
           interested_count: number
           property_id: string
+        }[]
+      }
+      get_tenant_rating: {
+        Args: { _tenant_id: string }
+        Returns: {
+          avg_stars: number
+          total_ratings: number
         }[]
       }
       has_role: {

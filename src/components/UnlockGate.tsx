@@ -201,15 +201,15 @@ function UnlockDialog({
           {expired ? "Renovar acesso" : "Desbloquear imóvel"} · R$ {(UNLOCK_PRICE_CENTS / 100).toFixed(2).replace(".", ",")}
         </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[92dvh] p-0 flex flex-col gap-0">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b">
           <DialogTitle>Desbloquear este imóvel</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs">
             Taxa única de seriedade. Válido por 30 dias e libera endereço exato, chat com o anunciante,
             envio de proposta e reserva.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3 text-sm">
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 text-sm">
           <div className="rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
             <p><strong>Termos de uso resumidos:</strong></p>
             <ul className="list-disc pl-4 space-y-0.5">
@@ -219,22 +219,25 @@ function UnlockDialog({
               <li>Compartilhar o endereço fora do app é proibido.</li>
             </ul>
           </div>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <Checkbox checked={terms} onCheckedChange={(v) => setTerms(v === true)} />
+          <label className="flex items-start gap-2 cursor-pointer py-1">
+            <Checkbox checked={terms} onCheckedChange={(v) => setTerms(v === true)} className="mt-0.5" />
             <span className="text-sm">Li e aceito os termos de uso e a política anti-bypass.</span>
           </label>
-          <label className="flex items-start gap-2 cursor-pointer">
-            <Checkbox checked={lgpd} onCheckedChange={(v) => setLgpd(v === true)} />
+          <label className="flex items-start gap-2 cursor-pointer py-1">
+            <Checkbox checked={lgpd} onCheckedChange={(v) => setLgpd(v === true)} className="mt-0.5" />
             <span className="text-sm">
               Autorizo o tratamento dos meus dados pessoais para esta negociação,
               conforme a <strong>LGPD</strong> (Lei 13.709/2018).
             </span>
           </label>
         </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading}>Cancelar</Button>
-          <Button onClick={handleUnlock} disabled={loading || !terms || !lgpd}>
-            {loading ? "Processando…" : "Confirmar desbloqueio"}
+        <DialogFooter
+          className="px-5 py-3 border-t flex-row gap-2 sm:flex-row"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        >
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={loading} className="flex-1">Cancelar</Button>
+          <Button onClick={handleUnlock} disabled={loading || !terms || !lgpd} className="flex-1">
+            {loading ? "Processando…" : "Confirmar"}
           </Button>
         </DialogFooter>
       </DialogContent>

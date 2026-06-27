@@ -92,13 +92,15 @@ function ContractsPage() {
 }
 
 function ContractCard({
-  contract, userId, existing, onSaved,
+  contract, userId, existing, existingTenantRating, onSaved,
 }: {
   contract: Contract;
   userId: string;
   existing?: { stars: number; comment: string };
+  existingTenantRating?: { stars: number; comment: string };
   onSaved: () => void;
 }) {
+
   const canRate =
     contract.status === "closed" &&
     contract.agent_id &&

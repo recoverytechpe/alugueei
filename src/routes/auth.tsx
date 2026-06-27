@@ -39,12 +39,35 @@ const loginSchema = z.object({
 function AuthPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/dashboard" });
     });
   }, [navigate]);
+
+  async function handleForgot(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") ?? "").trim();
+    const parsed = z.string().email("Email inválido").safeParse(email);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Enviamos um link para seu email.");
+    setShowForgot(false);
+  }
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -136,6 +159,22 @@ function AuthPage() {
                 <Button type="submit" className="w-full h-11" disabled={loading}>
                   {loading ? "Entrando..." : "Entrar"}
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => setShowForgot((v) => !v)}
+                  className="block w-full text-center text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Esqueci minha senha
+                </button>
+                {showForgot && (
+                  <form onSubmit={handleForgot} className="space-y-2 rounded-lg border p-3">
+                    <Label htmlFor="forgot-email">Email para recuperação</Label>
+                    <Input id="forgot-email" name="email" type="email" required />
+                    <Button type="submit" variant="secondary" className="w-full h-10" disabled={loading}>
+                      {loading ? "Enviando..." : "Enviar link de recuperação"}
+                    </Button>
+                  </form>
+                )}
               </form>
             </TabsContent>
 

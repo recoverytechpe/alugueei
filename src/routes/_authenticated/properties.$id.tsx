@@ -261,27 +261,44 @@ function PropertyDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto max-w-[440px] min-h-screen bg-background shadow-xl pb-28 relative">
-        {/* Gallery */}
+    <div className="bg-background">
+      <div className="mx-auto w-full max-w-3xl pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-8 relative">
+        {/* Swipeable gallery */}
         <section className="relative">
-          <div className="aspect-[4/3] bg-muted overflow-hidden">
-            {cover ? (
-              <img src={cover} alt={data.title} className="w-full h-full object-cover" />
+          <div
+            className="flex overflow-x-auto snap-x snap-mandatory aspect-[4/3] md:aspect-[16/9] md:rounded-b-2xl bg-muted [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const i = Math.round(el.scrollLeft / el.clientWidth);
+              if (i !== activePhoto) setActivePhoto(i);
+            }}
+          >
+            {data.photoUrls.length === 0 ? (
+              <div className="w-full shrink-0 snap-center flex items-center justify-center text-muted-foreground">
+                Sem fotos
+              </div>
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">Sem fotos</div>
+              data.photoUrls.map((u, i) => (
+                <img
+                  key={i}
+                  src={u}
+                  alt={`${data.title} foto ${i + 1}`}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  className="w-full h-full shrink-0 snap-center object-cover"
+                />
+              ))
             )}
           </div>
 
-          <div className="absolute top-0 inset-x-0 px-4 pt-4 flex items-center justify-between">
-            <Link to="/properties" className="size-10 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow hover:bg-background" aria-label="Voltar">
+          {/* Floating action buttons */}
+          <div className="absolute top-3 inset-x-0 px-3 flex items-center justify-between" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+            <Link to="/properties" className="size-10 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow active:scale-95 transition-transform" aria-label="Voltar">
               <ArrowLeft className="size-4" />
             </Link>
-            <p className="text-xs font-medium bg-background/90 backdrop-blur px-3 py-1.5 rounded-full shadow">Detalhes do imóvel</p>
             <div className="flex gap-2">
               <button
                 onClick={() => userId ? favMutation.mutate(!isFav) : toast.error("Faça login")}
-                className="size-10 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow hover:bg-background"
+                className="size-10 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow active:scale-95 transition-transform"
                 aria-label={isFav ? "Remover dos favoritos" : "Favoritar"}
                 aria-pressed={!!isFav}
               >
@@ -289,7 +306,7 @@ function PropertyDetail() {
               </button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="size-10 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow hover:bg-background" aria-label="Compartilhar">
+                  <button className="size-10 rounded-full bg-background/90 backdrop-blur flex items-center justify-center shadow active:scale-95 transition-transform" aria-label="Compartilhar">
                     <Share2 className="size-4" />
                   </button>
                 </DropdownMenuTrigger>
@@ -302,22 +319,31 @@ function PropertyDetail() {
             </div>
           </div>
 
+          {/* Photo counter + dots */}
           {data.photoUrls.length > 1 && (
-            <div className="absolute bottom-3 inset-x-0 px-4 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {data.photoUrls.map((u, i) => (
-                <button key={i} onClick={() => setActivePhoto(i)}
-                  className={`shrink-0 w-14 h-10 rounded-md overflow-hidden border-2 ${i === activePhoto ? "border-background ring-2 ring-primary" : "border-background/60"}`}>
-                  <img src={u} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-black/55 text-white text-xs font-medium px-2.5 py-1 rounded-full" style={{ marginTop: "env(safe-area-inset-top)" }}>
+                {activePhoto + 1} / {data.photoUrls.length}
+              </div>
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                {data.photoUrls.map((_, i) => (
+                  <span
+                    key={i}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all",
+                      i === activePhoto ? "w-5 bg-white" : "w-1.5 bg-white/60",
+                    )}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </section>
 
-        <main className="px-5 pt-5 space-y-5">
+        <main className="px-4 sm:px-6 pt-5 space-y-5">
           <div className="space-y-1">
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-xl font-bold leading-tight">{data.title}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold leading-tight">{data.title}</h1>
               <Badge variant="secondary" className="capitalize shrink-0">{data.property_type}</Badge>
             </div>
             <p className="text-lg font-semibold text-primary">
@@ -326,7 +352,7 @@ function PropertyDetail() {
             </p>
           </div>
 
-          <div className="flex items-center gap-5 text-sm">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
             <span className="flex items-center gap-1.5"><BedDouble className="size-4 text-muted-foreground" /> {data.bedrooms} Quartos</span>
             <span className="flex items-center gap-1.5"><Bath className="size-4 text-muted-foreground" /> {data.bathrooms} Banheiros</span>
             <span className="flex items-center gap-1.5"><Car className="size-4 text-muted-foreground" /> {data.parking_spots} Vaga{data.parking_spots === 1 ? "" : "s"}</span>
@@ -369,7 +395,6 @@ function PropertyDetail() {
             </div>
           )}
 
-          {/* Tenant action grid */}
           {!data.isOwner && isTenant && (
             <div className="space-y-2">
               <h2 className="text-base font-semibold">Antes de decidir</h2>
@@ -381,7 +406,6 @@ function PropertyDetail() {
             </div>
           )}
 
-          {/* Pricing breakdown */}
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Valores mensais</CardTitle></CardHeader>
             <CardContent className="space-y-1.5 text-sm">
@@ -406,22 +430,20 @@ function PropertyDetail() {
                 ? <ProposalDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} rentSuggestion={rent} preapproval={preapproval ?? null} />
                 : <Button size="sm" onClick={requireUnlock}>🔒 Enviar proposta</Button>
             )}
-
             {data.isOwner && (
               <Button variant="destructive" size="sm" onClick={handleDelete}>Remover imóvel</Button>
             )}
           </div>
 
-          {/* Similar properties */}
           {similar && similar.length > 0 && (
             <div className="space-y-2 pt-2">
               <h2 className="text-base font-semibold">Imóveis similares na região</h2>
-              <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {similar.map((p) => (
                   <Link key={p.id} to="/properties/$id" params={{ id: p.id }}
-                    className="shrink-0 w-44 rounded-xl border bg-card overflow-hidden hover:shadow-md transition">
+                    className="shrink-0 w-44 rounded-xl border bg-card overflow-hidden hover:shadow-md transition active:scale-[0.98]">
                     <div className="aspect-[4/3] bg-muted">
-                      {p.cover && <img src={p.cover} alt={p.title} className="w-full h-full object-cover" />}
+                      {p.cover && <img src={p.cover} alt={p.title} loading="lazy" className="w-full h-full object-cover" />}
                     </div>
                     <div className="p-2.5 space-y-0.5">
                       <p className="text-xs text-muted-foreground truncate">{p.neighborhood ?? p.city}</p>
@@ -435,18 +457,25 @@ function PropertyDetail() {
           )}
         </main>
 
+        {/* Sticky CTA — above bottom tab bar */}
         {!data.isOwner && (
-          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[440px] bg-background/95 backdrop-blur border-t px-5 py-3 z-10">
-            <Button size="lg" className="w-full h-12 rounded-2xl text-base font-semibold" onClick={contactAgent} disabled={contacting}>
-              <MessageCircle className="size-5" />
-              {contacting ? "Abrindo conversa..." : "Falar com o agente"}
-            </Button>
+          <div
+            className="fixed inset-x-0 z-30 border-t bg-background/95 backdrop-blur px-4 py-3"
+            style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}
+          >
+            <div className="mx-auto max-w-3xl">
+              <Button size="lg" className="w-full h-12 rounded-2xl text-base font-semibold" onClick={contactAgent} disabled={contacting}>
+                <MessageCircle className="size-5" />
+                {contacting ? "Abrindo conversa..." : "Falar com o agente"}
+              </Button>
+            </div>
           </div>
         )}
       </div>
     </div>
   );
 }
+
 
 function Row({ label, value }: { label: string; value: string }) {
   return <div className="flex justify-between"><span className="text-muted-foreground">{label}</span><span>{value}</span></div>;

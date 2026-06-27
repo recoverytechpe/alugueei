@@ -955,7 +955,7 @@ function TenantDashboard({ userId }: { userId: string }) {
     placeholderData: (prev) => prev,
   });
 
-  const { data: cities } = useQuery({
+  const { data: cities, isLoading: loadingCities } = useQuery({
     queryKey: ["tenant-cities"],
     queryFn: async () => {
       const { data: rows } = await supabase

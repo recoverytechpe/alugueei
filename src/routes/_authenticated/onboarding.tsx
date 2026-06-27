@@ -70,20 +70,21 @@ function OnboardingWizard() {
   );
   const [form, setForm] = useState({
     full_name: profile?.profile?.full_name ?? "",
-    phone: profile?.profile?.phone ?? "",
-    cpf_cnpj: profile?.profile?.cpf_cnpj ?? "",
+    phone: "",
+    cpf_cnpj: "",
     bio: profile?.profile?.bio ?? "",
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
   useEffect(() => {
-    if (!profile?.profile) return;
-    setUserType((current) => current ?? (profile.profile.user_type as UserType | null));
+    const loadedProfile = profile?.profile;
+    if (!loadedProfile) return;
+    setUserType((current) => current ?? (loadedProfile.user_type as UserType | null));
     setForm((current) => ({
       ...current,
-      full_name: current.full_name || profile.profile?.full_name || "",
-      bio: current.bio || profile.profile?.bio || "",
+      full_name: current.full_name || loadedProfile.full_name || "",
+      bio: current.bio || loadedProfile.bio || "",
     }));
   }, [profile?.profile]);
 

@@ -975,6 +975,28 @@ function TenantDashboard({ userId }: { userId: string }) {
     staleTime: 5 * 60_000,
   });
 
+  // Popup de boas-vindas — abre na primeira visita se ainda não houver cidade salva
+  // nem o flag de "já perguntei". Decisão fica persistente em localStorage.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (selectedCity) return;
+    const prompted = window.localStorage.getItem("tenant_city_prompted");
+    if (prompted) return;
+    if (cities && cities.length > 0) {
+      setWelcomeChoice(cities[0].city);
+      setWelcomeOpen(true);
+    }
+  }, [cities, selectedCity]);
+
+  function closeWelcome(save: boolean) {
+    if (save && welcomeChoice) setSelectedCity(welcomeChoice);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("tenant_city_prompted", "1");
+    }
+    setWelcomeOpen(false);
+  }
+
+
   const { data: regional, isLoading: loadingRegional } = useQuery({
     queryKey: ["tenant-regional", selectedCity],
     enabled: !!selectedCity,

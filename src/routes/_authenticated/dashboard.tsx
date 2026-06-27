@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSignedPhotoUrls } from "@/lib/property-helpers";
 import { toast } from "sonner";
 import {
@@ -929,6 +930,10 @@ function ReputationRow({ Icon, label, value }: { Icon: typeof Award; label: stri
 
 function TenantDashboard({ userId }: { userId: string }) {
   const [selectedCity, setSelectedCity] = useTenantCity("tenant_preferred_city");
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeChoice, setWelcomeChoice] = useState<string>("");
+
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["tenant-dash", userId],
@@ -969,6 +974,28 @@ function TenantDashboard({ userId }: { userId: string }) {
     },
     staleTime: 5 * 60_000,
   });
+
+  // Popup de boas-vindas — abre na primeira visita se ainda não houver cidade salva
+  // nem o flag de "já perguntei". Decisão fica persistente em localStorage.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (selectedCity) return;
+    const prompted = window.localStorage.getItem("tenant_city_prompted");
+    if (prompted) return;
+    if (cities && cities.length > 0) {
+      setWelcomeChoice(cities[0].city);
+      setWelcomeOpen(true);
+    }
+  }, [cities, selectedCity]);
+
+  function closeWelcome(save: boolean) {
+    if (save && welcomeChoice) setSelectedCity(welcomeChoice);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("tenant_city_prompted", "1");
+    }
+    setWelcomeOpen(false);
+  }
+
 
   const { data: regional, isLoading: loadingRegional } = useQuery({
     queryKey: ["tenant-regional", selectedCity],
@@ -1157,9 +1184,41 @@ function TenantDashboard({ userId }: { userId: string }) {
           </div>
         )}
       </section>
+
+      <Dialog open={welcomeOpen} onOpenChange={(o) => { if (!o) closeWelcome(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bem-vindo! Onde você procura imóveis?</DialogTitle>
+            <DialogDescription>
+              Escolha sua localidade preferida para vermos imóveis verificados próximos de você.
+              Você pode mudar depois no seletor do topo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Cidade</label>
+            <Select value={welcomeChoice} onValueChange={setWelcomeChoice}>
+              <SelectTrigger className="h-11">
+                <SelectValue placeholder="Selecione uma cidade" />
+              </SelectTrigger>
+              <SelectContent>
+                {(cities ?? []).map((c) => (
+                  <SelectItem key={`${c.city}-${c.state ?? ""}`} value={c.city}>
+                    {c.city}{c.state ? ` · ${c.state}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="ghost" onClick={() => closeWelcome(false)}>Agora não</Button>
+            <Button onClick={() => closeWelcome(true)} disabled={!welcomeChoice}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function useTenantCity(storageKey: string) {
   const [value, setValue] = useState<string | null>(() => {

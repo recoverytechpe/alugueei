@@ -115,20 +115,15 @@ function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Meu perfil</h1>
-          <div className="flex gap-2">
-            <Button asChild variant="outline"><Link to="/dashboard">Voltar</Link></Button>
-            <Button asChild variant="outline">
-              <Link to="/users/$id" params={{ id: data.userId }}>Ver perfil público</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="bg-background">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
+        <h1 className="text-lg font-semibold">Meu perfil</h1>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/users/$id" params={{ id: data.userId }}>Ver perfil público</Link>
+        </Button>
+      </div>
 
-      <main className="max-w-3xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-8 space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Foto e identidade</CardTitle>
@@ -152,27 +147,27 @@ function ProfilePage() {
           <CardHeader><CardTitle>Dados</CardTitle></CardHeader>
           <CardContent>
             <form onSubmit={save} className="space-y-4">
-              <div>
+              <div className="space-y-1.5">
                 <Label htmlFor="full_name">Nome completo</Label>
-                <Input id="full_name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
+                <Input id="full_name" autoComplete="name" autoCapitalize="words" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="phone">Telefone</Label>
-                  <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <Input id="phone" type="tel" inputMode="tel" autoComplete="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="cpf_cnpj">CPF/CNPJ</Label>
-                  <Input id="cpf_cnpj" value={form.cpf_cnpj} onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })} />
+                  <Input id="cpf_cnpj" inputMode="numeric" value={form.cpf_cnpj} onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })} />
                 </div>
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label htmlFor="bio">Bio pública</Label>
                 <Textarea id="bio" rows={4} maxLength={500} value={form.bio}
                   onChange={(e) => setForm({ ...form, bio: e.target.value })}
                   placeholder="Conte um pouco sobre você. Aparece no seu perfil público." />
               </div>
-              <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar"}</Button>
+              <Button type="submit" disabled={saving} className="w-full sm:w-auto h-11">{saving ? "Salvando..." : "Salvar"}</Button>
             </form>
           </CardContent>
         </Card>

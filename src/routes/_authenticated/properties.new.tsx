@@ -446,13 +446,17 @@ function NewProperty() {
         )}
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-6 py-3">
+      <footer
+        className="fixed inset-x-0 z-10 border-t bg-background/95 backdrop-blur"
+        style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}
+      >
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 sm:px-6 py-3">
           <Button
             type="button"
             variant="outline"
             onClick={() => setStep((s) => Math.max(0, s - 1))}
             disabled={step === 0 || submitting}
+            className="h-11"
           >
             Voltar
           </Button>
@@ -461,12 +465,12 @@ function NewProperty() {
               type="button"
               onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
               disabled={!canNext}
-              className="min-w-32"
+              className="min-w-32 h-11 flex-1 sm:flex-none"
             >
               Continuar
             </Button>
           ) : (
-            <Button type="button" onClick={submit} disabled={submitting} className="min-w-32">
+            <Button type="button" onClick={submit} disabled={submitting} className="min-w-32 h-11 flex-1 sm:flex-none">
               {submitting ? "Publicando..." : "Publicar imóvel"}
             </Button>
           )}
@@ -588,16 +592,18 @@ function Field({
   placeholder?: string;
 }) {
   const id = `f-${label.replace(/\s+/g, "-").toLowerCase()}`;
+  const isNumeric = type === "number";
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}
         type={type}
+        inputMode={isNumeric ? "decimal" : undefined}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-xl"
+        className="rounded-xl h-11"
       />
     </div>
   );

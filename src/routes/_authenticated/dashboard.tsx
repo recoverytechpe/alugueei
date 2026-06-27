@@ -127,24 +127,25 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-semibold truncate">
               {role === "proprietario" ? "Painel do Proprietário"
                 : role === "agente" ? "Painel do Agente"
                 : "Painel do Locatário"}
             </h1>
-            <p className="text-sm text-muted-foreground">{me.profile?.full_name ?? me.email}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{me.profile?.full_name ?? me.email}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <NotificationBell />
             <PushToggle />
-            <Button variant="outline" onClick={signOut}>Sair</Button>
+            <Button variant="outline" size="sm" onClick={signOut}>Sair</Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+
         <Card>
           <CardHeader>
             <CardTitle>Ações rápidas</CardTitle>

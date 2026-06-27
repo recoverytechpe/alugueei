@@ -36,15 +36,17 @@ export function PushToggle() {
 
   if (status === "granted") {
     return (
-      <Button variant="outline" size="sm" onClick={turnOff}>
-        <BellOff className="h-4 w-4 mr-2" /> Desativar notificações
+      <Button variant="outline" size="sm" onClick={turnOff} aria-label="Desativar notificações" title="Desativar notificações">
+        <BellOff className="h-4 w-4 sm:mr-2" />
+        <span className="hidden sm:inline">Desativar notificações</span>
       </Button>
     );
   }
+  const label = status === "denied" ? "Notificações bloqueadas" : "Ativar notificações";
   return (
-    <Button variant="outline" size="sm" onClick={turnOn} disabled={status === "loading"}>
-      <Bell className="h-4 w-4 mr-2" />
-      {status === "denied" ? "Notificações bloqueadas" : "Ativar notificações"}
+    <Button variant="outline" size="sm" onClick={turnOn} disabled={status === "loading"} aria-label={label} title={label}>
+      <Bell className="h-4 w-4 sm:mr-2" />
+      <span className="hidden sm:inline">{label}</span>
     </Button>
   );
 }

@@ -476,7 +476,7 @@ export type Database = {
           parking_spots?: number
           property_type: Database["public"]["Enums"]["property_type"]
           rent_value: number
-          slug: string
+          slug?: string
           state: string
           status?: Database["public"]["Enums"]["property_status"]
           street: string

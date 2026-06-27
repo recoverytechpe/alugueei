@@ -85,6 +85,40 @@ function AdminPanel() {
     },
   });
 
+  const { data: reports, isLoading: loadingReports } = useQuery({
+    queryKey: ["admin-reports"],
+    enabled: !!isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("id, reporter_id, target_type, target_id, reason, details, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const updateReport = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "reviewing" | "resolved" | "dismissed" }) => {
+      const { data: u } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("reports")
+        .update({
+          status,
+          resolved_at: new Date().toISOString(),
+          resolved_by: u.user?.id ?? null,
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Denúncia atualizada");
+      qc.invalidateQueries({ queryKey: ["admin-reports"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   useEffect(() => {
     if (!isAdmin) return;
     const channel = supabase
@@ -197,6 +231,66 @@ function AdminPanel() {
                       </Link>
                     )}
                   </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Denúncias de usuários</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Reportes feitos por usuários sobre imóveis ou perfis.
+          </p>
+          {loadingReports ? (
+            <Skeleton className="h-32 w-full" />
+          ) : !reports || reports.length === 0 ? (
+            <Card><CardContent className="py-6 text-sm text-muted-foreground">Nenhuma denúncia.</CardContent></Card>
+          ) : (
+            <div className="space-y-3">
+              {reports.map((r) => (
+                <Card key={r.id}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={r.status === "pending" ? "destructive" : "outline"}>{r.status}</Badge>
+                        <Badge variant="secondary">{r.target_type === "property" ? "imóvel" : "usuário"}</Badge>
+                        <Badge variant="outline">{r.reason}</Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(r.created_at).toLocaleString("pt-BR")}
+                        </span>
+                      </div>
+                      {(r.status === "pending" || r.status === "reviewing") && (
+                        <div className="flex gap-2">
+                          {r.status === "pending" && (
+                            <Button size="sm" variant="outline" onClick={() => updateReport.mutate({ id: r.id, status: "reviewing" })}>
+                              Em análise
+                            </Button>
+                          )}
+                          <Button size="sm" variant="default" onClick={() => updateReport.mutate({ id: r.id, status: "resolved" })}>
+                            Resolver
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => updateReport.mutate({ id: r.id, status: "dismissed" })}>
+                            Descartar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <CardDescription className="text-xs pt-1">
+                      Alvo: {r.target_id.slice(0, 8)} · Denunciante: {r.reporter_id.slice(0, 8)}
+                      {r.target_type === "property" && (
+                        <> · <Link to="/properties/$id" params={{ id: r.target_id }} className="text-primary hover:underline">abrir imóvel</Link></>
+                      )}
+                      {r.target_type === "user" && (
+                        <> · <Link to="/users/$id" params={{ id: r.target_id }} className="text-primary hover:underline">abrir perfil</Link></>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  {r.details && (
+                    <CardContent>
+                      <p className="text-sm bg-muted/40 p-3 rounded whitespace-pre-line">{r.details}</p>
+                    </CardContent>
+                  )}
                 </Card>
               ))}
             </div>

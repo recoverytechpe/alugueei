@@ -25,11 +25,12 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Heart, Share2, BedDouble, Bath, Car, MapPin, MessageCircle,
   ChevronDown, ChevronUp, BadgeCheck, Calculator, ShieldCheck, FileCheck2,
-  Link as LinkIcon, MessageSquare, Mail,
+  Link as LinkIcon, MessageSquare, Mail, Flag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UnlockGate, useUnlockStatus, isUnlocked } from "@/components/UnlockGate";
 import { AffiliateRequestButton } from "@/components/AffiliateRequestButton";
+import { ReportDialog } from "@/components/ReportDialog";
 
 type GuaranteeType = "fiador" | "seguro_fianca" | "caucao" | "titulo_capitalizacao";
 const GUARANTEE_LABEL: Record<GuaranteeType, string> = {
@@ -315,6 +316,17 @@ function PropertyDetail() {
                   <DropdownMenuItem onClick={shareWhatsApp}><MessageSquare className="size-4" /> WhatsApp</DropdownMenuItem>
                   <DropdownMenuItem onClick={shareEmail}><Mail className="size-4" /> E-mail</DropdownMenuItem>
                   <DropdownMenuItem onClick={copyLink}><LinkIcon className="size-4" /> Copiar link</DropdownMenuItem>
+                  {userId && !data.isOwner && (
+                    <ReportDialog
+                      targetType="property"
+                      targetId={data.id}
+                      trigger={
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Flag className="size-4" /> Reportar imóvel
+                        </DropdownMenuItem>
+                      }
+                    />
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

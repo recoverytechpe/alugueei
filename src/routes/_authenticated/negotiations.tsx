@@ -324,11 +324,15 @@ function ProposalCard({
   counters,
   userId,
   setProposalStatus,
+  isAccepting,
+  anyAccepting,
 }: {
   proposal: Proposal;
   counters: Counter[];
   userId: string;
   setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
+  isAccepting: boolean;
+  anyAccepting: boolean;
 }) {
   const isParticipant = userId === p.owner_id || userId === p.tenant_id;
   const lastCounter = counters[counters.length - 1];

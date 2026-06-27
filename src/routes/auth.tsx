@@ -159,6 +159,22 @@ function AuthPage() {
                 <Button type="submit" className="w-full h-11" disabled={loading}>
                   {loading ? "Entrando..." : "Entrar"}
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => setShowForgot((v) => !v)}
+                  className="block w-full text-center text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Esqueci minha senha
+                </button>
+                {showForgot && (
+                  <form onSubmit={handleForgot} className="space-y-2 rounded-lg border p-3">
+                    <Label htmlFor="forgot-email">Email para recuperação</Label>
+                    <Input id="forgot-email" name="email" type="email" required />
+                    <Button type="submit" variant="secondary" className="w-full h-10" disabled={loading}>
+                      {loading ? "Enviando..." : "Enviar link de recuperação"}
+                    </Button>
+                  </form>
+                )}
               </form>
             </TabsContent>
 

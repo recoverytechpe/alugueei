@@ -155,9 +155,10 @@ function NewProperty() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
-      setAuthorized(!!roles?.some((r) => r.role === "proprietario"));
+      setAuthorized(!!roles?.some((r) => r.role === "proprietario" || r.role === "agente"));
     })();
   }, []);
+
 
   useEffect(() => {
     const urls = photos.map((f) => URL.createObjectURL(f));

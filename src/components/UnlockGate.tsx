@@ -147,10 +147,12 @@ function UnlockDialog({
   propertyId,
   userId,
   existing,
+  expired = false,
 }: {
   propertyId: string;
   userId: string | null;
   existing: { id: string; status: string; terms_accepted_at: string | null; lgpd_accepted_at?: string | null } | null;
+  expired?: boolean;
 }) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);

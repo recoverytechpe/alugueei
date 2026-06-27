@@ -74,12 +74,18 @@ function OnboardingWizard() {
     cpf_cnpj: profile?.profile?.cpf_cnpj ?? "",
     bio: profile?.profile?.bio ?? "",
   });
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
 
   const save = useMutation({
     mutationFn: async () => {
       if (!profile?.uid) throw new Error("Sessão expirada");
       if (!userType) throw new Error("Selecione o tipo de usuário");
+      if (!acceptTerms || !acceptPrivacy) {
+        throw new Error("Você precisa aceitar os Termos e a Política de Privacidade");
+      }
       const parsed = profileSchema.parse(form);
+      const now = new Date().toISOString();
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -88,7 +94,11 @@ function OnboardingWizard() {
           cpf_cnpj: parsed.cpf_cnpj,
           bio: parsed.bio ?? null,
           user_type: userType,
-          onboarded_at: new Date().toISOString(),
+          onboarded_at: now,
+          terms_accepted_at: now,
+          terms_version: TERMS_VERSION,
+          privacy_accepted_at: now,
+          privacy_version: PRIVACY_VERSION,
         })
         .eq("id", profile.uid);
       if (error) throw error;

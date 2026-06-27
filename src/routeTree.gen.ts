@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPreapprovalsRouteImport } from './routes/_authenticated/preapprovals'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedNegotiationsRouteImport } from './routes/_authenticated/negotiations'
 import { Route as AuthenticatedFinancialsRouteImport } from './routes/_authenticated/financials'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
@@ -66,6 +67,11 @@ const AuthenticatedPreapprovalsRoute =
     path: '/preapprovals',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedNegotiationsRoute =
   AuthenticatedNegotiationsRouteImport.update({
     id: '/negotiations',
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/financials': typeof AuthenticatedFinancialsRoute
   '/negotiations': typeof AuthenticatedNegotiationsRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/financials': typeof AuthenticatedFinancialsRoute
   '/negotiations': typeof AuthenticatedNegotiationsRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
@@ -243,6 +251,7 @@ export interface FileRoutesById {
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
   '/_authenticated/financials': typeof AuthenticatedFinancialsRoute
   '/_authenticated/negotiations': typeof AuthenticatedNegotiationsRoute
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/financials'
     | '/negotiations'
+    | '/onboarding'
     | '/preapprovals'
     | '/profile'
     | '/chat/$id'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/favorites'
     | '/financials'
     | '/negotiations'
+    | '/onboarding'
     | '/preapprovals'
     | '/profile'
     | '/chat/$id'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/_authenticated/favorites'
     | '/_authenticated/financials'
     | '/_authenticated/negotiations'
+    | '/_authenticated/onboarding'
     | '/_authenticated/preapprovals'
     | '/_authenticated/profile'
     | '/_authenticated/chat/$id'
@@ -398,6 +410,13 @@ declare module '@tanstack/react-router' {
       path: '/preapprovals'
       fullPath: '/preapprovals'
       preLoaderRoute: typeof AuthenticatedPreapprovalsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/negotiations': {
@@ -564,6 +583,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
   AuthenticatedFinancialsRoute: typeof AuthenticatedFinancialsRoute
   AuthenticatedNegotiationsRoute: typeof AuthenticatedNegotiationsRoute
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPreapprovalsRoute: typeof AuthenticatedPreapprovalsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedChatIdRoute: typeof AuthenticatedChatIdRoute
@@ -584,6 +604,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
   AuthenticatedFinancialsRoute: AuthenticatedFinancialsRoute,
   AuthenticatedNegotiationsRoute: AuthenticatedNegotiationsRoute,
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPreapprovalsRoute: AuthenticatedPreapprovalsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedChatIdRoute: AuthenticatedChatIdRoute,
@@ -614,13 +635,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -714,7 +714,7 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
   const { data, isLoading } = useQuery({
     queryKey: ["agent-dash", userId],
     queryFn: async () => {
-      const [proposals, contracts, ratingRpc, visibilityRpc] = await Promise.all([
+      const [proposals, contracts, ratingRpc, visibilityRpc, myProps] = await Promise.all([
         supabase
           .from("proposals")
           .select("id, status, rent_offer, created_at, property:properties(id, title, address_neighborhood, address_number, city)")
@@ -726,17 +726,20 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           "get_agent_visibility",
           { _agent_id: userId }
         ),
+        supabase.from("properties").select("id, title, city, state, status").eq("owner_id", userId).order("created_at", { ascending: false }),
       ]);
       return {
         proposals: proposals.data ?? [],
         contracts: contracts.data ?? [],
         rating: ratingRpc.data?.[0] ?? { avg_stars: 0, total_ratings: 0 },
         visibility: visibilityRpc.data?.[0] ?? { closed_deals: 0, visibility_score: 0 },
+        myProperties: myProps.data ?? [],
       };
     },
     staleTime: 60_000,
     placeholderData: (prev) => prev,
   });
+
 
 
   useRealtimeNotifications({

@@ -48,6 +48,7 @@ type Counter = {
 
 function NegotiationsPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { data, isLoading } = useQuery({
     queryKey: ["negotiations"],
     queryFn: async () => {

@@ -16,6 +16,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPreapprovalsRouteImport } from './routes/_authenticated/preapprovals'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -72,6 +73,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PSlugRoute = PSlugRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -217,6 +223,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/p/$slug': typeof PSlugRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
@@ -248,6 +255,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/p/$slug': typeof PSlugRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
@@ -281,6 +289,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/p/$slug': typeof PSlugRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/contracts/$id': typeof AuthenticatedContractsIdRoute
   '/_authenticated/properties/$id': typeof AuthenticatedPropertiesIdRouteWithChildren
@@ -314,6 +323,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/preapprovals'
     | '/profile'
+    | '/p/$slug'
     | '/chat/$id'
     | '/contracts/$id'
     | '/properties/$id'
@@ -345,6 +355,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/preapprovals'
     | '/profile'
+    | '/p/$slug'
     | '/chat/$id'
     | '/contracts/$id'
     | '/properties/$id'
@@ -377,6 +388,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/preapprovals'
     | '/_authenticated/profile'
+    | '/p/$slug'
     | '/_authenticated/chat/$id'
     | '/_authenticated/contracts/$id'
     | '/_authenticated/properties/$id'
@@ -401,6 +413,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SearchRoute: typeof SearchRoute
   TermsRoute: typeof TermsRoute
+  PSlugRoute: typeof PSlugRoute
   ApiPublicCitiesRoute: typeof ApiPublicCitiesRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicNeighborhoodsRoute: typeof ApiPublicNeighborhoodsRoute
@@ -456,6 +469,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/profile': {
@@ -689,6 +709,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SearchRoute: SearchRoute,
   TermsRoute: TermsRoute,
+  PSlugRoute: PSlugRoute,
   ApiPublicCitiesRoute: ApiPublicCitiesRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicNeighborhoodsRoute: ApiPublicNeighborhoodsRoute,

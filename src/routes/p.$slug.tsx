@@ -26,8 +26,21 @@ export const Route = createFileRoute("/p/$slug")({
   head: ({ params, loaderData }) => {
     const p = loaderData;
     if (!p) return { meta: [{ title: "Imóvel | Alugueei" }] };
+    const title = p.title ?? "Imóvel";
     const desc = `${p.bedrooms ?? "?"} quartos · ${p.bathrooms ?? "?"} banheiros · ${p.neighborhood ?? ""}, ${p.city ?? ""}. ${formatBRL(p.rent_value)}/mês.`;
     const url = `${SITE}/p/${params.slug}`;
+    return {
+      meta: [
+        { title: `${title} | Alugueei` },
+        { name: "description", content: desc.slice(0, 160) },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc.slice(0, 160) },
+        { property: "og:type", content: "product" },
+        { property: "og:url", content: url },
+        { property: "twitter:card", content: "summary_large_image" },
+        { property: "twitter:title", content: title },
+        { property: "twitter:description", content: desc.slice(0, 160) },
+      ],
     return {
       meta: [
         { title: `${p.title} | Alugueei` },

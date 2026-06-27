@@ -167,8 +167,9 @@ function PropertiesList() {
       const ids = (rows ?? []).map((p) => p.id);
       const interestMap: Record<string, number> = {};
       if (ids.length > 0) {
-        const { data: counts } = await supabase.rpc("get_property_interest_counts", { _property_ids: ids });
-        for (const c of counts ?? []) interestMap[c.property_id] = Number(c.interested_count) || 0;
+        const { getPropertyInterestCounts } = await import("@/lib/protected-rpcs.functions");
+        const counts = await getPropertyInterestCounts({ data: { propertyIds: ids } });
+        for (const c of counts) interestMap[c.property_id] = c.interested_count;
       }
 
       return (rows ?? []).map((p) => {

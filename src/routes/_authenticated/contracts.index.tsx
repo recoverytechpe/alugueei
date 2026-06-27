@@ -186,7 +186,68 @@ function ContractCard({
               : "Avaliação liberada após o contrato ser fechado."}
           </p>
         )}
+        {contract.status === "closed" && userId === contract.owner_id && (
+          <TenantRatingForm
+            contractId={contract.id}
+            tenantId={contract.tenant_id}
+            raterId={userId}
+            existing={existingTenantRating}
+            onSaved={onSaved}
+          />
+        )}
       </CardContent>
     </Card>
   );
 }
+
+function TenantRatingForm({
+  contractId, tenantId, raterId, existing, onSaved,
+}: {
+  contractId: string;
+  tenantId: string;
+  raterId: string;
+  existing?: { stars: number; comment: string };
+  onSaved: () => void;
+}) {
+  const [stars, setStars] = useState(existing?.stars ?? 0);
+  const [comment, setComment] = useState(existing?.comment ?? "");
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (stars < 1 || stars > 5) return toast.error("Selecione de 1 a 5 estrelas");
+    setSaving(true);
+    const { error } = await supabase.from("tenant_ratings" as never).upsert(
+      {
+        contract_id: contractId,
+        tenant_id: tenantId,
+        rater_id: raterId,
+        stars,
+        comment: comment.trim().slice(0, 1000),
+      } as never,
+      { onConflict: "contract_id" },
+    );
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success(existing ? "Avaliação do locatário atualizada" : "Locatário avaliado");
+    onSaved();
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-3 border-t pt-3">
+      <p className="text-sm font-medium">
+        {existing ? "Atualizar avaliação do locatário" : "Avaliar o locatário"}
+      </p>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" onClick={() => setStars(n)} aria-label={`${n} estrelas`} className="p-1">
+            <Star className={`h-6 w-6 ${n <= stars ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+          </button>
+        ))}
+      </div>
+      <Textarea rows={3} maxLength={1000} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Como foi a experiência com este locatário?" />
+      <Button type="submit" disabled={saving}>{saving ? "Enviando..." : "Enviar avaliação"}</Button>
+    </form>
+  );
+}
+

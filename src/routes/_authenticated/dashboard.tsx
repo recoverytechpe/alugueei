@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getSignedPhotoUrls } from "@/lib/property-helpers";
 import { toast } from "sonner";
 import {
@@ -929,6 +930,10 @@ function ReputationRow({ Icon, label, value }: { Icon: typeof Award; label: stri
 
 function TenantDashboard({ userId }: { userId: string }) {
   const [selectedCity, setSelectedCity] = useTenantCity("tenant_preferred_city");
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeChoice, setWelcomeChoice] = useState<string>("");
+
+
 
   const { data, isLoading } = useQuery({
     queryKey: ["tenant-dash", userId],

@@ -106,7 +106,14 @@ function ChatThread() {
       body: body.slice(0, 2000),
     });
     setSending(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      if (/bloque/i.test(error.message)) {
+        return toast.error("Não é possível enviar mensagens", {
+          description: "Existe um bloqueio entre você e este usuário.",
+        });
+      }
+      return toast.error(error.message);
+    }
     setText("");
     qc.invalidateQueries({ queryKey: ["conversation", id] });
   }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
@@ -56,7 +56,7 @@ function OnboardingWizard() {
       if (!u.user) throw new Error("Sessão expirada");
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name, phone, cpf_cnpj, bio, user_type, onboarded_at")
+        .select("full_name, bio, user_type, onboarded_at")
         .eq("id", u.user.id)
         .maybeSingle();
       if (error) throw error;
@@ -76,6 +76,16 @@ function OnboardingWizard() {
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
+
+  useEffect(() => {
+    if (!profile?.profile) return;
+    setUserType((current) => current ?? (profile.profile.user_type as UserType | null));
+    setForm((current) => ({
+      ...current,
+      full_name: current.full_name || profile.profile?.full_name || "",
+      bio: current.bio || profile.profile?.bio || "",
+    }));
+  }, [profile?.profile]);
 
   const save = useMutation({
     mutationFn: async () => {

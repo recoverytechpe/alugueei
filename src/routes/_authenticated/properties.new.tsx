@@ -190,8 +190,9 @@ function NewProperty() {
           <Building2 className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
           <h1 className="text-lg font-semibold">Acesso restrito</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Apenas usuários com perfil de Proprietário podem cadastrar imóveis.
+            Apenas usuários com perfil de Proprietário ou Agente podem cadastrar imóveis.
           </p>
+
           <Button asChild className="mt-5">
             <Link to="/dashboard">Voltar ao painel</Link>
           </Button>

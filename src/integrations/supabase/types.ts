@@ -375,6 +375,10 @@ export type Database = {
           onboarded_at: string | null
           phone: string | null
           preferred_city: string | null
+          privacy_accepted_at: string | null
+          privacy_version: string | null
+          terms_accepted_at: string | null
+          terms_version: string | null
           updated_at: string
           user_type: string | null
         }
@@ -388,6 +392,10 @@ export type Database = {
           onboarded_at?: string | null
           phone?: string | null
           preferred_city?: string | null
+          privacy_accepted_at?: string | null
+          privacy_version?: string | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           updated_at?: string
           user_type?: string | null
         }
@@ -401,6 +409,10 @@ export type Database = {
           onboarded_at?: string | null
           phone?: string | null
           preferred_city?: string | null
+          privacy_accepted_at?: string | null
+          privacy_version?: string | null
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           updated_at?: string
           user_type?: string | null
         }

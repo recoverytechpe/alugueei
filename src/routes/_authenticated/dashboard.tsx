@@ -350,6 +350,14 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
         </div>
       </div>
 
+      <div className="flex justify-end -mt-2">
+        <Button asChild size="sm" variant="outline">
+          <Link to="/financials">Painel financeiro</Link>
+        </Button>
+      </div>
+
+
+
       {/* Summary cards overlap hero */}
       <div className="grid gap-4 sm:grid-cols-2 -mt-16 relative z-10">
         <Card className="shadow-md">

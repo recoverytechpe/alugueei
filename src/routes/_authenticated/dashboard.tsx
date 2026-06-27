@@ -906,7 +906,42 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           </CardContent>
         </Card>
       </section>
+
+      {/* Imóveis cadastrados pelo agente */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold">Meus imóveis cadastrados</h3>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/properties/new">Novo</Link>
+          </Button>
+        </div>
+        {data.myProperties.length === 0 ? (
+          <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Você ainda não cadastrou imóveis.</CardContent></Card>
+        ) : (
+          <div className="space-y-2">
+            {data.myProperties.slice(0, 5).map((p) => (
+              <Card key={p.id}>
+                <CardContent className="p-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{p.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {[p.city, p.state].filter(Boolean).join("/")} · {p.status}
+                    </p>
+                  </div>
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/properties/$id/edit" params={{ id: p.id }}>Editar</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link to="/properties/$id" params={{ id: p.id }}>Abrir</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
+
   );
 }
 

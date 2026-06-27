@@ -135,6 +135,7 @@ function NegotiationsPage() {
         counters={data.counters}
         userId={data.userId}
         setProposalStatus={setProposalStatus}
+        acceptingId={acceptingId}
       />
     </div>
   );

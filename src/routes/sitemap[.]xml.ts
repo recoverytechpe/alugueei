@@ -25,15 +25,12 @@ export const Route = createFileRoute("/sitemap.xml")({
         try {
           const { data } = await supabase
             .from("properties_public")
-            .select("slug, updated_at")
+            .select("slug")
             .not("slug", "is", null);
-          for (const row of data ?? []) {
-            const slug = (row as { slug: string | null }).slug;
-            if (!slug) continue;
-            const updated = (row as { updated_at?: string | null }).updated_at;
+          for (const row of (data ?? []) as Array<{ slug: string | null }>) {
+            if (!row.slug) continue;
             entries.push({
-              path: `/p/${slug}`,
-              lastmod: updated ? new Date(updated).toISOString() : undefined,
+              path: `/p/${row.slug}`,
               changefreq: "weekly",
               priority: "0.8",
             });

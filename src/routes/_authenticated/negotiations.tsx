@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +48,7 @@ type Counter = {
 
 function NegotiationsPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { data, isLoading } = useQuery({
     queryKey: ["negotiations"],
     queryFn: async () => {
@@ -104,9 +105,8 @@ function NegotiationsPage() {
     }
     await qc.invalidateQueries({ queryKey: ["negotiations"] });
     if (contractId) {
-      toast.success("Proposta aceita — contrato gerado", {
-        action: { label: "Abrir contrato", onClick: () => { window.location.href = `/contracts/${contractId}`; } },
-      });
+      toast.success("Proposta aceita — abrindo contrato…");
+      navigate({ to: "/contracts/$id", params: { id: contractId } });
     } else {
       toast.warning("Proposta aceita, mas o contrato ainda não apareceu. Verifique em Contratos em instantes.");
     }

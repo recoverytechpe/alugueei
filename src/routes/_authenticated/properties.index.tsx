@@ -26,7 +26,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Scale, BookmarkPlus, Bookmark, X, History, Trash2 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
+import { Scale, BookmarkPlus, Bookmark, X, History, Trash2, SlidersHorizontal, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 const searchSchema = z.object({
@@ -91,13 +92,22 @@ function PropertiesList() {
     navigate({ search: (prev: Record<string, unknown>) => ({ ...prev, ...patch }) as never });
   }
 
-  const hasFilters = useMemo(
-    () => f.city !== "all" || f.neighborhood !== "all" || f.type !== "all"
-      || f.bedrooms !== "any" || f.bathrooms !== "any" || f.parking !== "any"
-      || !!f.min || !!f.max || !!f.minArea || !!f.maxArea
-      || f.unlocked !== "all",
-    [f],
-  );
+  const activeFilterCount = useMemo(() => {
+    let n = 0;
+    if (f.city !== "all") n++;
+    if (f.neighborhood !== "all") n++;
+    if (f.type !== "all") n++;
+    if (f.bedrooms !== "any") n++;
+    if (f.bathrooms !== "any") n++;
+    if (f.parking !== "any") n++;
+    if (f.min) n++;
+    if (f.max) n++;
+    if (f.minArea) n++;
+    if (f.maxArea) n++;
+    if (f.unlocked !== "all") n++;
+    return n;
+  }, [f]);
+  const hasFilters = activeFilterCount > 0;
 
   const { data, isLoading } = useQuery({
     queryKey: ["properties", f],

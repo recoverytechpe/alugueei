@@ -1,8 +1,9 @@
 // Simple offline request queue with auto-sync on reconnect.
 // Persists serialized fetch requests to localStorage and replays them
-// when the browser regains connectivity.
+// when the browser regains connectivity AND the user has a valid session.
 
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const STORAGE_KEY = "offline-queue:v1";
 
@@ -54,10 +55,14 @@ export function enqueueRequest(
 
 let flushing = false;
 
-export async function flushQueue(): Promise<{ ok: number; failed: number }> {
+export async function flushQueue(): Promise<{ ok: number; failed: number; skipped?: boolean }> {
   if (typeof window === "undefined") return { ok: 0, failed: 0 };
   if (flushing) return { ok: 0, failed: 0 };
   if (!navigator.onLine) return { ok: 0, failed: 0 };
+
+  // Gate on a valid Supabase session — queued mutations almost always need auth.
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return { ok: 0, failed: 0, skipped: true };
 
   flushing = true;
   let ok = 0;
@@ -130,17 +135,24 @@ export function installOfflineQueue() {
   if (typeof window === "undefined" || installed) return;
   installed = true;
 
-  const onOnline = async () => {
+  const tryFlush = async () => {
     const pending = read().length;
     if (!pending) return;
-    const { ok, failed } = await flushQueue();
+    const { ok, failed, skipped } = await flushQueue();
+    if (skipped) return; // not signed in yet — wait for SIGNED_IN
     if (ok > 0) toast.success(`Sincronizado: ${ok} ação(ões) enviadas.`);
     if (failed > 0) toast.error(`${failed} ação(ões) ainda pendentes.`);
   };
 
-  window.addEventListener("online", onOnline);
-  // Attempt a flush on load in case we came back online while closed.
-  if (navigator.onLine) {
-    void flushQueue();
-  }
+  window.addEventListener("online", () => {
+    void tryFlush();
+  });
+
+  // Replay once the user signs in (or session is restored from storage).
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (!session) return;
+    if (event === "SIGNED_IN" || event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
+      void tryFlush();
+    }
+  });
 }

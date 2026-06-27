@@ -443,6 +443,65 @@ export type Database = {
         }
         Relationships: []
       }
+      property_affiliations: {
+        Row: {
+          agent_id: string
+          approved_at: string | null
+          can_edit_listing: boolean
+          created_at: string
+          expires_at: string | null
+          id: string
+          message: string | null
+          owner_commission_pct: number
+          property_id: string
+          rejected_reason: string | null
+          requested_at: string
+          status: Database["public"]["Enums"]["affiliation_status"]
+          tenant_commission_pct: number
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          approved_at?: string | null
+          can_edit_listing?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          owner_commission_pct?: number
+          property_id: string
+          rejected_reason?: string | null
+          requested_at?: string
+          status?: Database["public"]["Enums"]["affiliation_status"]
+          tenant_commission_pct?: number
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          approved_at?: string | null
+          can_edit_listing?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          owner_commission_pct?: number
+          property_id?: string
+          rejected_reason?: string | null
+          requested_at?: string
+          status?: Database["public"]["Enums"]["affiliation_status"]
+          tenant_commission_pct?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_affiliations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_photos: {
         Row: {
           created_at: string
@@ -920,6 +979,10 @@ export type Database = {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
+      is_property_owner: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
       notify_user: {
         Args: {
           _body: string
@@ -932,6 +995,13 @@ export type Database = {
       }
     }
     Enums: {
+      affiliation_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "revoked"
+        | "expired"
+        | "completed"
       app_role: "proprietario" | "locatario" | "agente" | "admin"
       guarantee_type:
         | "fiador"
@@ -1068,6 +1138,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      affiliation_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "revoked",
+        "expired",
+        "completed",
+      ],
       app_role: ["proprietario", "locatario", "agente", "admin"],
       guarantee_type: [
         "fiador",

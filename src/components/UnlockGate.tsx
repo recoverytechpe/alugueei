@@ -121,18 +121,23 @@ export function UnlockGate(props: UnlockGateProps) {
     );
   }
 
+  const expired =
+    row?.status === "paid" && row.expires_at != null && new Date(row.expires_at) < new Date();
+
   return (
-    <div className="rounded-lg border border-dashed bg-muted/30 p-3 space-y-2">
+    <div className={`rounded-lg border border-dashed p-3 space-y-2 ${expired ? "bg-amber-50/60 border-amber-300" : "bg-muted/30"}`}>
       <p className="text-sm flex items-start gap-2">
         <MapPin className="size-4 mt-0.5 shrink-0 text-muted-foreground" />
         <span>
           <span className="font-medium">{approx || "Localização aproximada"}</span>
           <span className="block text-xs text-muted-foreground">
-            Endereço exato, chat, proposta e reserva ficam disponíveis após o desbloqueio.
+            {expired
+              ? "Seu acesso a este imóvel expirou. Renove para liberar novamente endereço exato, chat e proposta."
+              : "Endereço exato, chat, proposta e reserva ficam disponíveis após o desbloqueio."}
           </span>
         </span>
       </p>
-      <UnlockDialog propertyId={propertyId} userId={userId} existing={row ?? null} />
+      <UnlockDialog propertyId={propertyId} userId={userId} existing={row ?? null} expired={expired} />
     </div>
   );
 }

@@ -148,14 +148,14 @@ function ChatThread() {
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col">
+    <div className="bg-background flex flex-col min-h-[calc(100dvh-4rem)]">
       {/* Header */}
-      <header className="border-b bg-background flex-shrink-0">
-        <div className="max-w-3xl w-full mx-auto px-4 py-3 flex items-center gap-3">
+      <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur">
+        <div className="max-w-3xl w-full mx-auto px-3 py-2.5 flex items-center gap-3">
           <button
             type="button"
             onClick={() => navigate({ to: "/chat" })}
-            className="h-10 w-10 -ml-2 rounded-full hover:bg-muted flex items-center justify-center flex-shrink-0"
+            className="h-10 w-10 -ml-2 rounded-full hover:bg-muted flex items-center justify-center flex-shrink-0 active:scale-95 transition"
             aria-label="Voltar"
           >
             <ChevronLeft className="h-6 w-6" />
@@ -163,13 +163,13 @@ function ChatThread() {
           <Link
             to="/properties/$id"
             params={{ id: data.conv.property_id }}
-            className="h-11 w-11 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0 overflow-hidden"
+            className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0 overflow-hidden"
           >
             <HomeIcon className="h-5 w-5 text-blue-700" />
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="text-base font-bold truncate">{data.conv.properties?.title ?? "Imóvel"}</h1>
-            <p className="text-sm text-muted-foreground truncate">{data.other?.full_name ?? "Usuário"}</p>
+            <h1 className="text-sm font-bold truncate">{data.conv.properties?.title ?? "Imóvel"}</h1>
+            <p className="text-xs text-muted-foreground truncate">{data.other?.full_name ?? "Usuário"}</p>
           </div>
           <Button
             size="sm"
@@ -181,7 +181,7 @@ function ChatThread() {
           </Button>
           <button
             type="button"
-            className="h-10 w-10 rounded-full hover:bg-muted flex items-center justify-center flex-shrink-0"
+            className="h-10 w-10 rounded-full hover:bg-muted flex items-center justify-center flex-shrink-0 sm:hidden"
             aria-label="Mais opções"
             onClick={toggleUnlock}
           >
@@ -191,12 +191,12 @@ function ChatThread() {
       </header>
 
       {/* Messages */}
-      <main className="flex-1 overflow-y-auto bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
+      <main className="flex-1 bg-background pb-[calc(5rem+env(safe-area-inset-bottom))]">
+        <div className="max-w-3xl mx-auto px-3 py-3 space-y-3">
           {/* Security banner */}
-          <div className="flex items-start gap-3 rounded-2xl bg-blue-50 border border-blue-100 px-4 py-3">
-            <ShieldCheck className="h-6 w-6 text-blue-600 flex-shrink-0 mt-0.5" strokeWidth={1.8} />
-            <p className="text-sm text-foreground leading-snug">
+          <div className="flex items-start gap-3 rounded-2xl bg-blue-50 border border-blue-100 px-3 py-2.5">
+            <ShieldCheck className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" strokeWidth={1.8} />
+            <p className="text-xs text-foreground leading-snug">
               Mantenha a comunicação dentro da plataforma para sua segurança.
               {!unlocked && " Telefones e e-mails são ocultados até a liberação."}
             </p>
@@ -227,7 +227,7 @@ function ChatThread() {
                       </div>
                     )}
                     <div
-                      className={`max-w-[78%] rounded-2xl px-4 py-2.5 ${
+                      className={`max-w-[80%] rounded-2xl px-3.5 py-2 ${
                         mine
                           ? "bg-blue-600 text-white rounded-br-md"
                           : "bg-muted text-foreground rounded-bl-md"
@@ -250,39 +250,47 @@ function ChatThread() {
         </div>
       </main>
 
-      {/* Composer */}
-      <footer className="border-t bg-background flex-shrink-0 safe-area-bottom">
-        <form onSubmit={send} className="max-w-3xl mx-auto px-4 py-3 flex items-end gap-2">
+      {/* Composer — fixo acima da bottom tab */}
+      <footer
+        className="fixed inset-x-0 z-20 border-t bg-background/95 backdrop-blur"
+        style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}
+      >
+        <form onSubmit={send} className="max-w-3xl mx-auto px-3 py-2 flex items-end gap-2">
           <button
             type="button"
-            className="h-11 w-11 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center flex-shrink-0"
+            className="h-10 w-10 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 flex items-center justify-center flex-shrink-0"
             aria-label="Anexar foto"
             onClick={() => toast.info("Anexos em breve")}
           >
             <Camera className="h-5 w-5" />
           </button>
-          <div className="flex-1 rounded-full border bg-background px-4 py-2 focus-within:ring-2 focus-within:ring-blue-200">
+          <div className="flex-1 rounded-2xl border bg-background px-3 py-1.5 focus-within:ring-2 focus-within:ring-blue-200">
             <textarea
               ref={inputRef}
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => {
+                setText(e.target.value);
+                const el = e.currentTarget;
+                el.style.height = "auto";
+                el.style.height = Math.min(el.scrollHeight, 128) + "px";
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   void send(e as unknown as React.FormEvent);
                 }
               }}
-              placeholder="Escreva uma mensagem..."
+              placeholder="Mensagem"
               maxLength={2000}
               disabled={sending}
               rows={1}
-              className="w-full resize-none bg-transparent text-[15px] outline-none placeholder:text-muted-foreground max-h-32"
+              className="w-full resize-none bg-transparent text-[16px] outline-none placeholder:text-muted-foreground max-h-32 py-1"
             />
           </div>
           <button
             type="submit"
             disabled={sending || !text.trim()}
-            className="h-11 w-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="h-10 w-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed transition-colors active:scale-95"
             aria-label="Enviar"
           >
             <Send className="h-5 w-5" />

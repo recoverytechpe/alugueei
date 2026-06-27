@@ -104,7 +104,13 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+    <div
+      className="min-h-[100dvh] flex items-center justify-center bg-background px-4 safe-x"
+      style={{
+        paddingTop: "calc(2rem + env(safe-area-inset-top))",
+        paddingBottom: "calc(2rem + env(safe-area-inset-bottom))",
+      }}
+    >
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Plataforma de Aluguel</CardTitle>
@@ -121,13 +127,13 @@ function AuthPage() {
               <form onSubmit={handleLogin} className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>
-                  <Input id="login-email" name="email" type="email" required />
+                  <Input id="login-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Senha</Label>
-                  <Input id="login-password" name="password" type="password" required />
+                  <Input id="login-password" name="password" type="password" autoComplete="current-password" required />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full h-11" disabled={loading}>
                   {loading ? "Entrando..." : "Entrar"}
                 </Button>
               </form>
@@ -138,7 +144,7 @@ function AuthPage() {
                 <div className="space-y-2">
                   <Label htmlFor="su-role">Eu sou</Label>
                   <Select name="role" defaultValue="locatario">
-                    <SelectTrigger id="su-role"><SelectValue /></SelectTrigger>
+                    <SelectTrigger id="su-role" className="h-11"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="proprietario">Proprietário</SelectItem>
                       <SelectItem value="locatario">Locatário</SelectItem>
@@ -148,31 +154,32 @@ function AuthPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-name">Nome completo</Label>
-                  <Input id="su-name" name="full_name" required />
+                  <Input id="su-name" name="full_name" autoComplete="name" autoCapitalize="words" required />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="su-phone">Telefone</Label>
-                    <Input id="su-phone" name="phone" required />
+                    <Input id="su-phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="su-doc">CPF/CNPJ</Label>
-                    <Input id="su-doc" name="cpf_cnpj" required />
+                    <Input id="su-doc" name="cpf_cnpj" inputMode="numeric" required />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-email">Email</Label>
-                  <Input id="su-email" name="email" type="email" required />
+                  <Input id="su-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="su-password">Senha</Label>
-                  <Input id="su-password" name="password" type="password" required minLength={8} />
+                  <Input id="su-password" name="password" type="password" autoComplete="new-password" required minLength={8} />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full h-11" disabled={loading}>
                   {loading ? "Criando conta..." : "Cadastrar"}
                 </Button>
               </form>
             </TabsContent>
+
           </Tabs>
         </CardContent>
       </Card>

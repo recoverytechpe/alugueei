@@ -311,6 +311,8 @@ function ProposalsSection({
           counters={countersByProposal.get(p.id) ?? []}
           userId={userId}
           setProposalStatus={setProposalStatus}
+          isAccepting={acceptingId === p.id}
+          anyAccepting={acceptingId !== null}
         />
       ))}
     </section>

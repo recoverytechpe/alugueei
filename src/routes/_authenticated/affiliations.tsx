@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getOrCreateConversation } from "@/lib/chat-helpers";
-import { Handshake, Check, X, MessageCircle, Clock } from "lucide-react";
+import { Handshake, Check, X, MessageCircle, Clock, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/affiliations")({
   head: () => ({ meta: [{ title: "Afiliações | Plataforma de Aluguel" }] }),
@@ -338,15 +338,17 @@ function OwnerView({ userId }: { userId: string }) {
 function ApproveDialog({ affiliation, onClose, onDone }: {
   affiliation: Affiliation;
   onClose: () => void;
-  onDone: (approved: boolean) => void;
+  onDone: (approved: boolean) => Promise<void> | void;
 }) {
   const [ownerPct, setOwnerPct] = useState(String(affiliation.owner_commission_pct));
   const [tenantPct, setTenantPct] = useState(String(affiliation.tenant_commission_pct));
   const [canEdit, setCanEdit] = useState(affiliation.can_edit_listing);
-  const [saving, setSaving] = useState(false);
+  const [phase, setPhase] = useState<"idle" | "approving" | "opening">("idle");
+
+  const busy = phase !== "idle";
 
   async function approve() {
-    setSaving(true);
+    setPhase("approving");
     const { error } = await supabase
       .from("property_affiliations")
       .update({
@@ -356,14 +358,27 @@ function ApproveDialog({ affiliation, onClose, onDone }: {
         can_edit_listing: canEdit,
       })
       .eq("id", affiliation.id);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Afiliação aprovada — abrindo chat com o agente");
-    onDone(true);
+
+    if (error) {
+      setPhase("idle");
+      toast.error("Não foi possível aprovar", { description: error.message });
+      return;
+    }
+
+    toast.success("Afiliação aprovada", { description: "Abrindo o chat com o agente..." });
+    setPhase("opening");
+    try {
+      await onDone(true);
+    } catch (e) {
+      toast.error("Aprovada, mas houve um erro ao abrir o chat", {
+        description: e instanceof Error ? e.message : "Erro desconhecido",
+      });
+      setPhase("idle");
+    }
   }
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
+    <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Aprovar afiliação</DialogTitle>
@@ -375,12 +390,12 @@ function ApproveDialog({ affiliation, onClose, onDone }: {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="own">% paga pelo dono</Label>
-              <Input id="own" type="number" min={0} max={100} step="0.5"
+              <Input id="own" type="number" min={0} max={100} step="0.5" disabled={busy}
                 value={ownerPct} onChange={(e) => setOwnerPct(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ten">% paga pelo inquilino</Label>
-              <Input id="ten" type="number" min={0} max={100} step="0.5"
+              <Input id="ten" type="number" min={0} max={100} step="0.5" disabled={busy}
                 value={tenantPct} onChange={(e) => setTenantPct(e.target.value)} />
             </div>
           </div>
@@ -389,12 +404,18 @@ function ApproveDialog({ affiliation, onClose, onDone }: {
               <Label htmlFor="edit-perm" className="text-sm">Permitir editar anúncio</Label>
               <p className="text-xs text-muted-foreground">Agente poderá ajustar fotos e descrição.</p>
             </div>
-            <Switch id="edit-perm" checked={canEdit} onCheckedChange={setCanEdit} />
+            <Switch id="edit-perm" checked={canEdit} onCheckedChange={setCanEdit} disabled={busy} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={onClose} disabled={saving}>Cancelar</Button>
-          <Button onClick={approve} disabled={saving}>{saving ? "Aprovando..." : "Aprovar"}</Button>
+          <Button variant="ghost" onClick={onClose} disabled={busy}>Cancelar</Button>
+          <Button onClick={approve} disabled={busy} className="gap-2">
+            {phase === "approving" && <Loader2 className="size-4 animate-spin" />}
+            {phase === "opening" && <MessageCircle className="size-4 animate-pulse" />}
+            {phase === "idle" && "Aprovar"}
+            {phase === "approving" && "Aprovando..."}
+            {phase === "opening" && "Abrindo chat..."}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

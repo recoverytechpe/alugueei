@@ -971,6 +971,13 @@ export type Database = {
           visibility_score: number
         }[]
       }
+      get_property_interest_counts: {
+        Args: { _property_ids: string[] }
+        Returns: {
+          interested_count: number
+          property_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

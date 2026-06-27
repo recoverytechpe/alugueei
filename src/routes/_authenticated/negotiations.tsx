@@ -429,12 +429,14 @@ function ProposalCard({
       <CardContent className="flex gap-2 flex-wrap">
         {p.status === "pending" && userId === p.owner_id && (
           <>
-            <Button size="sm" onClick={() => setProposalStatus(p.id, "accepted")}>Aceitar</Button>
-            <Button size="sm" variant="outline" onClick={() => setProposalStatus(p.id, "rejected")}>Recusar</Button>
+            <Button size="sm" disabled={anyAccepting} onClick={() => setProposalStatus(p.id, "accepted")}>
+              {isAccepting ? (<><Loader2 className="size-4 mr-1 animate-spin" />Gerando contrato…</>) : "Aceitar"}
+            </Button>
+            <Button size="sm" variant="outline" disabled={anyAccepting} onClick={() => setProposalStatus(p.id, "rejected")}>Recusar</Button>
           </>
         )}
         {p.status === "pending" && userId === p.tenant_id && (
-          <Button size="sm" variant="ghost" onClick={() => setProposalStatus(p.id, "withdrawn")}>Retirar</Button>
+          <Button size="sm" variant="ghost" disabled={anyAccepting} onClick={() => setProposalStatus(p.id, "withdrawn")}>Retirar</Button>
         )}
         {canCounter && (
           <Button size="sm" variant="outline" onClick={() => setShowForm((s) => !s)}>

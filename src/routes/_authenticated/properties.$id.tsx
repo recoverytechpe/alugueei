@@ -435,8 +435,14 @@ function PropertyDetail() {
               <AffiliateRequestButton propertyId={data.id} agentId={userId} ownerId={data.owner_id} />
             )}
             {data.isOwner && (
-              <Button variant="destructive" size="sm" onClick={handleDelete}>Remover imóvel</Button>
+              <>
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/properties/$id/edit" params={{ id: data.id }}>Editar imóvel</Link>
+                </Button>
+                <Button variant="destructive" size="sm" onClick={handleDelete}>Remover imóvel</Button>
+              </>
             )}
+
           </div>
 
           {similar && similar.length > 0 && (

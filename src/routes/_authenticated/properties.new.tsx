@@ -155,9 +155,10 @@ function NewProperty() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
-      setAuthorized(!!roles?.some((r) => r.role === "proprietario"));
+      setAuthorized(!!roles?.some((r) => r.role === "proprietario" || r.role === "agente"));
     })();
   }, []);
+
 
   useEffect(() => {
     const urls = photos.map((f) => URL.createObjectURL(f));
@@ -189,8 +190,9 @@ function NewProperty() {
           <Building2 className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
           <h1 className="text-lg font-semibold">Acesso restrito</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Apenas usuários com perfil de Proprietário podem cadastrar imóveis.
+            Apenas usuários com perfil de Proprietário ou Agente podem cadastrar imóveis.
           </p>
+
           <Button asChild className="mt-5">
             <Link to="/dashboard">Voltar ao painel</Link>
           </Button>

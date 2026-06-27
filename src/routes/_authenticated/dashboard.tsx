@@ -146,24 +146,27 @@ function Dashboard() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Ações rápidas</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Button asChild><Link to="/properties">Ver imóveis</Link></Button>
-            {(role === "proprietario" || role === "agente") && (
-              <Button asChild variant="outline"><Link to="/properties/new">Cadastrar imóvel</Link></Button>
-            )}
-            <Button asChild variant="outline"><Link to="/profile">Meu perfil</Link></Button>
-            <Button asChild variant="outline"><Link to="/contracts">Contratos</Link></Button>
-            <UnreadChatBadge />
-            <Button asChild variant="outline"><Link to="/negotiations">Negociações</Link></Button>
-            {isAdmin && (
-              <Button asChild variant="secondary"><Link to="/admin">Moderação</Link></Button>
-            )}
-          </CardContent>
-        </Card>
+        {role !== "locatario" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Ações rápidas</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              <Button asChild><Link to="/properties">Ver imóveis</Link></Button>
+              {(role === "proprietario" || role === "agente") && (
+                <Button asChild variant="outline"><Link to="/properties/new">Cadastrar imóvel</Link></Button>
+              )}
+              <Button asChild variant="outline"><Link to="/profile">Meu perfil</Link></Button>
+              <Button asChild variant="outline"><Link to="/contracts">Contratos</Link></Button>
+              <UnreadChatBadge />
+              <Button asChild variant="outline"><Link to="/negotiations">Negociações</Link></Button>
+              {isAdmin && (
+                <Button asChild variant="secondary"><Link to="/admin">Moderação</Link></Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
 
         {isAdmin ? (
           <>

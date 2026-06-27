@@ -35,7 +35,11 @@ function ProfilePage() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Sem sessão");
       const [{ data: profile }, { data: roles }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, bio, user_type, preferred_city, onboarded_at")
+          .eq("id", u.user.id)
+          .maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", u.user.id),
       ]);
       const avatar = await getSignedAvatarUrl(profile?.avatar_url);
@@ -66,8 +70,8 @@ function ProfilePage() {
     if (data?.profile) {
       setForm({
         full_name: data.profile.full_name ?? "",
-        phone: data.profile.phone ?? "",
-        cpf_cnpj: data.profile.cpf_cnpj ?? "",
+        phone: "",
+        cpf_cnpj: "",
         bio: (data.profile as { bio?: string }).bio ?? "",
       });
     }

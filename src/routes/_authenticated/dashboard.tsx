@@ -95,7 +95,7 @@ function Dashboard() {
       if (!userData.user) throw new Error("Sem sessão");
       const { data: profile } = await supabase
         .from("profiles")
-        .select("*")
+        .select("id, full_name, avatar_url, user_type, preferred_city")
         .eq("id", userData.user.id)
         .maybeSingle();
       return {

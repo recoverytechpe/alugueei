@@ -127,24 +127,25 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-lg font-semibold truncate">
               {role === "proprietario" ? "Painel do Proprietário"
                 : role === "agente" ? "Painel do Agente"
                 : "Painel do Locatário"}
             </h1>
-            <p className="text-sm text-muted-foreground">{me.profile?.full_name ?? me.email}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">{me.profile?.full_name ?? me.email}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <NotificationBell />
             <PushToggle />
-            <Button variant="outline" onClick={signOut}>Sair</Button>
+            <Button variant="outline" size="sm" onClick={signOut}>Sair</Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+
         <Card>
           <CardHeader>
             <CardTitle>Ações rápidas</CardTitle>
@@ -335,7 +336,7 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
   return (
     <div className="space-y-6">
       {/* Hero header */}
-      <div className="relative -mx-6 -mt-8 mb-2 bg-gradient-to-br from-blue-600 to-blue-700 px-6 pt-8 pb-16 text-white">
+      <div className="relative -mx-4 sm:-mx-6 -mt-6 sm:-mt-8 mb-2 bg-gradient-to-br from-blue-600 to-blue-700 px-4 sm:px-6 pt-6 sm:pt-8 pb-16 text-white">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-white/15 flex items-center justify-center">
@@ -1044,12 +1045,12 @@ function TenantDashboard({ userId }: { userId: string }) {
   return (
     <div className="space-y-8">
       {/* Hero elegante */}
-      <section className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white px-6 py-8 md:px-10 md:py-12">
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white px-5 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,theme(colors.amber.400),transparent_55%)]" />
-        <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-          <div className="space-y-2 max-w-xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-300/90 font-medium">Sua próxima casa</p>
-            <h2 className="text-3xl md:text-4xl font-serif leading-tight">
+        <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-5 md:gap-6">
+          <div className="space-y-2 max-w-xl min-w-0">
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-amber-300/90 font-medium">Sua próxima casa</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif leading-tight break-words">
               Boas-vindas. Vamos encontrar o lar perfeito para você.
             </h2>
             <p className="text-sm text-white/70">

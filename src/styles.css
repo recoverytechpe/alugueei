@@ -137,8 +137,37 @@
     border-color: var(--color-border);
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    overscroll-behavior-y: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* iOS Safari zooms inputs com font-size < 16px. Force 16px em mobile. */
+  @media (max-width: 767px) {
+    input, select, textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Tap targets confortáveis em mobile */
+  @media (pointer: coarse) {
+    button, a[role="button"], [data-slot="button"] {
+      min-height: 40px;
+    }
   }
 }
+
+@utility safe-top    { padding-top: env(safe-area-inset-top); }
+@utility safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+@utility safe-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+

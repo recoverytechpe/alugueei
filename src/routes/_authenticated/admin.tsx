@@ -237,6 +237,66 @@ function AdminPanel() {
           )}
         </section>
 
+        <section>
+          <h2 className="text-xl font-semibold mb-3">Denúncias de usuários</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Reportes feitos por usuários sobre imóveis ou perfis.
+          </p>
+          {loadingReports ? (
+            <Skeleton className="h-32 w-full" />
+          ) : !reports || reports.length === 0 ? (
+            <Card><CardContent className="py-6 text-sm text-muted-foreground">Nenhuma denúncia.</CardContent></Card>
+          ) : (
+            <div className="space-y-3">
+              {reports.map((r) => (
+                <Card key={r.id}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={r.status === "pending" ? "destructive" : "outline"}>{r.status}</Badge>
+                        <Badge variant="secondary">{r.target_type === "property" ? "imóvel" : "usuário"}</Badge>
+                        <Badge variant="outline">{r.reason}</Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(r.created_at).toLocaleString("pt-BR")}
+                        </span>
+                      </div>
+                      {(r.status === "pending" || r.status === "reviewing") && (
+                        <div className="flex gap-2">
+                          {r.status === "pending" && (
+                            <Button size="sm" variant="outline" onClick={() => updateReport.mutate({ id: r.id, status: "reviewing" })}>
+                              Em análise
+                            </Button>
+                          )}
+                          <Button size="sm" variant="default" onClick={() => updateReport.mutate({ id: r.id, status: "resolved" })}>
+                            Resolver
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => updateReport.mutate({ id: r.id, status: "dismissed" })}>
+                            Descartar
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <CardDescription className="text-xs pt-1">
+                      Alvo: {r.target_id.slice(0, 8)} · Denunciante: {r.reporter_id.slice(0, 8)}
+                      {r.target_type === "property" && (
+                        <> · <Link to="/properties/$id" params={{ id: r.target_id }} className="text-primary hover:underline">abrir imóvel</Link></>
+                      )}
+                      {r.target_type === "user" && (
+                        <> · <Link to="/users/$id" params={{ id: r.target_id }} className="text-primary hover:underline">abrir perfil</Link></>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  {r.details && (
+                    <CardContent>
+                      <p className="text-sm bg-muted/40 p-3 rounded whitespace-pre-line">{r.details}</p>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
+
         <div className="grid gap-6 md:grid-cols-2">
           <section>
             <h2 className="text-xl font-semibold mb-3">Negociações recentes</h2>

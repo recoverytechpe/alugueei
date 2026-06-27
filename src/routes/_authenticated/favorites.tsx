@@ -5,7 +5,7 @@ import { getSignedPhotoUrls, formatBRL } from "@/lib/property-helpers";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, MapPin, BedDouble, Bath, ArrowLeft } from "lucide-react";
+import { Heart, MapPin, BedDouble, Bath } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/favorites")({
   head: () => ({ meta: [{ title: "Meus favoritos | Plataforma de Aluguel" }] }),
@@ -40,63 +40,56 @@ function FavoritesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <div className="mx-auto max-w-[440px] min-h-screen bg-background shadow-xl">
-        <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b px-5 py-4 flex items-center gap-3">
-          <Link to="/dashboard" className="size-9 rounded-full bg-muted flex items-center justify-center hover:bg-accent" aria-label="Voltar">
-            <ArrowLeft className="size-4" />
-          </Link>
-          <div>
-            <h1 className="text-lg font-bold leading-tight flex items-center gap-2">
-              <Heart className="size-4 fill-rose-500 text-rose-500" />
-              Meus favoritos
-            </h1>
-            <p className="text-xs text-muted-foreground">Imóveis que você salvou</p>
-          </div>
-        </header>
+    <div className="mx-auto w-full max-w-2xl px-4 py-4 sm:px-6 sm:py-6">
+      <div className="mb-4 flex items-center gap-2">
+        <Heart className="size-5 fill-rose-500 text-rose-500" />
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold leading-tight truncate">Meus favoritos</h1>
+          <p className="text-xs text-muted-foreground">Imóveis que você salvou</p>
+        </div>
+      </div>
 
-        <main className="px-5 py-4 space-y-3">
-          {isLoading ? (
-            <>
-              <Skeleton className="h-28 w-full" />
-              <Skeleton className="h-28 w-full" />
-            </>
-          ) : !data || data.length === 0 ? (
-            <Card className="p-8 text-center space-y-3">
-              <Heart className="size-10 mx-auto text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Você ainda não favoritou nenhum imóvel.
-              </p>
-              <Button asChild size="sm">
-                <Link to="/properties">Explorar imóveis</Link>
-              </Button>
-            </Card>
-          ) : (
-            data.map((p: any) => (
-              <Link key={p.id} to="/properties/$id" params={{ id: p.id }}>
-                <Card className="overflow-hidden flex hover:shadow-md transition">
-                  <div className="w-28 aspect-square bg-muted shrink-0">
-                    {p.cover && <img src={p.cover} alt={p.title} className="w-full h-full object-cover" />}
+      <div className="space-y-3">
+        {isLoading ? (
+          <>
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+          </>
+        ) : !data || data.length === 0 ? (
+          <Card className="p-8 text-center space-y-3">
+            <Heart className="size-10 mx-auto text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Você ainda não favoritou nenhum imóvel.
+            </p>
+            <Button asChild size="sm">
+              <Link to="/properties">Explorar imóveis</Link>
+            </Button>
+          </Card>
+        ) : (
+          data.map((p: any) => (
+            <Link key={p.id} to="/properties/$id" params={{ id: p.id }} className="block active:scale-[0.99] transition-transform">
+              <Card className="overflow-hidden flex hover:shadow-md transition">
+                <div className="w-28 aspect-square bg-muted shrink-0">
+                  {p.cover && <img src={p.cover} alt={p.title} className="w-full h-full object-cover" loading="lazy" />}
+                </div>
+                <div className="flex-1 p-3 min-w-0">
+                  <p className="text-sm font-semibold truncate">{p.title}</p>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
+                    <MapPin className="size-3 shrink-0" />
+                    {[p.neighborhood, p.city].filter(Boolean).join(", ")}
+                  </p>
+                  <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><BedDouble className="size-3" /> {p.bedrooms}</span>
+                    <span className="flex items-center gap-1"><Bath className="size-3" /> {p.bathrooms}</span>
                   </div>
-                  <div className="flex-1 p-3 min-w-0">
-                    <p className="text-sm font-semibold truncate">{p.title}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 truncate">
-                      <MapPin className="size-3 shrink-0" />
-                      {[p.neighborhood, p.city].filter(Boolean).join(", ")}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><BedDouble className="size-3" /> {p.bedrooms}</span>
-                      <span className="flex items-center gap-1"><Bath className="size-3" /> {p.bathrooms}</span>
-                    </div>
-                    <p className="text-sm font-bold text-primary mt-1">
-                      {formatBRL(p.rent_value)}<span className="text-[10px] font-normal text-muted-foreground">/mês</span>
-                    </p>
-                  </div>
-                </Card>
-              </Link>
-            ))
-          )}
-        </main>
+                  <p className="text-sm font-bold text-primary mt-1">
+                    {formatBRL(p.rent_value)}<span className="text-[10px] font-normal text-muted-foreground">/mês</span>
+                  </p>
+                </div>
+              </Card>
+            </Link>
+          ))
+        )}
       </div>
     </div>
   );

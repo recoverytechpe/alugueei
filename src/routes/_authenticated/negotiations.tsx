@@ -93,22 +93,18 @@ function NegotiationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Negociações</h1>
-          <Button asChild variant="outline"><Link to="/dashboard">Voltar</Link></Button>
-        </div>
-      </header>
-      <main className="max-w-3xl mx-auto px-6 py-8 space-y-8">
-        <VisitsSection visits={data.visits} userId={data.userId} setVisitStatus={setVisitStatus} />
-        <ProposalsSection
-          proposals={data.proposals}
-          counters={data.counters}
-          userId={data.userId}
-          setProposalStatus={setProposalStatus}
-        />
-      </main>
+    <div className="mx-auto w-full max-w-3xl px-4 py-4 sm:px-6 sm:py-8 space-y-6">
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight">Negociações</h1>
+        <p className="text-xs text-muted-foreground">Visitas, propostas e contrapropostas</p>
+      </div>
+      <VisitsSection visits={data.visits} userId={data.userId} setVisitStatus={setVisitStatus} />
+      <ProposalsSection
+        proposals={data.proposals}
+        counters={data.counters}
+        userId={data.userId}
+        setProposalStatus={setProposalStatus}
+      />
     </div>
   );
 }

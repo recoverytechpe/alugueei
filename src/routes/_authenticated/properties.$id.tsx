@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UnlockGate, useUnlockStatus, isUnlocked } from "@/components/UnlockGate";
+import { AffiliateRequestButton } from "@/components/AffiliateRequestButton";
 
 type GuaranteeType = "fiador" | "seguro_fianca" | "caucao" | "titulo_capitalizacao";
 const GUARANTEE_LABEL: Record<GuaranteeType, string> = {
@@ -429,6 +430,9 @@ function PropertyDetail() {
               unlocked
                 ? <ProposalDialog propertyId={data.id} ownerId={data.owner_id} userId={userId!} rentSuggestion={rent} preapproval={preapproval ?? null} />
                 : <Button size="sm" onClick={requireUnlock}>🔒 Enviar proposta</Button>
+            )}
+            {!data.isOwner && data.userRole === "agente" && userId && (
+              <AffiliateRequestButton propertyId={data.id} agentId={userId} ownerId={data.owner_id} />
             )}
             {data.isOwner && (
               <Button variant="destructive" size="sm" onClick={handleDelete}>Remover imóvel</Button>

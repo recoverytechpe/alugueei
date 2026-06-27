@@ -471,7 +471,17 @@ function PropertiesList() {
                         loading="lazy"
                         onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${p.id}/800/600`; }}
                       />
+                      {p.interested_count > 0 && (
+                        <div
+                          className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-background/90 backdrop-blur px-2 py-1 text-[11px] font-medium text-foreground shadow-sm"
+                          title={`${p.interested_count} ${p.interested_count === 1 ? "pessoa interessada" : "pessoas interessadas"}`}
+                        >
+                          <Users className="size-3" />
+                          <span>{p.interested_count} {p.interested_count === 1 ? "interessado" : "interessados"}</span>
+                        </div>
+                      )}
                     </div>
+
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold leading-tight line-clamp-1">{p.title}</h3>

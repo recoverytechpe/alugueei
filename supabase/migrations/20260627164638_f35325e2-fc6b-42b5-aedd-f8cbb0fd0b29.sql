@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.tg_block_messages_between_blocked() FROM PUBLIC, anon, authenticated;

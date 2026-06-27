@@ -1,12 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { timingSafeEqual } from "crypto";
+
 
 export const Route = createFileRoute("/api/public/hooks/unlock-expiry-warning")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apikey = request.headers.get("apikey");
-        if (!apikey || apikey !== process.env.SUPABASE_PUBLISHABLE_KEY) {
+        const cronSecret = process.env.CRON_SECRET;
+        if (!cronSecret) {
+          console.error("[unlock-expiry-warning] CRON_SECRET not configured");
+          return new Response("Server misconfigured", { status: 500 });
+        }
+        const provided =
+          request.headers.get("x-cron-secret") ??
+          request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
+          "";
+        const a = Buffer.from(provided);
+        const b = Buffer.from(cronSecret);
+        if (a.length !== b.length || !timingSafeEqual(a, b)) {
           return new Response("Unauthorized", { status: 401 });
         }
 

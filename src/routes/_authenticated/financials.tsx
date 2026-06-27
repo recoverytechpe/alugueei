@@ -82,9 +82,10 @@ function FinancialsPage() {
   }, [data]);
 
   async function markPaid(contractId: string) {
-    const { error } = await supabase.rpc("mark_agent_commission_paid", { _contract_id: contractId });
-    if (error) {
-      toast.error(error.message);
+    const { markAgentCommissionPaid } = await import("@/lib/protected-rpcs.functions");
+    const result = await markAgentCommissionPaid({ data: { contractId } });
+    if (!result.ok) {
+      toast.error(result.message);
       return;
     }
     toast.success("Comissão marcada como paga.");

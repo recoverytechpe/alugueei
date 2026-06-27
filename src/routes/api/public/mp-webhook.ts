@@ -26,32 +26,34 @@ export const Route = createFileRoute("/api/public/mp-webhook")({
         const paymentId = payload?.data?.id;
         const type = payload?.type ?? payload?.action;
 
-        // === Validação de assinatura (x-signature) ===
+        // === Validação de assinatura (x-signature) — OBRIGATÓRIA ===
         // Formato MP: "ts=1700000000,v1=hexhash"
         // Manifest:  id:<data.id>;request-id:<x-request-id>;ts:<ts>;
-        if (webhookSecret) {
-          const sigHeader = request.headers.get("x-signature") ?? "";
-          const requestId = request.headers.get("x-request-id") ?? "";
-          const parts = Object.fromEntries(
-            sigHeader.split(",").map((p) => {
-              const [k, ...v] = p.trim().split("=");
-              return [k, v.join("=")];
-            }),
-          );
-          const ts = parts.ts;
-          const v1 = parts.v1;
-          if (!ts || !v1 || !paymentId) {
-            console.warn("[mp-webhook] missing signature parts");
-            return new Response("unauthorized", { status: 401 });
-          }
-          const manifest = `id:${paymentId};request-id:${requestId};ts:${ts};`;
-          const expected = createHmac("sha256", webhookSecret).update(manifest).digest("hex");
-          const a = Buffer.from(v1, "hex");
-          const b = Buffer.from(expected, "hex");
-          if (a.length !== b.length || !timingSafeEqual(a, b)) {
-            console.warn("[mp-webhook] invalid signature");
-            return new Response("unauthorized", { status: 401 });
-          }
+        if (!webhookSecret) {
+          console.error("[mp-webhook] MERCADO_PAGO_WEBHOOK_SECRET not configured — rejecting request");
+          return new Response("Server misconfigured", { status: 500 });
+        }
+        const sigHeader = request.headers.get("x-signature") ?? "";
+        const requestId = request.headers.get("x-request-id") ?? "";
+        const parts = Object.fromEntries(
+          sigHeader.split(",").map((p) => {
+            const [k, ...v] = p.trim().split("=");
+            return [k, v.join("=")];
+          }),
+        );
+        const ts = parts.ts;
+        const v1 = parts.v1;
+        if (!ts || !v1 || !paymentId) {
+          console.warn("[mp-webhook] missing signature parts");
+          return new Response("unauthorized", { status: 401 });
+        }
+        const manifest = `id:${paymentId};request-id:${requestId};ts:${ts};`;
+        const expected = createHmac("sha256", webhookSecret).update(manifest).digest("hex");
+        const a = Buffer.from(v1, "hex");
+        const b = Buffer.from(expected, "hex");
+        if (a.length !== b.length || !timingSafeEqual(a, b)) {
+          console.warn("[mp-webhook] invalid signature");
+          return new Response("unauthorized", { status: 401 });
         }
 
         if (!accessToken) {

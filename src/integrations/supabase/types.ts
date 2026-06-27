@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _app_secrets: {
+        Row: {
+          name: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          name: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          name?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       agent_ratings: {
         Row: {
           agent_id: string
@@ -1281,6 +1299,7 @@ export type Database = {
           property_id: string
         }[]
       }
+      get_push_dispatch_secret: { Args: never; Returns: string }
       get_tenant_rating: {
         Args: { _tenant_id: string }
         Returns: {

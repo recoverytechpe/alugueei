@@ -737,6 +737,9 @@ export type Database = {
       }
       rental_contracts: {
         Row: {
+          agent_commission_marked_by: string | null
+          agent_commission_paid_at: string | null
+          agent_commission_pct: number
           agent_id: string | null
           contract_text: string
           created_at: string
@@ -756,6 +759,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agent_commission_marked_by?: string | null
+          agent_commission_paid_at?: string | null
+          agent_commission_pct?: number
           agent_id?: string | null
           contract_text?: string
           created_at?: string
@@ -775,6 +781,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agent_commission_marked_by?: string | null
+          agent_commission_paid_at?: string | null
+          agent_commission_pct?: number
           agent_id?: string | null
           contract_text?: string
           created_at?: string
@@ -992,6 +1001,37 @@ export type Database = {
       is_property_owner: {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
+      }
+      mark_agent_commission_paid: {
+        Args: { _contract_id: string }
+        Returns: {
+          agent_commission_marked_by: string | null
+          agent_commission_paid_at: string | null
+          agent_commission_pct: number
+          agent_id: string | null
+          contract_text: string
+          created_at: string
+          deposit_value: number | null
+          id: string
+          owner_id: string
+          paid_at: string | null
+          payment_id: string | null
+          payment_status: string
+          property_id: string
+          proposal_id: string | null
+          rent_value: number | null
+          start_date: string | null
+          status: string
+          tenant_id: string
+          term_months: number | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rental_contracts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       notify_user: {
         Args: {

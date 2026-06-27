@@ -372,9 +372,11 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          onboarded_at: string | null
           phone: string | null
           preferred_city: string | null
           updated_at: string
+          user_type: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -383,9 +385,11 @@ export type Database = {
           created_at?: string
           full_name: string
           id: string
+          onboarded_at?: string | null
           phone?: string | null
           preferred_city?: string | null
           updated_at?: string
+          user_type?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -394,9 +398,11 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          onboarded_at?: string | null
           phone?: string | null
           preferred_city?: string | null
           updated_at?: string
+          user_type?: string | null
         }
         Relationships: []
       }

@@ -27,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
-import { Scale, BookmarkPlus, Bookmark, X, History, Trash2, SlidersHorizontal, Plus } from "lucide-react";
+import { Scale, BookmarkPlus, Bookmark, X, History, Trash2, SlidersHorizontal, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const searchSchema = z.object({
@@ -163,11 +163,20 @@ function PropertiesList() {
         .filter((s): s is string => !!s);
 
       const urls = await getSignedPhotoUrls(firstPhotos);
+
+      const ids = (rows ?? []).map((p) => p.id);
+      const interestMap: Record<string, number> = {};
+      if (ids.length > 0) {
+        const { data: counts } = await supabase.rpc("get_property_interest_counts", { _property_ids: ids });
+        for (const c of counts ?? []) interestMap[c.property_id] = Number(c.interested_count) || 0;
+      }
+
       return (rows ?? []).map((p) => {
         const photos = (p.property_photos ?? []).slice().sort((a, b) => a.position - b.position);
         const path = photos[0]?.storage_path;
-        return { ...p, cover: path ? urls[path] : null };
+        return { ...p, cover: path ? urls[path] : null, interested_count: interestMap[p.id] ?? 0 };
       });
+
     },
   });
 
@@ -462,7 +471,17 @@ function PropertiesList() {
                         loading="lazy"
                         onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${p.id}/800/600`; }}
                       />
+                      {p.interested_count > 0 && (
+                        <div
+                          className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-background/90 backdrop-blur px-2 py-1 text-[11px] font-medium text-foreground shadow-sm"
+                          title={`${p.interested_count} ${p.interested_count === 1 ? "pessoa interessada" : "pessoas interessadas"}`}
+                        >
+                          <Users className="size-3" />
+                          <span>{p.interested_count} {p.interested_count === 1 ? "interessado" : "interessados"}</span>
+                        </div>
+                      )}
                     </div>
+
                     <CardContent className="p-4 space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold leading-tight line-clamp-1">{p.title}</h3>

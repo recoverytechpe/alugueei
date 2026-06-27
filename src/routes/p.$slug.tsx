@@ -41,18 +41,6 @@ export const Route = createFileRoute("/p/$slug")({
         { property: "twitter:title", content: title },
         { property: "twitter:description", content: desc.slice(0, 160) },
       ],
-    return {
-      meta: [
-        { title: `${p.title} | Alugueei` },
-        { name: "description", content: desc.slice(0, 160) },
-        { property: "og:title", content: p.title },
-        { property: "og:description", content: desc.slice(0, 160) },
-        { property: "og:type", content: "product" },
-        { property: "og:url", content: url },
-        { property: "twitter:card", content: "summary_large_image" },
-        { property: "twitter:title", content: p.title },
-        { property: "twitter:description", content: desc.slice(0, 160) },
-      ],
       links: [{ rel: "canonical", href: url }],
       scripts: [
         {

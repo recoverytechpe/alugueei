@@ -15,9 +15,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 type AnyFn = (...args: unknown[]) => unknown;
 
-const auth = { getUser: vi.fn() };
-const fromMock = vi.fn();
-const supabase = { auth, from: fromMock };
+const { auth, fromMock, supabase } = vi.hoisted(() => {
+  const auth = { getUser: vi.fn() };
+  const fromMock = vi.fn();
+  return { auth, fromMock, supabase: { auth, from: fromMock } };
+});
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase }));
 

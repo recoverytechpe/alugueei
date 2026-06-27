@@ -423,10 +423,16 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
                           Gerenciar
                         </Link>
                       </Button>
+                      <Button asChild size="sm" variant="outline" className="flex-1">
+                        <Link to="/properties/$id/edit" params={{ id: p.id }}>
+                          Editar
+                        </Link>
+                      </Button>
                       <Button size="sm" variant="outline" className="flex-1" onClick={() => togglePause(p.id, p.status)}>
                         {isPaused ? "Reativar" : "Pausar"}
                       </Button>
                     </div>
+
                   </CardContent>
                 </Card>
               );
@@ -708,7 +714,7 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
   const { data, isLoading } = useQuery({
     queryKey: ["agent-dash", userId],
     queryFn: async () => {
-      const [proposals, contracts, ratingRpc, visibilityRpc] = await Promise.all([
+      const [proposals, contracts, ratingRpc, visibilityRpc, myProps] = await Promise.all([
         supabase
           .from("proposals")
           .select("id, status, rent_offer, created_at, property:properties(id, title, address_neighborhood, address_number, city)")
@@ -720,17 +726,20 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           "get_agent_visibility",
           { _agent_id: userId }
         ),
+        supabase.from("properties").select("id, title, city, state, status").eq("owner_id", userId).order("created_at", { ascending: false }),
       ]);
       return {
         proposals: proposals.data ?? [],
         contracts: contracts.data ?? [],
         rating: ratingRpc.data?.[0] ?? { avg_stars: 0, total_ratings: 0 },
         visibility: visibilityRpc.data?.[0] ?? { closed_deals: 0, visibility_score: 0 },
+        myProperties: myProps.data ?? [],
       };
     },
     staleTime: 60_000,
     placeholderData: (prev) => prev,
   });
+
 
 
   useRealtimeNotifications({
@@ -897,7 +906,42 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           </CardContent>
         </Card>
       </section>
+
+      {/* Imóveis cadastrados pelo agente */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold">Meus imóveis cadastrados</h3>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/properties/new">Novo</Link>
+          </Button>
+        </div>
+        {data.myProperties.length === 0 ? (
+          <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Você ainda não cadastrou imóveis.</CardContent></Card>
+        ) : (
+          <div className="space-y-2">
+            {data.myProperties.slice(0, 5).map((p) => (
+              <Card key={p.id}>
+                <CardContent className="p-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{p.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {[p.city, p.state].filter(Boolean).join("/")} · {p.status}
+                    </p>
+                  </div>
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/properties/$id/edit" params={{ id: p.id }}>Editar</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link to="/properties/$id" params={{ id: p.id }}>Abrir</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
+
   );
 }
 

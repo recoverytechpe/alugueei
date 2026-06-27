@@ -81,9 +81,11 @@ function ContractsPage() {
             contract={c}
             userId={data.userId}
             existing={data.ratingsByContract[c.id]}
+            existingTenantRating={data.tenantRatingsByContract[c.id]}
             onSaved={() => qc.invalidateQueries({ queryKey: ["my-contracts"] })}
           />
         ))}
+
       </main>
     </div>
   );

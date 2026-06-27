@@ -3,7 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Home, Building2, MessageCircle, Handshake, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
+import { BackButton } from "@/components/BackButton";
 import { cn } from "@/lib/utils";
+
 
 type NavItem = {
   to: "/dashboard" | "/properties" | "/chat" | "/negotiations" | "/profile";

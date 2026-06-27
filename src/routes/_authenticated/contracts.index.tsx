@@ -44,9 +44,20 @@ function ContractsPage() {
         .eq("rater_id", u.user.id);
       const ratingsByContract: Record<string, { stars: number; comment: string }> = {};
       for (const r of ratings ?? []) ratingsByContract[r.contract_id] = { stars: r.stars, comment: r.comment };
-      return { userId: u.user.id, contracts: (contracts ?? []) as unknown as Contract[], ratingsByContract };
+
+      const { data: tRatings } = await supabase
+        .from("tenant_ratings" as never)
+        .select("contract_id, stars, comment")
+        .eq("rater_id", u.user.id);
+      const tenantRatingsByContract: Record<string, { stars: number; comment: string }> = {};
+      for (const r of (tRatings ?? []) as Array<{ contract_id: string; stars: number; comment: string }>) {
+        tenantRatingsByContract[r.contract_id] = { stars: r.stars, comment: r.comment };
+      }
+
+      return { userId: u.user.id, contracts: (contracts ?? []) as unknown as Contract[], ratingsByContract, tenantRatingsByContract };
     },
   });
+
 
   if (isLoading || !data) {
     return <div className="p-8 space-y-4"><Skeleton className="h-10 w-64" /><Skeleton className="h-40 w-full max-w-2xl" /></div>;

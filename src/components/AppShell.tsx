@@ -1,10 +1,36 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Home, Building2, MessageCircle, Handshake, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NotificationBell } from "@/components/NotificationBell";
 import { BackButton } from "@/components/BackButton";
 import { cn } from "@/lib/utils";
+
+function useOnboardingGate() {
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data } = useQuery({
+    queryKey: ["onboarding-status"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return { needs: false };
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("onboarded_at")
+        .eq("id", u.user.id)
+        .maybeSingle();
+      return { needs: !p?.onboarded_at };
+    },
+    staleTime: 60_000,
+  });
+  useEffect(() => {
+    if (data?.needs && !pathname.startsWith("/onboarding")) {
+      navigate({ to: "/onboarding" });
+    }
+  }, [data?.needs, pathname, navigate]);
+}
+
 
 
 type NavItem = {

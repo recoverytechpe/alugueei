@@ -930,7 +930,7 @@ function ReputationRow({ Icon, label, value }: { Icon: typeof Award; label: stri
 }
 
 function TenantDashboard({ userId }: { userId: string }) {
-  const [selectedCity, setSelectedCity] = useTenantCity("tenant_preferred_city");
+  const [selectedCity, setSelectedCity] = useTenantCity("tenant_preferred_city", userId);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [welcomeChoice, setWelcomeChoice] = useState<string>("");
 
@@ -1219,16 +1219,47 @@ function TenantDashboard({ userId }: { userId: string }) {
 }
 
 
-function useTenantCity(storageKey: string) {
+function useTenantCity(storageKey: string, userId?: string) {
   const [value, setValue] = useState<string | null>(() => {
     if (typeof window === "undefined") return null;
     return window.localStorage.getItem(storageKey);
   });
+
+  // Hydrate from backend on mount: backend wins if it has a value and local
+  // doesn't (or differs) — so a new device picks up the saved preference.
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("preferred_city")
+        .eq("id", userId)
+        .maybeSingle();
+      if (cancelled || error) return;
+      const remote = (data?.preferred_city ?? null) as string | null;
+      if (remote && remote !== value) {
+        setValue(remote);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem(storageKey, remote);
+        }
+      } else if (!remote && value) {
+        // Local has a value but backend doesn't — push local up so it follows the user.
+        await supabase.from("profiles").update({ preferred_city: value }).eq("id", userId);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
   const update = (v: string | null) => {
     setValue(v);
     if (typeof window !== "undefined") {
       if (v) window.localStorage.setItem(storageKey, v);
       else window.localStorage.removeItem(storageKey);
+    }
+    if (userId) {
+      void supabase.from("profiles").update({ preferred_city: v }).eq("id", userId);
     }
   };
   return [value, update] as const;

@@ -20,6 +20,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { ExportReports } from "@/components/ExportReports";
 import { UnreadChatBadge } from "@/components/UnreadChatBadge";
 import { useViewAs } from "@/lib/view-as";
+import { CITY_PROMPTED_KEY, markPrompted, shouldOpenWelcome } from "@/lib/tenant-city-prefs";
 
 /**
  * Subscribes to realtime postgres_changes for the given table+filter and
@@ -979,11 +980,9 @@ function TenantDashboard({ userId }: { userId: string }) {
   // nem o flag de "já perguntei". Decisão fica persistente em localStorage.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (selectedCity) return;
-    const prompted = window.localStorage.getItem("tenant_city_prompted");
-    if (prompted) return;
-    if (cities && cities.length > 0) {
-      setWelcomeChoice(cities[0].city);
+    const prompted = window.localStorage.getItem(CITY_PROMPTED_KEY);
+    if (shouldOpenWelcome({ selectedCity, prompted, citiesCount: cities?.length ?? 0 })) {
+      setWelcomeChoice(cities![0].city);
       setWelcomeOpen(true);
     }
   }, [cities, selectedCity]);
@@ -991,7 +990,7 @@ function TenantDashboard({ userId }: { userId: string }) {
   function closeWelcome(save: boolean) {
     if (save && welcomeChoice) setSelectedCity(welcomeChoice);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("tenant_city_prompted", "1");
+      markPrompted(window.localStorage);
     }
     setWelcomeOpen(false);
   }

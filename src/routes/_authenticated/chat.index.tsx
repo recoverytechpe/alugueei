@@ -86,7 +86,7 @@ function ChatList() {
       await supabase.from("conversation_archives" as never).delete().eq("conversation_id", convId).eq("user_id", data!.userId);
       toast.success("Conversa restaurada");
     } else {
-      await supabase.from("conversation_archives" as never).insert({ conversation_id: convId, user_id: data!.userId });
+      await supabase.from("conversation_archives" as never).insert({ conversation_id: convId, user_id: data!.userId } as never);
       toast.success("Conversa arquivada");
     }
     qc.invalidateQueries({ queryKey: ["conversations"] });
@@ -98,7 +98,7 @@ function ChatList() {
       toast.success("Usuário desbloqueado");
     } else {
       if (!confirm("Bloquear este usuário? Ele não poderá mais te enviar mensagens.")) return;
-      await supabase.from("user_blocks" as never).insert({ blocker_id: data!.userId, blocked_id: otherId });
+      await supabase.from("user_blocks" as never).insert({ blocker_id: data!.userId, blocked_id: otherId } as never);
       toast.success("Usuário bloqueado");
     }
     qc.invalidateQueries({ queryKey: ["conversations"] });

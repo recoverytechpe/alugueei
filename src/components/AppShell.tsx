@@ -17,10 +17,12 @@ function useOnboardingGate() {
       if (!u.user) return { needs: false };
       const { data: p } = await supabase
         .from("profiles")
-        .select("onboarded_at")
+        .select("onboarded_at, terms_accepted_at, privacy_accepted_at")
         .eq("id", u.user.id)
         .maybeSingle();
-      return { needs: !p?.onboarded_at };
+      return {
+        needs: !p?.onboarded_at || !p?.terms_accepted_at || !p?.privacy_accepted_at,
+      };
     },
     staleTime: 60_000,
   });

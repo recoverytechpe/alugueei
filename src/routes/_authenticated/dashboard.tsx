@@ -1045,12 +1045,12 @@ function TenantDashboard({ userId }: { userId: string }) {
   return (
     <div className="space-y-8">
       {/* Hero elegante */}
-      <section className="relative overflow-hidden rounded-3xl border bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white px-6 py-8 md:px-10 md:py-12">
+      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white px-5 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,theme(colors.amber.400),transparent_55%)]" />
-        <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-          <div className="space-y-2 max-w-xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-300/90 font-medium">Sua próxima casa</p>
-            <h2 className="text-3xl md:text-4xl font-serif leading-tight">
+        <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-5 md:gap-6">
+          <div className="space-y-2 max-w-xl min-w-0">
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-amber-300/90 font-medium">Sua próxima casa</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif leading-tight break-words">
               Boas-vindas. Vamos encontrar o lar perfeito para você.
             </h2>
             <p className="text-sm text-white/70">

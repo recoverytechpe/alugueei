@@ -163,11 +163,20 @@ function PropertiesList() {
         .filter((s): s is string => !!s);
 
       const urls = await getSignedPhotoUrls(firstPhotos);
+
+      const ids = (rows ?? []).map((p) => p.id);
+      const interestMap: Record<string, number> = {};
+      if (ids.length > 0) {
+        const { data: counts } = await supabase.rpc("get_property_interest_counts", { _property_ids: ids });
+        for (const c of counts ?? []) interestMap[c.property_id] = Number(c.interested_count) || 0;
+      }
+
       return (rows ?? []).map((p) => {
         const photos = (p.property_photos ?? []).slice().sort((a, b) => a.position - b.position);
         const path = photos[0]?.storage_path;
-        return { ...p, cover: path ? urls[path] : null };
+        return { ...p, cover: path ? urls[path] : null, interested_count: interestMap[p.id] ?? 0 };
       });
+
     },
   });
 

@@ -423,10 +423,16 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
                           Gerenciar
                         </Link>
                       </Button>
+                      <Button asChild size="sm" variant="outline" className="flex-1">
+                        <Link to="/properties/$id/edit" params={{ id: p.id }}>
+                          Editar
+                        </Link>
+                      </Button>
                       <Button size="sm" variant="outline" className="flex-1" onClick={() => togglePause(p.id, p.status)}>
                         {isPaused ? "Reativar" : "Pausar"}
                       </Button>
                     </div>
+
                   </CardContent>
                 </Card>
               );

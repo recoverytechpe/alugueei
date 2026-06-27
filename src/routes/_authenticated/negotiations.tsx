@@ -93,23 +93,29 @@ function NegotiationsPage() {
       return;
     }
 
-    // Confirma que o trigger DB gerou o rental_contract antes de avisar o usuário
-    let contractId: string | null = null;
-    for (let i = 0; i < 5; i++) {
-      const { data: c } = await supabase
-        .from("rental_contracts")
-        .select("id")
-        .eq("proposal_id", id)
-        .maybeSingle();
-      if (c?.id) { contractId = c.id; break; }
-      await new Promise((r) => setTimeout(r, 400));
-    }
-    await qc.invalidateQueries({ queryKey: ["negotiations"] });
-    if (contractId) {
-      toast.success("Proposta aceita — abrindo contrato…");
-      navigate({ to: "/contracts/$id", params: { id: contractId } });
-    } else {
-      toast.warning("Proposta aceita, mas o contrato ainda não apareceu. Verifique em Contratos em instantes.");
+    setAcceptingId(id);
+    const loadingToast = toast.loading("Gerando contrato…");
+    try {
+      let contractId: string | null = null;
+      for (let i = 0; i < 8; i++) {
+        const { data: c } = await supabase
+          .from("rental_contracts")
+          .select("id")
+          .eq("proposal_id", id)
+          .maybeSingle();
+        if (c?.id) { contractId = c.id; break; }
+        await new Promise((r) => setTimeout(r, 500));
+      }
+      await qc.invalidateQueries({ queryKey: ["negotiations"] });
+      toast.dismiss(loadingToast);
+      if (contractId) {
+        toast.success("Proposta aceita — abrindo contrato…");
+        navigate({ to: "/contracts/$id", params: { id: contractId } });
+      } else {
+        toast.warning("Proposta aceita, mas o contrato ainda não apareceu. Verifique em Contratos em instantes.");
+      }
+    } finally {
+      setAcceptingId(null);
     }
   }
 

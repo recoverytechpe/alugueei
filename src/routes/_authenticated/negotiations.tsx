@@ -84,8 +84,32 @@ function NegotiationsPage() {
 
   async function setProposalStatus(id: string, status: "accepted" | "rejected" | "withdrawn") {
     const { error } = await supabase.from("proposals").update({ status }).eq("id", id);
-    if (error) toast.error(error.message);
-    else toast.success(status === "accepted" ? "Proposta aceita — contrato gerado" : "Proposta atualizada");
+    if (error) { toast.error(error.message); return; }
+    if (status !== "accepted") {
+      toast.success("Proposta atualizada");
+      await qc.invalidateQueries({ queryKey: ["negotiations"] });
+      return;
+    }
+
+    // Confirma que o trigger DB gerou o rental_contract antes de avisar o usuário
+    let contractId: string | null = null;
+    for (let i = 0; i < 5; i++) {
+      const { data: c } = await supabase
+        .from("rental_contracts")
+        .select("id")
+        .eq("proposal_id", id)
+        .maybeSingle();
+      if (c?.id) { contractId = c.id; break; }
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    await qc.invalidateQueries({ queryKey: ["negotiations"] });
+    if (contractId) {
+      toast.success("Proposta aceita — contrato gerado", {
+        action: { label: "Abrir contrato", onClick: () => { window.location.href = `/contracts/${contractId}`; } },
+      });
+    } else {
+      toast.warning("Proposta aceita, mas o contrato ainda não apareceu. Verifique em Contratos em instantes.");
+    }
   }
 
   if (isLoading || !data) {

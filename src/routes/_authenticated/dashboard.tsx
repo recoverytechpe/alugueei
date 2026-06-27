@@ -1043,7 +1043,7 @@ function TenantDashboard({ userId }: { userId: string }) {
   const activeContracts = data.contracts.filter((c) => c.status === "active" || c.status === "closed").length;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Hero elegante */}
       <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white px-5 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12">
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,theme(colors.amber.400),transparent_55%)]" />
@@ -1104,7 +1104,7 @@ function TenantDashboard({ userId }: { userId: string }) {
 
       {/* Imóveis na região */}
       <section className="space-y-4">
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
           <div>
             <h3 className="text-xl md:text-2xl font-serif">
               {selectedCity ? `Oportunidades em ${selectedCity}` : "Oportunidades para você"}

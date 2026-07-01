@@ -464,64 +464,52 @@ function PropertiesList() {
         )}
 
         {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-72" />)}
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-36 w-full rounded-2xl" />)}
           </div>
         ) : empty ? (
           <div className="py-16 text-center text-muted-foreground">Nenhum imóvel encontrado.</div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="space-y-3">
             {data!.map((p) => {
               const inCompare = compareIds.includes(p.id);
               return (
-                <Card key={p.id} className="overflow-hidden hover:border-primary transition-colors h-full flex flex-col">
-                  <button onClick={() => handleOpenCard(p)} className="text-left">
-                    <div className="aspect-[4/3] bg-muted overflow-hidden relative">
-                      <img
-                        src={p.cover ?? `https://picsum.photos/seed/${p.id}/800/600`}
-                        alt={p.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${p.id}/800/600`; }}
-                      />
-                      {p.interested_count > 0 && (
-                        <div
-                          className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-background/90 backdrop-blur px-2 py-1 text-[11px] font-medium text-foreground shadow-sm"
-                          title={`${p.interested_count} ${p.interested_count === 1 ? "pessoa interessada" : "pessoas interessadas"}`}
-                        >
-                          <Users className="size-3" />
-                          <span>{p.interested_count} {p.interested_count === 1 ? "interessado" : "interessados"}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <CardContent className="p-4 space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="font-semibold leading-tight line-clamp-1">{p.title}</h3>
-                        <Badge variant="secondary" className="capitalize">{p.property_type}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {[p.neighborhood, p.city, p.state].filter(Boolean).join(" · ")}
-                      </p>
-                      <div className="flex gap-3 text-xs text-muted-foreground">
-                        <span>{p.bedrooms} qtos</span>
-                        <span>{p.bathrooms} ban.</span>
-                        <span>{p.parking_spots} vagas</span>
-                        <span>{Number(p.area_m2)} m²</span>
-                      </div>
-                      <div className="pt-1 font-semibold">{formatBRL(p.rent_value)}<span className="text-xs font-normal text-muted-foreground"> / mês</span></div>
-                    </CardContent>
+                <div key={p.id} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenCard(p)}
+                    className="block w-full text-left"
+                  >
+                    <PropertyCard
+                      property={{
+                        id: p.id,
+                        title: p.title,
+                        city: p.city,
+                        neighborhood: p.neighborhood,
+                        rent_value: Number(p.rent_value),
+                        bedrooms: p.bedrooms,
+                        bathrooms: p.bathrooms,
+                        area: p.area_m2 != null ? Number(p.area_m2) : null,
+                        cover: p.cover ?? `https://picsum.photos/seed/${p.id}/800/600`,
+                        verified: true,
+                      }}
+                    />
                   </button>
-                  <div className="px-4 pb-3 mt-auto">
-                    <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
-                      <Checkbox checked={inCompare} onCheckedChange={() => onToggleCompare(p.id)} />
-                      <span>Comparar</span>
-                    </label>
-                  </div>
-                </Card>
+                  {p.interested_count > 0 && (
+                    <div className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full bg-background/95 backdrop-blur px-2 py-1 text-[10px] font-semibold text-foreground shadow-sm">
+                      <Users className="size-3" />
+                      {p.interested_count}
+                    </div>
+                  )}
+                  <label className="mt-1.5 ml-2 flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+                    <Checkbox checked={inCompare} onCheckedChange={() => onToggleCompare(p.id)} />
+                    <span>Comparar</span>
+                  </label>
+                </div>
               );
             })}
           </div>
+
         )}
       </main>
 

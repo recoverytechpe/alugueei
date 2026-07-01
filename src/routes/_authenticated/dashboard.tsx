@@ -302,26 +302,26 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
   const upcomingPayments = activeContracts.length;
 
   const contractStatusPill = (s: string) => {
-    if (s === "closed") return { cls: "bg-emerald-100 text-emerald-700", label: "Assinado" };
-    if (s === "active") return { cls: "bg-blue-100 text-blue-700", label: "Em assinatura" };
-    return { cls: "bg-amber-100 text-amber-700", label: "Pendente" };
+    if (s === "closed") return { cls: "bg-success/15 text-success", label: "Assinado" };
+    if (s === "active") return { cls: "bg-primary/15 text-primary", label: "Em assinatura" };
+    return { cls: "bg-warning/20 text-warning-foreground", label: "Pendente" };
   };
   const visitStatusPill = (s: string) => {
-    if (s === "confirmed") return { cls: "bg-blue-100 text-blue-700", label: "Confirmada" };
-    if (s === "done") return { cls: "bg-emerald-100 text-emerald-700", label: "Realizada" };
+    if (s === "confirmed") return { cls: "bg-primary/15 text-primary", label: "Confirmada" };
+    if (s === "done") return { cls: "bg-success/15 text-success", label: "Realizada" };
     if (s === "canceled") return { cls: "bg-muted text-muted-foreground", label: "Cancelada" };
-    return { cls: "bg-amber-100 text-amber-700", label: "Agendada" };
+    return { cls: "bg-warning/20 text-warning-foreground", label: "Agendada" };
   };
   const propStatusDot = (s: string | null) => {
-    if (s === "rented") return { cls: "bg-emerald-500", text: "text-emerald-600", label: "Ocupado" };
-    if (s === "available") return { cls: "bg-amber-500", text: "text-amber-600", label: "Disponível" };
+    if (s === "rented") return { cls: "bg-success", text: "text-success", label: "Ocupado" };
+    if (s === "available") return { cls: "bg-warning", text: "text-warning-foreground", label: "Disponível" };
     return { cls: "bg-muted-foreground", text: "text-muted-foreground", label: s ?? "—" };
   };
 
   return (
     <div className="space-y-6">
       {/* Hero header */}
-      <div className="relative -mx-4 sm:-mx-6 -mt-6 sm:-mt-8 mb-2 bg-gradient-to-br from-blue-600 to-blue-700 px-4 sm:px-6 pt-6 sm:pt-8 pb-16 text-white">
+      <div className="relative -mx-4 sm:-mx-6 -mt-6 sm:-mt-8 mb-2 bg-gradient-to-br from-primary to-primary/80 px-4 sm:px-6 pt-6 sm:pt-8 pb-16 text-white">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-white/15 flex items-center justify-center">
@@ -341,7 +341,7 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
               {avatarUrl ? (
                 <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold">
+                <div className="h-full w-full bg-gradient-to-br from-primary/70 to-primary flex items-center justify-center text-white font-semibold">
                   {fullName.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -362,24 +362,24 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
       <div className="grid gap-4 sm:grid-cols-2 -mt-16 relative z-10">
         <Card className="shadow-md">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <Home className="h-7 w-7 text-blue-600" strokeWidth={1.5} />
+            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Home className="h-7 w-7 text-primary" strokeWidth={1.5} />
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-medium">Meus imóveis</p>
-              <p className="text-3xl font-bold text-blue-700 leading-tight">{data.properties.length}</p>
+              <p className="text-3xl font-bold text-primary leading-tight">{data.properties.length}</p>
               <p className="text-xs text-muted-foreground">Total cadastrado</p>
             </div>
           </CardContent>
         </Card>
         <Card className="shadow-md">
           <CardContent className="p-5 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-              <Calendar className="h-7 w-7 text-blue-600" strokeWidth={1.5} />
+            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Calendar className="h-7 w-7 text-primary" strokeWidth={1.5} />
             </div>
             <div>
               <p className="text-sm text-muted-foreground font-medium">Próximo aluguel</p>
-              <p className="text-3xl font-bold text-blue-700 leading-tight capitalize">{nextRentLabel}</p>
+              <p className="text-3xl font-bold text-primary leading-tight capitalize">{nextRentLabel}</p>
               <p className="text-xs text-muted-foreground">{upcomingPayments} pagamento{upcomingPayments === 1 ? "" : "s"} a receber</p>
             </div>
           </CardContent>
@@ -405,7 +405,7 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
               return (
                 <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-3 flex flex-col sm:flex-row gap-3">
-                    <div className="h-24 sm:h-20 sm:w-28 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0" />
+                    <div className="h-24 sm:h-20 sm:w-28 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold truncate">{p.title}</p>
                       <p className="text-sm text-muted-foreground truncate">
@@ -472,8 +472,8 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
               return (
                 <div key={c.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0">
                   <Link to="/contracts/$id" params={{ id: c.id }} className="flex flex-1 items-center gap-3 min-w-0 hover:bg-muted/30 -mx-1 px-1 rounded">
-                    <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                      <FileText className="h-5 w-5 text-blue-600" />
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <FileText className="h-5 w-5 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
@@ -523,8 +523,8 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
               const when = v.scheduled_at ? new Date(v.scheduled_at) : null;
               return (
                 <div key={v.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0">
-                  <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="h-5 w-5 text-blue-600" />
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Calendar className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
@@ -636,7 +636,7 @@ function OwnerProposals({ proposals }: { proposals: unknown[] }) {
               >
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-start gap-3">
-                    <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0" />
+                    <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-semibold truncate">{p.property?.title ?? "Imóvel"}</p>
@@ -687,9 +687,9 @@ function mapProposalStatus(s: string | null | undefined): ReferralStatus {
 
 function StatusPill({ status }: { status: ReferralStatus }) {
   const map: Record<ReferralStatus, { cls: string; Icon: typeof Clock }> = {
-    "Pendente": { cls: "bg-amber-100 text-amber-700", Icon: Clock },
-    "Em Progresso": { cls: "bg-blue-100 text-blue-700", Icon: RefreshCw },
-    "Concluído": { cls: "bg-emerald-100 text-emerald-700", Icon: CheckCircle2 },
+    "Pendente": { cls: "bg-warning/20 text-warning-foreground", Icon: Clock },
+    "Em Progresso": { cls: "bg-primary/15 text-primary", Icon: RefreshCw },
+    "Concluído": { cls: "bg-success/15 text-success", Icon: CheckCircle2 },
   };
   const { cls, Icon } = map[status];
   return (
@@ -805,7 +805,7 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           <p className="text-sm text-muted-foreground">Bem-vindo de volta,</p>
           <div className="flex items-center gap-2">
             <h2 className="text-3xl font-bold tracking-tight">{fullName}</h2>
-            <BadgeCheck className="h-6 w-6 text-blue-600 fill-blue-100" />
+            <BadgeCheck className="h-6 w-6 text-primary fill-primary/20" />
           </div>
           <p className="text-sm text-muted-foreground mt-1">
             Finder · Ajudando pessoas a encontrar o lar perfeito
@@ -815,7 +815,7 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           {avatarUrl ? (
             <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-semibold">
+            <div className="h-full w-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-semibold">
               {fullName.charAt(0).toUpperCase()}
             </div>
           )}
@@ -823,7 +823,7 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
       </div>
 
       {/* Earnings + leads hero card */}
-      <Card className="border-0 bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg">
+      <Card className="border-0 bg-gradient-to-br from-primary to-primary/80 text-white shadow-lg">
         <CardContent className="p-6 grid grid-cols-2 gap-4 divide-x divide-white/20">
           <div className="flex items-center gap-4 pr-4">
             <div className="h-14 w-14 rounded-full bg-white/15 flex items-center justify-center">
@@ -867,7 +867,7 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
               return (
                 <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-3 flex items-center gap-3">
-                    <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex-shrink-0" />
+                    <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold truncate">{prop?.title ?? "Imóvel"}</p>
                       <p className="text-sm text-muted-foreground truncate">
@@ -896,8 +896,8 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
         <Card>
           <CardContent className="p-6 grid gap-6 md:grid-cols-2 md:divide-x">
             <div className="flex items-center gap-4">
-              <div className="h-20 w-20 rounded-full bg-blue-50 flex items-center justify-center">
-                <ShieldCheck className="h-10 w-10 text-blue-600" strokeWidth={1.5} />
+              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <ShieldCheck className="h-10 w-10 text-primary" strokeWidth={1.5} />
               </div>
               <div>
                 <p className="font-semibold text-lg">{reputationLabel}</p>
@@ -956,8 +956,8 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
 function ReputationRow({ Icon, label, value }: { Icon: typeof Award; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-        <Icon className="h-5 w-5 text-blue-600" />
+      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <Icon className="h-5 w-5 text-primary" />
       </div>
       <div>
         <p className="font-semibold text-sm">{label}</p>
@@ -1240,7 +1240,7 @@ function TenantDashboard({ userId }: { userId: string }) {
                     <span>{Number(p.area_m2 ?? 0)} m²</span>
                   </div>
                   <div className="flex items-center justify-between gap-2 pt-1">
-                    <Badge variant="secondary" className="gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200">
+                    <Badge variant="secondary" className="gap-1 bg-success/10 text-success hover:bg-success/10 border-success/30">
                       <BadgeCheck className="h-3.5 w-3.5" /> Verificado
                     </Badge>
                     <span className="text-xs font-semibold text-primary inline-flex items-center gap-1 group-hover:underline">

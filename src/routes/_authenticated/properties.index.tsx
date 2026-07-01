@@ -224,20 +224,31 @@ function PropertiesList() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10 py-4 md:py-8 space-y-4">
+      <main className="mx-auto w-full px-4 pt-6 pb-4 space-y-4">
 
-        {/* Title + primary action */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight truncate">Imóveis disponíveis</h1>
-            <p className="text-xs text-muted-foreground">{isLoading ? "Buscando…" : `${data?.length ?? 0} resultado(s)`}</p>
-          </div>
-          {isOwner && (
-            <Button asChild size="sm" className="shrink-0 gap-1.5">
-              <Link to="/properties/new"><Plus className="size-4" />Cadastrar</Link>
-            </Button>
-          )}
+        {/* Hero */}
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-3xl font-bold tracking-tight leading-tight">
+            Encontre seu próximo<br />
+            <span className="text-primary">lar perfeito</span>
+          </h1>
+          <button
+            type="button"
+            className="grid size-10 shrink-0 place-items-center rounded-full text-foreground hover:bg-muted"
+            aria-label="Notificações"
+          >
+            <Bell className="size-5" />
+            <span className="sr-only">Notificações</span>
+          </button>
         </div>
+
+        <p className="text-xs text-muted-foreground -mt-2">
+          {isLoading ? "Buscando…" : `${data?.length ?? 0} resultado(s)`}
+          {isOwner && (
+            <> · <Link to="/properties/new" className="text-primary font-semibold inline-flex items-center gap-1"><Plus className="size-3" />Cadastrar imóvel</Link></>
+          )}
+        </p>
+
 
         {/* Toolbar: Filters (sheet) + Sort + Saved searches */}
         <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

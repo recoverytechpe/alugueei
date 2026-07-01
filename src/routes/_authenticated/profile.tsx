@@ -120,32 +120,34 @@ function ProfilePage() {
 
   return (
     <div className="bg-background">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">Meu perfil</h1>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/users/$id" params={{ id: data.userId }}>Ver perfil público</Link>
-        </Button>
+      {/* Hero */}
+      <div className="bg-primary text-primary-foreground rounded-b-3xl">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-6 pb-8 flex flex-col items-center text-center gap-3">
+          <div className="relative">
+            <Avatar className="h-24 w-24 ring-4 ring-primary-foreground/20">
+              {data.avatar && <AvatarImage src={data.avatar} alt={form.full_name} />}
+              <AvatarFallback className="text-2xl bg-primary-foreground/15 text-primary-foreground">
+                {form.full_name.slice(0, 2).toUpperCase() || "?"}
+              </AvatarFallback>
+            </Avatar>
+            <label className="absolute -bottom-1 -right-1 bg-card text-primary rounded-full h-8 w-8 flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition">
+              <input type="file" accept="image/*" onChange={onAvatar} disabled={uploading} className="sr-only" />
+              <span className="text-lg leading-none">＋</span>
+            </label>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold">{form.full_name || "Meu perfil"}</h1>
+            <p className="text-xs text-primary-foreground/80">
+              {ROLE_LABEL[data.role ?? ""] ?? "Usuário"} · {data.email}
+            </p>
+          </div>
+          <Button asChild variant="secondary" size="sm" className="rounded-full">
+            <Link to="/users/$id" params={{ id: data.userId }}>Ver perfil público</Link>
+          </Button>
+        </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 pb-8 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Foto e identidade</CardTitle>
-            <CardDescription>
-              {ROLE_LABEL[data.role ?? ""] ?? "Usuário"} · {data.email}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center gap-4">
-            <Avatar className="h-20 w-20">
-              {data.avatar && <AvatarImage src={data.avatar} alt={form.full_name} />}
-              <AvatarFallback>{form.full_name.slice(0, 2).toUpperCase() || "?"}</AvatarFallback>
-            </Avatar>
-            <div>
-              <Input type="file" accept="image/*" onChange={onAvatar} disabled={uploading} />
-              <p className="text-xs text-muted-foreground mt-1">PNG ou JPG, até 3MB.</p>
-            </div>
-          </CardContent>
-        </Card>
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-4">
 
         <Card>
           <CardHeader><CardTitle>Dados</CardTitle></CardHeader>

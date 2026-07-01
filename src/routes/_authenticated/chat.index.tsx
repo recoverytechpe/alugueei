@@ -1,12 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Archive, ArchiveRestore, Ban, ShieldOff } from "lucide-react";
+import { Archive, ArchiveRestore, Ban, ShieldOff, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/chat/")({
@@ -25,6 +24,18 @@ type Row = {
   last_message_at: string | null;
   properties: { id: string; title: string } | null;
 };
+
+function timeAgo(iso: string | null) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = (now.getTime() - d.getTime()) / 1000;
+  if (diff < 60) return "agora";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  const sameYear = d.getFullYear() === now.getFullYear();
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: sameYear ? undefined : "2-digit" });
+}
 
 function ChatList() {
   const qc = useQueryClient();
@@ -54,11 +65,16 @@ function ChatList() {
 
       const ids = conversations.map((c) => c.id);
       const unread: Record<string, number> = {};
+      const preview: Record<string, string> = {};
       if (ids.length > 0) {
         const { data: msgs } = await supabase
-          .from("messages").select("conversation_id, sender_id, read_at")
-          .in("conversation_id", ids).is("read_at", null);
-        for (const m of msgs ?? []) if (m.sender_id !== me) unread[m.conversation_id] = (unread[m.conversation_id] ?? 0) + 1;
+          .from("messages").select("conversation_id, sender_id, read_at, body, created_at")
+          .in("conversation_id", ids)
+          .order("created_at", { ascending: false });
+        for (const m of msgs ?? []) {
+          if (m.sender_id !== me && !m.read_at) unread[m.conversation_id] = (unread[m.conversation_id] ?? 0) + 1;
+          if (!preview[m.conversation_id]) preview[m.conversation_id] = (m.body as string) ?? "";
+        }
       }
 
       const { data: arch } = await supabase
@@ -69,7 +85,7 @@ function ChatList() {
         .from("user_blocks" as never).select("blocked_id").eq("blocker_id", me);
       const blocked = new Set((blk ?? []).map((b: { blocked_id: string }) => b.blocked_id));
 
-      return { userId: me, conversations, profilesMap, unread, archived, blocked };
+      return { userId: me, conversations, profilesMap, unread, preview, archived, blocked };
     },
   });
 
@@ -105,7 +121,13 @@ function ChatList() {
   }
 
   if (isLoading || !data) {
-    return <div className="p-8 space-y-4"><Skeleton className="h-10 w-64" /><Skeleton className="h-40 w-full max-w-2xl" /></div>;
+    return (
+      <div className="mx-auto w-full max-w-2xl px-4 py-4 space-y-3">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
+      </div>
+    );
   }
 
   const active = data.conversations.filter((c) => !data.archived.has(c.id));
@@ -113,60 +135,78 @@ function ChatList() {
 
   const renderRow = (c: Row) => {
     const otherId = c.initiator_id === data.userId ? c.recipient_id : c.initiator_id;
+    const name = data.profilesMap[otherId] ?? "Usuário";
     const unread = data.unread[c.id] ?? 0;
     const isArchived = data.archived.has(c.id);
     const isBlocked = data.blocked.has(otherId);
+    const initials = name.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
 
     return (
-      <Card key={c.id} className={isBlocked ? "opacity-60" : ""}>
-        <CardHeader className="flex flex-row items-start justify-between gap-3">
-          <Link to="/chat/$id" params={{ id: c.id }} className="flex-1 min-w-0">
-            <CardTitle className="text-base truncate">{data.profilesMap[otherId] ?? "Usuário"}</CardTitle>
-            <CardDescription className="truncate">
-              {c.properties?.title ?? "Imóvel"} · {c.last_message_at ? new Date(c.last_message_at).toLocaleString("pt-BR") : "sem mensagens"}
-            </CardDescription>
-          </Link>
-          {unread > 0 && <span className="bg-primary text-primary-foreground rounded-full text-xs px-2 py-0.5">{unread}</span>}
-        </CardHeader>
-        <CardContent className="flex gap-2 flex-wrap pt-0">
-          <Button size="sm" variant="outline" onClick={() => toggleArchive(c.id, isArchived)}>
-            {isArchived ? <><ArchiveRestore className="size-4 mr-1.5" /> Desarquivar</> : <><Archive className="size-4 mr-1.5" /> Arquivar</>}
+      <div
+        key={c.id}
+        className={`group relative rounded-2xl bg-card shadow-[var(--shadow-card)] hover:shadow-md transition-shadow ${isBlocked ? "opacity-60" : ""}`}
+      >
+        <Link to="/chat/$id" params={{ id: c.id }} className="flex items-center gap-3 p-3 min-w-0">
+          <div className="relative flex-shrink-0">
+            <div className="h-12 w-12 rounded-full bg-primary/15 text-primary flex items-center justify-center font-semibold">
+              {initials || "?"}
+            </div>
+            {unread > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[20px] h-5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold px-1.5 flex items-center justify-center">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className={`text-sm truncate ${unread > 0 ? "font-bold text-foreground" : "font-semibold text-foreground"}`}>{name}</p>
+              <span className="text-[11px] text-muted-foreground flex-shrink-0">{timeAgo(c.last_message_at)}</span>
+            </div>
+            <p className="text-xs text-muted-foreground truncate">{c.properties?.title ?? "Imóvel"}</p>
+            <p className={`text-xs truncate mt-0.5 ${unread > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+              {data.preview[c.id] || "Sem mensagens ainda"}
+            </p>
+          </div>
+        </Link>
+        <div className="flex gap-1 px-3 pb-2">
+          <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => toggleArchive(c.id, isArchived)}>
+            {isArchived ? <><ArchiveRestore className="size-3.5 mr-1" /> Desarquivar</> : <><Archive className="size-3.5 mr-1" /> Arquivar</>}
           </Button>
-          <Button size="sm" variant={isBlocked ? "outline" : "ghost"} onClick={() => toggleBlock(otherId, isBlocked)}>
-            {isBlocked ? <><ShieldOff className="size-4 mr-1.5" /> Desbloquear</> : <><Ban className="size-4 mr-1.5" /> Bloquear</>}
+          <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={() => toggleBlock(otherId, isBlocked)}>
+            {isBlocked ? <><ShieldOff className="size-3.5 mr-1" /> Desbloquear</> : <><Ban className="size-3.5 mr-1" /> Bloquear</>}
           </Button>
-          {c.contacts_unlocked && <span className="text-xs text-muted-foreground self-center">Contatos liberados</span>}
-        </CardContent>
-      </Card>
+          {c.contacts_unlocked && <span className="text-[10px] text-primary self-center ml-auto font-medium">Contatos liberados</span>}
+        </div>
+      </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Conversas</h1>
-          <Button asChild variant="outline"><Link to="/dashboard">Voltar</Link></Button>
-        </div>
-      </header>
-      <main className="max-w-3xl mx-auto px-6 py-8">
-        <Tabs defaultValue="active">
-          <TabsList>
-            <TabsTrigger value="active">Ativas ({active.length})</TabsTrigger>
-            <TabsTrigger value="archived">Arquivadas ({archivedRows.length})</TabsTrigger>
-          </TabsList>
-          <TabsContent value="active" className="space-y-3 mt-4">
-            {active.length === 0 ? (
+    <div className="mx-auto w-full max-w-2xl px-4 py-4 sm:px-6 sm:py-6">
+      <div className="mb-4 flex items-center gap-2">
+        <MessageCircle className="size-5 text-primary" />
+        <h1 className="text-xl font-bold leading-tight">Conversas</h1>
+      </div>
+
+      <Tabs defaultValue="active">
+        <TabsList className="w-full grid grid-cols-2 bg-surface-muted h-11 rounded-full p-1">
+          <TabsTrigger value="active" className="rounded-full data-[state=active]:bg-card data-[state=active]:shadow-[var(--shadow-card)]">Ativas ({active.length})</TabsTrigger>
+          <TabsTrigger value="archived" className="rounded-full data-[state=active]:bg-card data-[state=active]:shadow-[var(--shadow-card)]">Arquivadas ({archivedRows.length})</TabsTrigger>
+        </TabsList>
+        <TabsContent value="active" className="space-y-2.5 mt-4">
+          {active.length === 0 ? (
+            <div className="rounded-2xl bg-card p-8 text-center space-y-2 shadow-[var(--shadow-card)]">
+              <MessageCircle className="size-10 mx-auto text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Nenhuma conversa ativa.</p>
-            ) : active.map(renderRow)}
-          </TabsContent>
-          <TabsContent value="archived" className="space-y-3 mt-4">
-            {archivedRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma conversa arquivada.</p>
-            ) : archivedRows.map(renderRow)}
-          </TabsContent>
-        </Tabs>
-      </main>
+            </div>
+          ) : active.map(renderRow)}
+        </TabsContent>
+        <TabsContent value="archived" className="space-y-2.5 mt-4">
+          {archivedRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhuma conversa arquivada.</p>
+          ) : archivedRows.map(renderRow)}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

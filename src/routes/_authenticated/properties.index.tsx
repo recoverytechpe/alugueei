@@ -24,11 +24,12 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetClose } from "@/components/ui/sheet";
-import { Scale, BookmarkPlus, Bookmark, X, History, Trash2, SlidersHorizontal, Plus, Users } from "lucide-react";
+import { PropertyCard } from "@/components/ui/property-card";
+import { Scale, BookmarkPlus, Bookmark, X, History, Trash2, SlidersHorizontal, Plus, Users, Search, Bell } from "lucide-react";
 import { toast } from "sonner";
+
 
 const searchSchema = z.object({
   city: fallback(z.string(), "all").default("all"),

@@ -475,11 +475,7 @@ function PropertiesList() {
               const inCompare = compareIds.includes(p.id);
               return (
                 <div key={p.id} className="relative">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenCard(p)}
-                    className="block w-full text-left"
-                  >
+                  <div onClick={() => handleOpenCard(p)}>
                     <PropertyCard
                       property={{
                         id: p.id,
@@ -494,7 +490,8 @@ function PropertiesList() {
                         verified: true,
                       }}
                     />
-                  </button>
+                  </div>
+
                   {p.interested_count > 0 && (
                     <div className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full bg-background/95 backdrop-blur px-2 py-1 text-[10px] font-semibold text-foreground shadow-sm">
                       <Users className="size-3" />

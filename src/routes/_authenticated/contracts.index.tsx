@@ -64,16 +64,16 @@ function ContractsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Meus contratos</h1>
-          <Button asChild variant="outline"><Link to="/dashboard">Voltar</Link></Button>
-        </div>
-      </header>
-      <main className="max-w-3xl mx-auto px-6 py-8 space-y-4">
+    <div className="mx-auto w-full max-w-2xl px-4 py-4 sm:px-6 sm:py-6">
+      <div className="mb-4">
+        <h1 className="text-xl font-bold leading-tight">Meus contratos</h1>
+        <p className="text-xs text-muted-foreground">Acompanhe e avalie suas negociações concluídas</p>
+      </div>
+      <div className="space-y-3">
         {data.contracts.length === 0 && (
-          <p className="text-sm text-muted-foreground">Você ainda não tem contratos.</p>
+          <div className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground shadow-[var(--shadow-card)]">
+            Você ainda não tem contratos.
+          </div>
         )}
         {data.contracts.map((c) => (
           <ContractCard
@@ -85,8 +85,7 @@ function ContractsPage() {
             onSaved={() => qc.invalidateQueries({ queryKey: ["my-contracts"] })}
           />
         ))}
-
-      </main>
+      </div>
     </div>
   );
 }

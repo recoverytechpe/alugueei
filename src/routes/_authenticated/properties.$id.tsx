@@ -762,6 +762,17 @@ function ProposalDialog({ propertyId, ownerId, userId, rentSuggestion, preapprov
     if (!rentN || rentN <= 0) return toast.error("Valor inválido");
     if (!termN || termN < 1) return toast.error("Prazo inválido");
     if (!start) return toast.error("Informe a data de início");
+
+    const { count: activeCount, error: checkErr } = await supabase
+      .from("rental_contracts")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", userId)
+      .in("status", ["active", "closed"]);
+    if (checkErr) return toast.error(checkErr.message);
+    if ((activeCount ?? 0) > 0) {
+      return toast.error("Você já possui um contrato de aluguel ativo e não pode alugar outro imóvel.");
+    }
+
     setBusy(true);
     const { error } = await supabase.from("proposals").insert({
       property_id: propertyId, owner_id: ownerId, tenant_id: userId,

@@ -19,8 +19,13 @@ import { toast } from "sonner";
 import { getOrCreateConversation } from "@/lib/chat-helpers";
 import { Handshake, Check, X, MessageCircle, Clock, Loader2 } from "lucide-react";
 
+type AffSearch = { tab?: "agent" | "owner" };
+
 export const Route = createFileRoute("/_authenticated/affiliations")({
   head: () => ({ meta: [{ title: "Afiliações | Plataforma de Aluguel" }] }),
+  validateSearch: (raw: Record<string, unknown>): AffSearch => ({
+    tab: raw.tab === "agent" || raw.tab === "owner" ? raw.tab : undefined,
+  }),
   component: AffiliationsPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,
   notFoundComponent: () => <div className="p-8">Página não encontrada</div>,

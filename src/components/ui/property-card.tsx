@@ -59,18 +59,21 @@ export function PropertyCard({
               : "size-32 sm:size-36",
           )}
         >
-          {property.cover ? (
-            <img
-              src={property.cover}
-              alt={property.title}
-              className="size-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="grid size-full place-items-center text-xs text-muted-foreground">
-              sem foto
-            </div>
-          )}
+          <img
+            src={
+              property.cover ??
+              `https://source.unsplash.com/featured/600x400/?apartment,house,${encodeURIComponent(
+                property.city ?? "brasil",
+              )}&sig=${property.id}`
+            }
+            alt={property.title}
+            className="size-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src =
+                "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=70";
+            }}
+          />
           {property.verified && (
             <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-success px-2 py-0.5 text-[10px] font-semibold text-success-foreground">
               <ShieldCheck className="size-3" />

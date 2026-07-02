@@ -36,11 +36,12 @@ export const Route = createFileRoute("/api/public/dev-test-session")({
         if (!/^localhost(:\d+)?$/i.test(host) && !/^127\.0\.0\.1(:\d+)?$/.test(host)) {
           return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: HEADERS });
         }
+        const rawText = await request.text();
         let raw: unknown = {};
-        try { raw = JSON.parse(await request.text()); } catch { /* keep {} */ }
+        try { raw = JSON.parse(rawText); } catch { /* keep {} */ }
         const parsed = BodySchema.safeParse(raw);
         if (!parsed.success) {
-          return new Response(JSON.stringify({ error: "invalid body" }), { status: 400, headers: HEADERS });
+          return new Response(JSON.stringify({ error: "invalid body", rawText, issues: parsed.error.flatten() }), { status: 400, headers: HEADERS });
         }
         const { user_id, password } = parsed.data;
         if (!ALLOWED_IDS.has(user_id)) {

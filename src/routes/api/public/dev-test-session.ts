@@ -13,7 +13,7 @@ import { z } from "zod";
  */
 
 const BodySchema = z.object({
-  user_id: z.string().uuid(),
+  user_id: z.string().regex(/^[0-9a-f-]{36}$/i, "invalid id"),
   password: z.string().min(8).max(72),
 });
 

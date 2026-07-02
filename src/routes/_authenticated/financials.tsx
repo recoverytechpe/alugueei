@@ -1,17 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatBRL } from "@/lib/property-helpers";
 import { toast } from "sonner";
-import { ArrowLeft, DollarSign, TrendingUp, Users, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, DollarSign, TrendingUp, Users, CheckCircle2, Clock, Wallet } from "lucide-react";
+import { z } from "zod";
+
+const searchSchema = z.object({
+  tab: z.enum(["owner", "agent"]).optional(),
+});
 
 export const Route = createFileRoute("/_authenticated/financials")({
   head: () => ({ meta: [{ title: "Painel financeiro | Plataforma de Aluguel" }] }),
+  validateSearch: searchSchema,
   component: FinancialsPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,
   notFoundComponent: () => <div className="p-8">Não encontrado</div>,
@@ -29,19 +36,49 @@ type Row = {
   payments: { amount: number; status: string; kind: string; created_at: string }[];
 };
 
+const SELECT_COLS =
+  "id, status, owner_id, agent_id, rent_value, agent_commission_pct, agent_commission_paid_at, properties(title), payments(amount, status, kind, created_at)";
+
 function FinancialsPage() {
+  const search = Route.useSearch();
+  const [tab, setTab] = useState<"owner" | "agent">(search.tab ?? "owner");
+
+  return (
+    <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <div className="flex items-center gap-3">
+        <Button asChild variant="ghost" size="sm">
+          <Link to="/dashboard"><ArrowLeft className="size-4 mr-1" /> Voltar</Link>
+        </Button>
+        <h1 className="text-2xl font-semibold">Painel financeiro</h1>
+      </div>
+
+      <Tabs value={tab} onValueChange={(v) => setTab(v as "owner" | "agent")}>
+        <TabsList>
+          <TabsTrigger value="owner">Como proprietário</TabsTrigger>
+          <TabsTrigger value="agent">Minhas comissões (agente)</TabsTrigger>
+        </TabsList>
+        <TabsContent value="owner" className="pt-4">
+          <OwnerView />
+        </TabsContent>
+        <TabsContent value="agent" className="pt-4">
+          <AgentView />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function OwnerView() {
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["financials"],
+    queryKey: ["financials", "owner"],
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Sem sessão");
       const { data: contracts, error } = await supabase
         .from("rental_contracts")
-        .select(
-          "id, status, owner_id, agent_id, rent_value, agent_commission_pct, agent_commission_paid_at, properties(title), payments(amount, status, kind, created_at)",
-        )
+        .select(SELECT_COLS)
         .eq("owner_id", u.user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -89,18 +126,11 @@ function FinancialsPage() {
       return;
     }
     toast.success("Comissão marcada como paga.");
-    qc.invalidateQueries({ queryKey: ["financials"] });
+    qc.invalidateQueries({ queryKey: ["financials", "owner"] });
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/dashboard"><ArrowLeft className="size-4 mr-1" /> Voltar</Link>
-        </Button>
-        <h1 className="text-2xl font-semibold">Painel financeiro</h1>
-      </div>
-
+    <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={<DollarSign className="size-4" />} label="Recebido (mês)" value={formatBRL(totals.received)} />
         <StatCard icon={<TrendingUp className="size-4" />} label="A receber" value={formatBRL(totals.pending)} />
@@ -111,9 +141,7 @@ function FinancialsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Comissões do agente por contrato</CardTitle>
-          <CardDescription>
-            Calculado como {`rent × %`} configurado no contrato (padrão 5%).
-          </CardDescription>
+          <CardDescription>Calculado como {`rent × %`} configurado no contrato (padrão 5%).</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {isLoading ? (
@@ -129,10 +157,7 @@ function FinancialsPage() {
                 const com = (rent * pct) / 100;
                 const paid = !!c.agent_commission_paid_at;
                 return (
-                  <div
-                    key={c.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4"
-                  >
+                  <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
                     <div className="min-w-0">
                       <p className="font-medium truncate">{c.properties?.title ?? "Imóvel"}</p>
                       <p className="text-xs text-muted-foreground">
@@ -145,9 +170,7 @@ function FinancialsPage() {
                           Paga
                         </Badge>
                       ) : (
-                        <Button size="sm" onClick={() => markPaid(c.id)}>
-                          Marcar como paga
-                        </Button>
+                        <Button size="sm" onClick={() => markPaid(c.id)}>Marcar como paga</Button>
                       )}
                     </div>
                   </div>
@@ -183,6 +206,95 @@ function FinancialsPage() {
                   <div className="text-right text-sm">
                     <div>Recebido: <strong>{formatBRL(received)}</strong></div>
                     <div className="text-muted-foreground">Pendente: {formatBRL(pending)}</div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function AgentView() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["financials", "agent"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("Sem sessão");
+      const { data: contracts, error } = await supabase
+        .from("rental_contracts")
+        .select(SELECT_COLS)
+        .eq("agent_id", u.user.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (contracts ?? []) as unknown as Row[];
+    },
+  });
+
+  const rows = data ?? [];
+  const totals = useMemo(() => {
+    let owed = 0;
+    let paid = 0;
+    let activeCount = 0;
+    for (const c of rows) {
+      const rent = Number(c.rent_value) || 0;
+      const pct = Number(c.agent_commission_pct) || 0;
+      const com = (rent * pct) / 100;
+      if (c.agent_commission_paid_at) paid += com;
+      else owed += com;
+      if (c.status === "active") activeCount++;
+    }
+    return { owed, paid, activeCount, total: rows.length };
+  }, [rows]);
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard icon={<Clock className="size-4" />} label="A receber" value={formatBRL(totals.owed)} />
+        <StatCard icon={<Wallet className="size-4" />} label="Já recebido" value={formatBRL(totals.paid)} />
+        <StatCard icon={<CheckCircle2 className="size-4" />} label="Contratos ativos" value={String(totals.activeCount)} />
+        <StatCard icon={<Users className="size-4" />} label="Total intermediado" value={String(totals.total)} />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Minhas comissões</CardTitle>
+          <CardDescription>
+            Comissões dos contratos em que você é o agente intermediador. O pagamento é confirmado pelo proprietário.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : rows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Você ainda não é agente em nenhum contrato. Aceite afiliações e feche negociações para aparecer aqui.
+            </p>
+          ) : (
+            rows.map((c) => {
+              const rent = Number(c.rent_value) || 0;
+              const pct = Number(c.agent_commission_pct) || 0;
+              const com = (rent * pct) / 100;
+              const paid = !!c.agent_commission_paid_at;
+              return (
+                <div key={c.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{c.properties?.title ?? "Imóvel"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Aluguel {formatBRL(rent)} · {pct}% = <strong>{formatBRL(com)}</strong>
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Status do contrato: {c.status}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {paid ? (
+                      <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                        Recebida em {new Date(c.agent_commission_paid_at!).toLocaleDateString("pt-BR")}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">Aguardando pagamento</Badge>
+                    )}
                   </div>
                 </div>
               );

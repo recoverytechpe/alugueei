@@ -1100,7 +1100,7 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
         { icon: MapPin, label: "Visitas", to: "/negotiations", search: { focus: "visits" } },
         { icon: MessageSquare, label: "Conversas", to: "/chat" },
         { icon: FileText, label: "Contratos", to: "/contracts" },
-        { icon: Wallet, label: "Financeiro", to: "/financials" },
+        { icon: Wallet, label: "Minhas comissões", to: "/financials", search: { tab: "agent" } },
         { icon: Users, label: "Meu perfil", to: "/profile" },
       ]} />
     </div>

@@ -18,6 +18,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as AgentsIdRouteImport } from './routes/agents.$id'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPreapprovalsRouteImport } from './routes/_authenticated/preapprovals'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -84,6 +85,11 @@ const IndexRoute = IndexRouteImport.update({
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgentsIdRoute = AgentsIdRouteImport.update({
+  id: '/agents/$id',
+  path: '/agents/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/agents/$id': typeof AgentsIdRoute
   '/p/$slug': typeof PSlugRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/agents/$id': typeof AgentsIdRoute
   '/p/$slug': typeof PSlugRoute
   '/chat/$id': typeof AuthenticatedChatIdRoute
   '/contracts/$id': typeof AuthenticatedContractsIdRoute
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/preapprovals': typeof AuthenticatedPreapprovalsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/agents/$id': typeof AgentsIdRoute
   '/p/$slug': typeof PSlugRoute
   '/_authenticated/chat/$id': typeof AuthenticatedChatIdRoute
   '/_authenticated/contracts/$id': typeof AuthenticatedContractsIdRoute
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/preapprovals'
     | '/profile'
+    | '/agents/$id'
     | '/p/$slug'
     | '/chat/$id'
     | '/contracts/$id'
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/preapprovals'
     | '/profile'
+    | '/agents/$id'
     | '/p/$slug'
     | '/chat/$id'
     | '/contracts/$id'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/preapprovals'
     | '/_authenticated/profile'
+    | '/agents/$id'
     | '/p/$slug'
     | '/_authenticated/chat/$id'
     | '/_authenticated/contracts/$id'
@@ -426,6 +438,7 @@ export interface RootRouteChildren {
   SearchRoute: typeof SearchRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  AgentsIdRoute: typeof AgentsIdRoute
   PSlugRoute: typeof PSlugRoute
   ApiPublicCitiesRoute: typeof ApiPublicCitiesRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
@@ -496,6 +509,13 @@ declare module '@tanstack/react-router' {
       path: '/p/$slug'
       fullPath: '/p/$slug'
       preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agents/$id': {
+      id: '/agents/$id'
+      path: '/agents/$id'
+      fullPath: '/agents/$id'
+      preLoaderRoute: typeof AgentsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/profile': {
@@ -730,6 +750,7 @@ const rootRouteChildren: RootRouteChildren = {
   SearchRoute: SearchRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  AgentsIdRoute: AgentsIdRoute,
   PSlugRoute: PSlugRoute,
   ApiPublicCitiesRoute: ApiPublicCitiesRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,

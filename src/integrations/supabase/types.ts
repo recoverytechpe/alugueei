@@ -1299,6 +1299,7 @@ export type Database = {
           property_id: string
         }[]
       }
+      get_public_agent_profile: { Args: { _agent_id: string }; Returns: Json }
       get_push_dispatch_secret: { Args: never; Returns: string }
       get_tenant_rating: {
         Args: { _tenant_id: string }

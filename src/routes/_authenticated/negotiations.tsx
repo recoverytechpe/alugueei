@@ -164,12 +164,17 @@ function VisitsSection({
   visits,
   userId,
   setVisitStatus,
+  initialStatus,
 }: {
   visits: Visit[];
   userId: string;
   setVisitStatus: (id: string, status: string) => Promise<void>;
+  initialStatus?: string;
 }) {
-  const [filter, setFilter] = useState<VisitFilter>("all");
+  const initial: VisitFilter =
+    initialStatus === "requested" || initialStatus === "confirmed" ||
+    initialStatus === "done" || initialStatus === "cancelled" ? initialStatus : "all";
+  const [filter, setFilter] = useState<VisitFilter>(initial);
   const counts = useMemo(() => ({
     all: visits.length,
     requested: visits.filter((v) => v.status === "requested").length,

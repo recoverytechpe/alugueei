@@ -953,161 +953,155 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
   const reputationLabel =
     avgStars >= 4.5 ? "Excelente" : avgStars >= 3.5 ? "Muito Bom" : avgStars >= 2.5 ? "Bom" : "Em construção";
 
+  // Funnel counts (últimos 30 dias)
+  const thirtyAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const recentProposals = data.proposals.filter((p) => new Date(p.created_at) >= thirtyAgo);
+  const funnel = {
+    leads: recentProposals.length,
+    negotiating: recentProposals.filter((p) => p.status === "negotiating" || p.status === "countered").length,
+    accepted: recentProposals.filter((p) => p.status === "accepted").length,
+    closed: data.contracts.filter((c) => c.status === "closed" && new Date(c.created_at) >= thirtyAgo).length,
+  };
+  const pendingLeads = data.proposals.filter(
+    (p) => p.status === "pending" || p.status === "negotiating" || p.status === "countered",
+  );
+
+  const attention: AttentionItem[] = [];
+  if (pendingLeads.length > 0) attention.push({
+    id: "leads", icon: AlertTriangle, tone: "urgent",
+    title: `${pendingLeads.length} lead${pendingLeads.length === 1 ? "" : "s"} aguardando`,
+    detail: "Acompanhe as negociações em andamento.",
+    to: "/negotiations", cta: "Acompanhar leads",
+  });
+  if (data.myProperties.length === 0) attention.push({
+    id: "affil", icon: Handshake, tone: "info",
+    title: "Amplie seu portfólio",
+    detail: "Solicite afiliação para intermediar mais imóveis.",
+    to: "/affiliations", cta: "Solicitar afiliação",
+  });
+
   return (
     <div className="space-y-6">
-      {/* Welcome / identity */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">Bem-vindo de volta,</p>
-          <div className="flex items-center gap-2">
-            <h2 className="text-3xl font-bold tracking-tight">{fullName}</h2>
-            <BadgeCheck className="h-6 w-6 text-primary fill-primary/20" />
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Finder · Ajudando pessoas a encontrar o lar perfeito
-          </p>
-        </div>
-        <div className="h-16 w-16 rounded-full bg-muted overflow-hidden flex-shrink-0 ring-2 ring-background shadow">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-white font-semibold">
-              {fullName.charAt(0).toUpperCase()}
-            </div>
-          )}
-        </div>
+      <PersonaHero
+        role="Agente / Finder"
+        name={fullName}
+        avatarUrl={avatarUrl}
+        subtitle={`${reputationLabel} · ${avgStars.toFixed(1)} ★ · ${closedDeals} fechamentos`}
+        primaryCta={{ label: "Nova afiliação", to: "/affiliations" }}
+      />
+
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Precisa da sua atenção</h3>
+        <AttentionSection items={attention} />
+      </section>
+
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+        <KpiTile icon={Wallet} label="Ganhos do mês" value={brl(earningsMonth)} tone="success" hint="Comissões liberadas" />
+        <KpiTile icon={Users} label="Leads ativos" value={activeLeads} tone={activeLeads > 0 ? "warning" : "primary"} hint="Em negociação" />
+        <KpiTile icon={CheckCircle2} label="Fechamentos" value={closedDeals} tone="success" hint="Total histórico" />
+        <KpiTile icon={Star} label="Reputação" value={avgStars.toFixed(1)} hint={`${totalRatings} avaliações`} />
       </div>
 
-      {/* Earnings + leads hero card */}
-      <Card className="border-0 bg-gradient-to-br from-primary to-primary/80 text-white shadow-lg">
-        <CardContent className="p-6 grid grid-cols-2 gap-4 divide-x divide-white/20">
-          <div className="flex items-center gap-4 pr-4">
-            <div className="h-14 w-14 rounded-full bg-white/15 flex items-center justify-center">
-              <Wallet className="h-7 w-7" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-white/80">Ganhos este mês</p>
-              <p className="text-2xl font-bold leading-tight">{brl(earningsMonth)}</p>
-              <p className="text-xs text-emerald-200 mt-1">Comissões liberadas</p>
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        {/* Funnel */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-primary" /> Funil de negociações (30 dias)
+            </CardTitle>
+            <CardDescription className="text-xs">Do primeiro contato ao contrato fechado.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {([
+              { label: "Leads recebidos", value: funnel.leads, tone: "bg-primary/15 text-primary" },
+              { label: "Em negociação", value: funnel.negotiating, tone: "bg-warning/20 text-warning-foreground" },
+              { label: "Propostas aceitas", value: funnel.accepted, tone: "bg-primary/25 text-primary" },
+              { label: "Contratos fechados", value: funnel.closed, tone: "bg-success/15 text-success" },
+            ] as const).map((stage, i) => {
+              const pct = funnel.leads > 0 ? Math.round((stage.value / funnel.leads) * 100) : 0;
+              return (
+                <div key={i} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{stage.label}</span>
+                    <span className="text-muted-foreground text-xs">
+                      <strong className="text-foreground">{stage.value}</strong> · {pct}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div className={`h-full ${stage.tone.split(" ")[0]} transition-all`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+            {funnel.leads === 0 && (
+              <p className="text-xs text-muted-foreground text-center pt-2">
+                Sem leads nos últimos 30 dias. Solicite novas afiliações para ampliar seu alcance.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recent referrals */}
+        <Card>
+          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Handshake className="h-4 w-4 text-primary" /> Indicações recentes
+            </CardTitle>
+            <Link to="/negotiations" className="text-xs text-primary hover:underline">Ver todas</Link>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {data.proposals.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sem indicações ainda.</p>
+            ) : data.proposals.slice(0, 4).map((p) => {
+              const status = mapProposalStatus(p.status);
+              const prop = (p as unknown as { property: { title: string; city: string | null } | null }).property;
+              return (
+                <div key={p.id} className="flex items-center gap-2 pb-2 border-b last:border-b-0 last:pb-0">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {prop?.city ?? "—"} · {brl(Number(p.rent_offer))}
+                    </p>
+                  </div>
+                  <StatusPill status={status} />
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Reputação compacta */}
+      <Card>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary" /> Reputação
+          </CardTitle>
+          <Link to="/profile" className="text-xs text-primary hover:underline">Ver perfil</Link>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3">
+          <div className="flex items-center gap-3">
+            <div>
+              <p className="text-3xl font-bold leading-none">{avgStars.toFixed(1)}</p>
+              <div className="mt-1"><Stars value={avgStars} /></div>
+              <p className="text-[11px] text-muted-foreground mt-1">{totalRatings} avaliações</p>
             </div>
           </div>
-          <div className="flex items-center gap-4 pl-4">
-            <div className="h-14 w-14 rounded-full bg-white/15 flex items-center justify-center">
-              <Users className="h-7 w-7" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs text-white/80">Leads ativos</p>
-              <p className="text-2xl font-bold leading-tight">{activeLeads}</p>
-              <Link to="/negotiations" className="text-xs text-white/90 mt-1 inline-flex items-center gap-1 hover:underline">
-                Ver todos <ChevronRight className="h-3 w-3" />
-              </Link>
-            </div>
-          </div>
+          <ReputationRow Icon={Users} label="Indicações concluídas" value={`${closedDeals}`} />
+          <ReputationRow Icon={TrendingUp} label="Score de visibilidade" value={Number(data.visibility.visibility_score ?? 0).toFixed(1)} />
         </CardContent>
       </Card>
 
-      {/* Referrals list */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">Minhas indicações</h3>
-          <Link to="/negotiations" className="text-sm text-primary font-medium hover:underline">Ver todas</Link>
-        </div>
-        {data.proposals.length === 0 ? (
-          <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Sem indicações ainda.</CardContent></Card>
-        ) : (
-          <div className="space-y-3">
-            {data.proposals.slice(0, 5).map((p) => {
-              const status = mapProposalStatus(p.status);
-              const prop = (p as unknown as { property: { id: string; title: string; address_neighborhood: string | null; address_number: string | null; city: string | null } | null }).property;
-              const dateStr = new Date(p.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
-              return (
-                <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{prop?.title ?? "Imóvel"}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {[prop?.address_neighborhood, prop?.city].filter(Boolean).join(", ") || "—"}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                        <Calendar className="h-3 w-3" /> Indicado em {dateStr}
-                      </p>
-                    </div>
-                    <StatusPill status={status} />
-                    <ChevronRight className="h-5 w-5 text-muted-foreground hidden sm:block" />
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* Reputation */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">Reputação</h3>
-          <Link to="/profile" className="text-sm text-primary font-medium hover:underline">Ver detalhes</Link>
-        </div>
-        <Card>
-          <CardContent className="p-6 grid gap-6 md:grid-cols-2 md:divide-x">
-            <div className="flex items-center gap-4">
-              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <ShieldCheck className="h-10 w-10 text-primary" strokeWidth={1.5} />
-              </div>
-              <div>
-                <p className="font-semibold text-lg">{reputationLabel}</p>
-                <p className="text-4xl font-bold leading-none mt-1">{avgStars.toFixed(1)}</p>
-                <div className="mt-2"><Stars value={avgStars} /></div>
-                <p className="text-xs text-muted-foreground mt-2">Baseado em {totalRatings} avaliações</p>
-              </div>
-            </div>
-            <div className="space-y-3 md:pl-6">
-              <ReputationRow Icon={Award} label="Confiança dos clientes" value={`${totalRatings} avaliações`} />
-              <ReputationRow Icon={Users} label="Indicações de sucesso" value={`${closedDeals} concluídas`} />
-              <ReputationRow Icon={TrendingUp} label="Score de visibilidade" value={Number(data.visibility.visibility_score ?? 0).toFixed(1)} />
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Imóveis cadastrados pelo agente */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">Meus imóveis cadastrados</h3>
-          <Button asChild size="sm" variant="outline">
-            <Link to="/properties/new">Novo</Link>
-          </Button>
-        </div>
-        {data.myProperties.length === 0 ? (
-          <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Você ainda não cadastrou imóveis.</CardContent></Card>
-        ) : (
-          <div className="space-y-2">
-            {data.myProperties.slice(0, 5).map((p) => (
-              <Card key={p.id}>
-                <CardContent className="p-3 flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{p.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {[p.city, p.state].filter(Boolean).join("/")} · {p.status}
-                    </p>
-                  </div>
-                  <Button asChild size="sm" variant="outline">
-                    <Link to="/properties/$id/edit" params={{ id: p.id }}>Editar</Link>
-                  </Button>
-                  <Button asChild size="sm">
-                    <Link to="/properties/$id" params={{ id: p.id }}>Abrir</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </section>
+      <QuickActions items={[
+        { icon: Handshake, label: "Afiliações", to: "/affiliations" },
+        { icon: MessageSquare, label: "Conversas", to: "/chat" },
+        { icon: FileText, label: "Contratos", to: "/contracts" },
+        { icon: Wallet, label: "Financeiro", to: "/financials" },
+      ]} />
     </div>
-
   );
 }
+
 
 function ReputationRow({ Icon, label, value }: { Icon: typeof Award; label: string; value: string }) {
   return (

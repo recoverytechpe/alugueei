@@ -34,6 +34,7 @@ import { Route as AuthenticatedContractsIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as ApiPublicNeighborhoodsRouteImport } from './routes/api/public/neighborhoods'
 import { Route as ApiPublicMpWebhookRouteImport } from './routes/api/public/mp-webhook'
+import { Route as ApiPublicDevTestSessionRouteImport } from './routes/api/public/dev-test-session'
 import { Route as ApiPublicCitiesRouteImport } from './routes/api/public/cities'
 import { Route as AuthenticatedUsersIdRouteImport } from './routes/_authenticated/users.$id'
 import { Route as AuthenticatedPropertiesNewRouteImport } from './routes/_authenticated/properties.new'
@@ -173,6 +174,11 @@ const ApiPublicMpWebhookRoute = ApiPublicMpWebhookRouteImport.update({
   path: '/api/public/mp-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDevTestSessionRoute = ApiPublicDevTestSessionRouteImport.update({
+  id: '/api/public/dev-test-session',
+  path: '/api/public/dev-test-session',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCitiesRoute = ApiPublicCitiesRouteImport.update({
   id: '/api/public/cities',
   path: '/api/public/cities',
@@ -252,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
+  '/api/public/dev-test-session': typeof ApiPublicDevTestSessionRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/neighborhoods': typeof ApiPublicNeighborhoodsRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
+  '/api/public/dev-test-session': typeof ApiPublicDevTestSessionRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/neighborhoods': typeof ApiPublicNeighborhoodsRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -324,6 +332,7 @@ export interface FileRoutesById {
   '/_authenticated/properties/new': typeof AuthenticatedPropertiesNewRoute
   '/_authenticated/users/$id': typeof AuthenticatedUsersIdRoute
   '/api/public/cities': typeof ApiPublicCitiesRoute
+  '/api/public/dev-test-session': typeof ApiPublicDevTestSessionRoute
   '/api/public/mp-webhook': typeof ApiPublicMpWebhookRoute
   '/api/public/neighborhoods': typeof ApiPublicNeighborhoodsRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
@@ -361,6 +370,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/users/$id'
     | '/api/public/cities'
+    | '/api/public/dev-test-session'
     | '/api/public/mp-webhook'
     | '/api/public/neighborhoods'
     | '/chat/'
@@ -396,6 +406,7 @@ export interface FileRouteTypes {
     | '/properties/new'
     | '/users/$id'
     | '/api/public/cities'
+    | '/api/public/dev-test-session'
     | '/api/public/mp-webhook'
     | '/api/public/neighborhoods'
     | '/chat'
@@ -432,6 +443,7 @@ export interface FileRouteTypes {
     | '/_authenticated/properties/new'
     | '/_authenticated/users/$id'
     | '/api/public/cities'
+    | '/api/public/dev-test-session'
     | '/api/public/mp-webhook'
     | '/api/public/neighborhoods'
     | '/_authenticated/chat/'
@@ -453,6 +465,7 @@ export interface RootRouteChildren {
   AgentsIdRoute: typeof AgentsIdRoute
   PSlugRoute: typeof PSlugRoute
   ApiPublicCitiesRoute: typeof ApiPublicCitiesRoute
+  ApiPublicDevTestSessionRoute: typeof ApiPublicDevTestSessionRoute
   ApiPublicMpWebhookRoute: typeof ApiPublicMpWebhookRoute
   ApiPublicNeighborhoodsRoute: typeof ApiPublicNeighborhoodsRoute
   ApiPublicHooksUnlockExpiryWarningRoute: typeof ApiPublicHooksUnlockExpiryWarningRoute
@@ -635,6 +648,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMpWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/dev-test-session': {
+      id: '/api/public/dev-test-session'
+      path: '/api/public/dev-test-session'
+      fullPath: '/api/public/dev-test-session'
+      preLoaderRoute: typeof ApiPublicDevTestSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cities': {
       id: '/api/public/cities'
       path: '/api/public/cities'
@@ -774,6 +794,7 @@ const rootRouteChildren: RootRouteChildren = {
   AgentsIdRoute: AgentsIdRoute,
   PSlugRoute: PSlugRoute,
   ApiPublicCitiesRoute: ApiPublicCitiesRoute,
+  ApiPublicDevTestSessionRoute: ApiPublicDevTestSessionRoute,
   ApiPublicMpWebhookRoute: ApiPublicMpWebhookRoute,
   ApiPublicNeighborhoodsRoute: ApiPublicNeighborhoodsRoute,
   ApiPublicHooksUnlockExpiryWarningRoute:

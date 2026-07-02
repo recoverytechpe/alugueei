@@ -79,20 +79,33 @@ async def main() -> None:
         await page_m.goto(f"{BASE}/dashboard", wait_until="domcontentloaded")
         await snap(page_m, "01_marina_dashboard")
 
+        # Garante que Marina tem uma pré-aprovação exposta como lead.
         lead_id = await page_m.evaluate(
             """async () => {
                 const mod = await import('/src/integrations/supabase/client.ts');
-                const { data, error } = await mod.supabase
-                  .from('tenant_preapprovals')
-                  .select('id, share_as_lead')
-                  .eq('share_as_lead', true)
-                  .limit(1)
-                  .maybeSingle();
-                return { id: data?.id ?? null, error: error?.message ?? null };
+                const { data: u } = await mod.supabase.auth.getUser();
+                const uid = u.user.id;
+                let { data: pa } = await mod.supabase
+                  .from('tenant_preapprovals').select('id, share_as_lead')
+                  .eq('user_id', uid).maybeSingle();
+                if (!pa) {
+                  const ins = await mod.supabase.from('tenant_preapprovals').insert({
+                    user_id: uid, monthly_income: 12000, guarantee_type: 'fiador',
+                    preferred_city: 'São Paulo', share_as_lead: true, status: 'approved',
+                  }).select('id').single();
+                  if (ins.error) return { id: null, error: ins.error.message };
+                  return { id: ins.data.id, error: null };
+                }
+                if (!pa.share_as_lead) {
+                  const up = await mod.supabase.from('tenant_preapprovals')
+                    .update({ share_as_lead: true }).eq('id', pa.id);
+                  if (up.error) return { id: null, error: up.error.message };
+                }
+                return { id: pa.id, error: null };
             }"""
         )
         print(f"  lead da Marina: {lead_id}")
-        assert lead_id.get("id"), f"Marina não tem preapproval com share_as_lead=true: {lead_id}"
+        assert lead_id.get("id"), f"não consegui obter/criar preapproval da Marina: {lead_id}"
 
         # -------- 2. Rafael: manifesta interesse --------
         ctx_r = await browser.new_context(viewport={"width": 1280, "height": 1800})

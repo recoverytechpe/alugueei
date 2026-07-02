@@ -206,6 +206,174 @@ function brl(n: number | null | undefined) {
   return (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+// ---------- Shared persona dashboard primitives ----------
+
+function PersonaHero({
+  role, name, avatarUrl, subtitle, primaryCta,
+}: {
+  role: string;
+  name: string;
+  avatarUrl: string | null;
+  subtitle?: string;
+  primaryCta?: { label: string; to: string; params?: Record<string, string> };
+}) {
+  return (
+    <div className="rounded-2xl border bg-gradient-to-br from-card via-card to-muted/40 p-5 sm:p-6 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-4 min-w-0">
+        <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-primary/10 overflow-hidden ring-2 ring-background shadow flex-shrink-0">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-xl font-semibold">
+              {name.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-widest text-muted-foreground font-medium">{role}</p>
+          <h2 className="text-xl sm:text-2xl font-bold leading-tight truncate">{name}</h2>
+          {subtitle && <p className="text-sm text-muted-foreground truncate mt-0.5">{subtitle}</p>}
+        </div>
+      </div>
+      {primaryCta && (
+        <Button asChild size="sm" className="shrink-0 hidden sm:inline-flex">
+          <Link to={primaryCta.to} params={primaryCta.params as never}>{primaryCta.label}</Link>
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function KpiTile({
+  icon: Icon, label, value, hint, tone = "primary",
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string | number;
+  hint?: string;
+  tone?: "primary" | "success" | "warning";
+}) {
+  const toneCls =
+    tone === "success" ? "bg-success/10 text-success"
+    : tone === "warning" ? "bg-warning/20 text-warning-foreground"
+    : "bg-primary/10 text-primary";
+  return (
+    <Card className="min-w-0">
+      <CardContent className="p-4 flex items-center gap-3">
+        <div className={`h-10 w-10 rounded-lg flex items-center justify-center flex-shrink-0 ${toneCls}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground font-medium truncate">{label}</p>
+          <p className="text-xl font-bold leading-tight truncate">{value}</p>
+          {hint && <p className="text-[11px] text-muted-foreground truncate">{hint}</p>}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+type AttentionItem = {
+  id: string;
+  icon: LucideIcon;
+  title: string;
+  detail: string;
+  tone: "urgent" | "info" | "success";
+  to: string;
+  params?: Record<string, string>;
+  cta: string;
+};
+
+function AttentionSection({ items }: { items: AttentionItem[] }) {
+  if (items.length === 0) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="p-5 flex items-center gap-3 text-sm text-muted-foreground">
+          <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
+          Tudo em dia. Nada urgente no momento.
+        </CardContent>
+      </Card>
+    );
+  }
+  const toneCls: Record<AttentionItem["tone"], string> = {
+    urgent: "border-l-warning bg-warning/5",
+    info: "border-l-primary bg-primary/5",
+    success: "border-l-success bg-success/5",
+  };
+  const iconCls: Record<AttentionItem["tone"], string> = {
+    urgent: "bg-warning/20 text-warning-foreground",
+    info: "bg-primary/15 text-primary",
+    success: "bg-success/15 text-success",
+  };
+  return (
+    <div className="grid gap-3 md:grid-cols-3">
+      {items.map((it) => {
+        const Icon = it.icon;
+        return (
+          <Card key={it.id} className={`border-l-4 ${toneCls[it.tone]}`}>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${iconCls[it.tone]}`}>
+                  <Icon className="h-4.5 w-4.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm leading-tight">{it.title}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{it.detail}</p>
+                </div>
+              </div>
+              <Button asChild size="sm" variant="outline" className="w-full">
+                <Link to={it.to} params={it.params as never}>
+                  {it.cta} <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function QuickActions({ items }: { items: Array<{ icon: LucideIcon; label: string; to: string; params?: Record<string, string> }> }) {
+  return (
+    <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+      {items.map((it) => {
+        const Icon = it.icon;
+        return (
+          <Button
+            key={it.label}
+            asChild
+            variant="outline"
+            className="h-auto py-4 flex-col gap-2 hover:border-primary hover:bg-primary/5"
+          >
+            <Link to={it.to} params={it.params as never}>
+              <Icon className="h-5 w-5 text-primary" />
+              <span className="text-xs font-medium">{it.label}</span>
+            </Link>
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
+function SectionHeader({ title, hint, actionLabel, actionTo }: { title: string; hint?: string; actionLabel?: string; actionTo?: string }) {
+  return (
+    <div className="flex items-end justify-between gap-3 flex-wrap">
+      <div>
+        <h3 className="text-lg sm:text-xl font-bold leading-tight">{title}</h3>
+        {hint && <p className="text-xs sm:text-sm text-muted-foreground">{hint}</p>}
+      </div>
+      {actionLabel && actionTo && (
+        <Link to={actionTo} className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1 shrink-0">
+          {actionLabel} <ChevronRight className="h-4 w-4" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+
 function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullName: string; avatarUrl: string | null }) {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({

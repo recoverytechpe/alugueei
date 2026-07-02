@@ -464,17 +464,59 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
 
   if (isLoading || !data) return <Skeleton className="h-64 w-full" />;
 
-  // Next rent due: based on active/closed contracts, first day of next month
   const activeContracts = data.contracts.filter((c) => c.status === "active" || c.status === "closed");
   const now = new Date();
-  const nextRent = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const nextRentLabel = nextRent.toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
-  const upcomingPayments = activeContracts.length;
 
-  const contractStatusPill = (s: string) => {
-    if (s === "closed") return { cls: "bg-success/15 text-success", label: "Assinado" };
-    if (s === "active") return { cls: "bg-primary/15 text-primary", label: "Em assinatura" };
-    return { cls: "bg-warning/20 text-warning-foreground", label: "Pendente" };
+  // Derived state ------------------------------------------------------------
+  const pendingProposals = data.proposals.filter(
+    (p) => p.status === "pending" || p.status === "negotiating" || p.status === "countered",
+  );
+  const visitsToday = data.visits.filter((v) => {
+    if (!v.scheduled_at) return false;
+    const d = new Date(v.scheduled_at);
+    return d.toDateString() === now.toDateString();
+  });
+  const visitsNext7 = data.visits.filter((v) => {
+    if (!v.scheduled_at) return false;
+    const d = new Date(v.scheduled_at);
+    const diff = (d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return diff >= 0 && diff <= 7;
+  });
+  const expiringContracts = activeContracts.filter((c) => {
+    if (!c.start_date || !c.term_months) return false;
+    const start = new Date(c.start_date);
+    const end = new Date(start.getFullYear(), start.getMonth() + c.term_months, start.getDate());
+    const diff = (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return diff > 0 && diff <= 30;
+  });
+  const rentedCount = data.properties.filter((p) => p.status === "rented").length;
+  const occupancy = data.properties.length > 0 ? Math.round((rentedCount / data.properties.length) * 100) : 0;
+  const mrr = activeContracts.reduce((s, c) => s + Number(c.rent_value ?? 0), 0);
+
+  const attention: AttentionItem[] = [];
+  if (pendingProposals.length > 0) attention.push({
+    id: "prop", icon: AlertTriangle, tone: "urgent",
+    title: `${pendingProposals.length} proposta${pendingProposals.length === 1 ? "" : "s"} aguardando`,
+    detail: "Responda para não perder o locatário.",
+    to: "/negotiations", cta: "Analisar propostas",
+  });
+  if (visitsToday.length > 0) attention.push({
+    id: "vis", icon: Calendar, tone: "info",
+    title: `${visitsToday.length} visita${visitsToday.length === 1 ? "" : "s"} hoje`,
+    detail: "Confirme presença e prepare o imóvel.",
+    to: "/negotiations", cta: "Ver agenda",
+  });
+  if (expiringContracts.length > 0) attention.push({
+    id: "exp", icon: RefreshCw, tone: "urgent",
+    title: `${expiringContracts.length} contrato${expiringContracts.length === 1 ? "" : "s"} vencendo`,
+    detail: "Renove antes do fim para manter a ocupação.",
+    to: "/contracts", cta: "Renovar contratos",
+  });
+
+  const propStatusDot = (s: string | null) => {
+    if (s === "rented") return { cls: "bg-success", text: "text-success", label: "Ocupado" };
+    if (s === "available") return { cls: "bg-warning", text: "text-warning-foreground", label: "Disponível" };
+    return { cls: "bg-muted-foreground", text: "text-muted-foreground", label: s ?? "—" };
   };
   const visitStatusPill = (s: string) => {
     if (s === "confirmed") return { cls: "bg-primary/15 text-primary", label: "Confirmada" };
@@ -482,244 +524,188 @@ function OwnerDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
     if (s === "canceled") return { cls: "bg-muted text-muted-foreground", label: "Cancelada" };
     return { cls: "bg-warning/20 text-warning-foreground", label: "Agendada" };
   };
-  const propStatusDot = (s: string | null) => {
-    if (s === "rented") return { cls: "bg-success", text: "text-success", label: "Ocupado" };
-    if (s === "available") return { cls: "bg-warning", text: "text-warning-foreground", label: "Disponível" };
-    return { cls: "bg-muted-foreground", text: "text-muted-foreground", label: s ?? "—" };
-  };
 
   return (
     <div className="space-y-6">
-      {/* Hero header */}
-      <div className="relative -mx-4 sm:-mx-6 -mt-6 sm:-mt-8 mb-2 bg-gradient-to-br from-primary to-primary/80 px-4 sm:px-6 pt-6 sm:pt-8 pb-16 text-white">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-white/15 flex items-center justify-center">
-              <Home className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold leading-tight">Proprietário</h2>
-              <p className="text-sm text-white/80">{fullName}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button type="button" className="relative h-10 w-10 rounded-full bg-white/15 flex items-center justify-center" aria-label="Notificações">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500" />
-            </button>
-            <div className="h-12 w-12 rounded-full bg-white overflow-hidden ring-2 ring-white/30">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={fullName} className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full bg-gradient-to-br from-primary/70 to-primary flex items-center justify-center text-white font-semibold">
-                  {fullName.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <PersonaHero
+        role="Proprietário"
+        name={fullName}
+        avatarUrl={avatarUrl}
+        subtitle={`${data.properties.length} imóve${data.properties.length === 1 ? "l" : "is"} · ${activeContracts.length} contrato${activeContracts.length === 1 ? "" : "s"} ativo${activeContracts.length === 1 ? "" : "s"}`}
+        primaryCta={{ label: "Cadastrar imóvel", to: "/properties/new" }}
+      />
 
-      <div className="flex justify-end -mt-2">
-        <Button asChild size="sm" variant="outline">
-          <Link to="/financials">Painel financeiro</Link>
-        </Button>
-      </div>
-
-
-
-      {/* Summary cards overlap hero */}
-      <div className="grid gap-4 sm:grid-cols-2 -mt-16 relative z-10">
-        <Card className="shadow-md">
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Home className="h-7 w-7 text-primary" strokeWidth={1.5} />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-medium">Meus imóveis</p>
-              <p className="text-3xl font-bold text-primary leading-tight">{data.properties.length}</p>
-              <p className="text-xs text-muted-foreground">Total cadastrado</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-md">
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Calendar className="h-7 w-7 text-primary" strokeWidth={1.5} />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground font-medium">Próximo aluguel</p>
-              <p className="text-3xl font-bold text-primary leading-tight capitalize">{nextRentLabel}</p>
-              <p className="text-xs text-muted-foreground">{upcomingPayments} pagamento{upcomingPayments === 1 ? "" : "s"} a receber</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Properties list */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-bold">Meus imóveis</h3>
-          <Link to="/properties" className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1">
-            Ver todos <ChevronRight className="h-4 w-4" />
-          </Link>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Precisa da sua atenção</h3>
+        <AttentionSection items={attention} />
+      </section>
+
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+        <KpiTile icon={Home} label="Imóveis publicados" value={data.properties.length} hint={`${rentedCount} ocupados`} />
+        <KpiTile icon={TrendingUp} label="Ocupação" value={`${occupancy}%`} tone="success" hint={`${rentedCount}/${data.properties.length}`} />
+        <KpiTile icon={Wallet} label="Receita mensal" value={brl(mrr)} tone="success" hint={`${activeContracts.length} contrato${activeContracts.length === 1 ? "" : "s"}`} />
+        <KpiTile icon={MessageSquare} label="Propostas abertas" value={pendingProposals.length} tone={pendingProposals.length > 0 ? "warning" : "primary"} hint="Aguardando resposta" />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        {/* Left: proposals pipeline */}
+        <div className="space-y-3">
+          <SectionHeader title="Propostas em aberto" hint="Ordenadas por urgência" actionLabel="Ver todas" actionTo="/negotiations" />
+          <OwnerProposals proposals={data.proposals} />
         </div>
+
+        {/* Right: agenda + contracts */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" /> Próximas visitas (7 dias)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {visitsNext7.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhuma visita agendada.</p>
+              ) : visitsNext7.slice(0, 4).map((v) => {
+                const pill = visitStatusPill(v.status);
+                const prop = (v as unknown as { property: { title: string } | null }).property;
+                const when = v.scheduled_at ? new Date(v.scheduled_at) : null;
+                return (
+                  <div key={v.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Calendar className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {when ? when.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }) : "—"}
+                        {when ? ` · ${when.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}
+                      </p>
+                    </div>
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${pill.cls}`}>
+                      {pill.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" /> Contratos ativos
+              </CardTitle>
+              <Link to="/contracts" className="text-xs text-primary hover:underline">Ver todos</Link>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {activeContracts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Sem contratos ativos.</p>
+              ) : activeContracts.slice(0, 3).map((c) => {
+                const prop = (c as unknown as { property: { title: string } | null }).property;
+                const tenant = (c as unknown as { tenant: { full_name: string } | null }).tenant;
+                return (
+                  <div key={c.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0">
+                    <Link to="/contracts/$id" params={{ id: c.id }} className="flex flex-1 items-center gap-3 min-w-0 hover:opacity-80">
+                      <div className="h-9 w-9 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+                        <FileText className="h-4 w-4 text-success" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
+                        <p className="text-xs text-muted-foreground truncate">{tenant?.full_name ?? "—"} · {brl(Number(c.rent_value))}</p>
+                      </div>
+                    </Link>
+                    {(c.status === "closed" || c.status === "active") && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2"
+                        onClick={() => renewContract({
+                          property_id: (c as unknown as { property_id: string }).property_id,
+                          tenant_id: (c as unknown as { tenant_id: string }).tenant_id,
+                          agent_id: (c as unknown as { agent_id: string | null }).agent_id,
+                          rent_value: Number(c.rent_value),
+                          term_months: Number(c.term_months),
+                          start_date: c.start_date as unknown as string,
+                        })}
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Properties compact list */}
+      <section className="space-y-3">
+        <SectionHeader title="Meus imóveis" hint="Desempenho e status" actionLabel="Gerenciar todos" actionTo="/properties" />
         {data.properties.length === 0 ? (
-          <Card><CardContent className="p-6 text-center text-sm text-muted-foreground">Nenhum imóvel cadastrado.</CardContent></Card>
+          <Card className="border-dashed">
+            <CardContent className="p-8 text-center space-y-3">
+              <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Home className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-sm font-medium">Você ainda não cadastrou imóveis</p>
+              <Button asChild size="sm">
+                <Link to="/properties/new"><Plus className="h-4 w-4 mr-1" /> Cadastrar primeiro imóvel</Link>
+              </Button>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="space-y-3">
-            {data.properties.slice(0, 5).map((p) => {
+          <div className="grid gap-3 md:grid-cols-2">
+            {data.properties.slice(0, 4).map((p) => {
               const dot = propStatusDot(p.status);
               const m = data.metrics[p.id] ?? { favorites: 0, proposals: 0, conversations: 0 };
               const isPaused = p.status === "inactive";
               return (
-                <Card key={p.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                  <CardContent className="p-3 flex flex-col sm:flex-row gap-3">
-                    <div className="h-24 sm:h-20 sm:w-28 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{p.title}</p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {[p.street, p.number].filter(Boolean).join(", ")}{p.city ? ` · ${p.city}/${p.state ?? ""}` : ""}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {p.bedrooms ?? 0} quartos · {p.bathrooms ?? 0} banh. · {p.area_m2 ?? 0} m²
-                      </p>
-                      <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className={`inline-flex items-center gap-1 font-medium ${dot.text}`}>
-                          <span className={`h-2 w-2 rounded-full ${dot.cls}`} />
-                          {isPaused ? "Pausado" : dot.label}
-                        </span>
-                        <span title="Favoritos">❤ {m.favorites}</span>
-                        <span title="Propostas">📩 {m.proposals}</span>
-                        <span title="Conversas">💬 {m.conversations}</span>
+                <Card key={p.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-14 w-14 rounded-lg bg-gradient-to-br from-primary/10 to-primary/20 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate">{p.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {[p.city, p.state].filter(Boolean).join("/")} · {brl(Number(p.rent_value))}
+                        </p>
+                        <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <span className={`inline-flex items-center gap-1 font-medium ${dot.text}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${dot.cls}`} />
+                            {isPaused ? "Pausado" : dot.label}
+                          </span>
+                          <span>· ❤ {m.favorites}</span>
+                          <span>· 📩 {m.proposals}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex sm:flex-col gap-2 sm:w-40">
-                      <Button asChild size="sm" className="flex-1">
-                        <Link to="/properties/$id" params={{ id: p.id }}>
-                          <Settings className="h-4 w-4 mr-1.5" />
-                          Gerenciar
-                        </Link>
-                      </Button>
+                    <div className="flex gap-2">
                       <Button asChild size="sm" variant="outline" className="flex-1">
-                        <Link to="/properties/$id/edit" params={{ id: p.id }}>
-                          Editar
-                        </Link>
+                        <Link to="/properties/$id" params={{ id: p.id }}>Gerenciar</Link>
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1" onClick={() => togglePause(p.id, p.status)}>
+                      <Button size="sm" variant="ghost" onClick={() => togglePause(p.id, p.status)}>
                         {isPaused ? "Reativar" : "Pausar"}
                       </Button>
                     </div>
-
                   </CardContent>
                 </Card>
               );
             })}
-
           </div>
         )}
       </section>
 
-      {/* Recent contracts + Inspections */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-lg">Contratos recentes</CardTitle>
-            <Link to="/contracts" className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1">
-              Ver todos <ChevronRight className="h-3 w-3" />
-            </Link>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {data.contracts.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum contrato ainda.</p>
-            ) : data.contracts.slice(0, 3).map((c) => {
-              const pill = contractStatusPill(c.status);
-              const prop = (c as unknown as { property: { title: string } | null }).property;
-              const tenant = (c as unknown as { tenant: { full_name: string } | null }).tenant;
-              const start = c.start_date ? new Date(c.start_date) : null;
-              const end = start && c.term_months ? new Date(start.getFullYear(), start.getMonth() + c.term_months, start.getDate()) : null;
-              const fmt = (d: Date | null) => d ? d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—";
-              return (
-                <div key={c.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0">
-                  <Link to="/contracts/$id" params={{ id: c.id }} className="flex flex-1 items-center gap-3 min-w-0 hover:bg-muted/30 -mx-1 px-1 rounded">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <FileText className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
-                      <p className="text-xs text-muted-foreground truncate">{tenant?.full_name ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground">{fmt(start)} – {fmt(end)}</p>
-                    </div>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${pill.cls}`}>
-                      {pill.label}
-                    </span>
-                  </Link>
-                  {(c.status === "closed" || c.status === "active") && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => renewContract({
-                        property_id: (c as unknown as { property_id: string }).property_id,
-                        tenant_id: (c as unknown as { tenant_id: string }).tenant_id,
-                        agent_id: (c as unknown as { agent_id: string | null }).agent_id,
-                        rent_value: Number(c.rent_value),
-                        term_months: Number(c.term_months),
-                        start_date: c.start_date as unknown as string,
-                      })}
-                    >
-                      <RefreshCw className="h-3.5 w-3.5 mr-1" />Renovar
-                    </Button>
-                  )}
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-lg">Vistorias</CardTitle>
-            <Link to="/negotiations" className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1">
-              Ver todas <ChevronRight className="h-3 w-3" />
-            </Link>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {data.visits.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhuma vistoria agendada.</p>
-            ) : data.visits.slice(0, 3).map((v) => {
-              const pill = visitStatusPill(v.status);
-              const prop = (v as unknown as { property: { title: string } | null }).property;
-              const when = v.scheduled_at ? new Date(v.scheduled_at) : null;
-              return (
-                <div key={v.id} className="flex items-center gap-3 pb-3 border-b last:border-b-0 last:pb-0">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Calendar className="h-5 w-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{prop?.title ?? "Imóvel"}</p>
-                    <p className="text-xs text-muted-foreground truncate">{v.notes ?? "Vistoria"}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {when ? when.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
-                      {when ? ` · ${when.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : ""}
-                    </p>
-                  </div>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${pill.cls}`}>
-                    {pill.label}
-                  </span>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Propostas recebidas */}
-      <OwnerProposals proposals={data.proposals} />
-
+      <QuickActions items={[
+        { icon: Plus, label: "Novo imóvel", to: "/properties/new" },
+        { icon: Wallet, label: "Financeiro", to: "/financials" },
+        { icon: MessageSquare, label: "Conversas", to: "/chat" },
+        { icon: FileText, label: "Contratos", to: "/contracts" },
+      ]} />
     </div>
   );
 }
+
 
 type OwnerProposal = {
   id: string;

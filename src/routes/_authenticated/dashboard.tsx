@@ -1129,7 +1129,7 @@ function TenantDashboard({ userId, fullName, avatarUrl }: { userId: string; full
     queryFn: async () => {
       const [proposals, contracts, visits] = await Promise.all([
         supabase.from("proposals").select("id, status, rent_offer, created_at").eq("tenant_id", userId).order("created_at", { ascending: false }),
-        supabase.from("rental_contracts").select("id, status, rent_value, created_at").eq("tenant_id", userId).order("created_at", { ascending: false }),
+        supabase.from("rental_contracts").select("id, status, rent_value, start_date, term_months, created_at").eq("tenant_id", userId).order("created_at", { ascending: false }),
         supabase.from("visits").select("id, status, scheduled_at").eq("tenant_id", userId),
       ]);
       return {

@@ -249,12 +249,14 @@ function ProposalsSection({
   userId,
   setProposalStatus,
   acceptingId,
+  initialStatus,
 }: {
   proposals: Proposal[];
   counters: Counter[];
   userId: string;
   setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
   acceptingId: string | null;
+  initialStatus?: string;
 }) {
   const countersByProposal = useMemo(() => {
     const map = new Map<string, Counter[]>();
@@ -265,7 +267,10 @@ function ProposalsSection({
     }
     return map;
   }, [counters]);
-  const [filter, setFilter] = useState<ProposalFilter>("all");
+  const initial: ProposalFilter =
+    initialStatus === "pending" || initialStatus === "accepted" || initialStatus === "rejected"
+      ? initialStatus : "all";
+  const [filter, setFilter] = useState<ProposalFilter>(initial);
   const [sort, setSort] = useState<ProposalSort>("date_desc");
   const counts = useMemo(() => ({
     all: proposals.length,

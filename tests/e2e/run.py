@@ -120,9 +120,10 @@ async def run_persona(ctx: BrowserContext, key: str) -> dict:
                     asserts.append(f"✅ /leads: {cards} card(s)")
 
                 if key == "carlos" and label == "dashboard":
-                    # Carlos deve ver o CTA de propostas pendentes (só aparece se >0)
-                    await page.wait_for_selector("text=Analisar propostas", timeout=8000)
-                    asserts.append("✅ /dashboard: CTA 'Analisar propostas' visível")
+                    # Carlos deve ver a proposta pendente (R$ 3.300) e o texto "aguardando"
+                    await page.wait_for_selector("text=aguardando", timeout=8000)
+                    await page.wait_for_selector("text=3.300", timeout=4000)
+                    asserts.append("✅ /dashboard: proposta pendente (R$ 3.300) visível")
             except AssertionError as e:
                 print(f"  ❌ ASSERT {label}: {e}")
                 errors.append(f"assert: {e}")

@@ -17,6 +17,8 @@ import os
 import sys
 import urllib.request
 from pathlib import Path
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 from playwright.async_api import async_playwright, Page, BrowserContext
 
 BASE = "http://localhost:8080"

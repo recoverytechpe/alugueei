@@ -13,8 +13,10 @@ import { toast } from "sonner";
 import {
   Wallet, Users, Clock, RefreshCw, CheckCircle2,
   Award, TrendingUp, ShieldCheck, Star, ChevronRight, BadgeCheck, Calendar,
-  Home, Settings, Bell, FileText,
+  Home, Settings, FileText, AlertTriangle, Search, Heart, MessageSquare,
+  Plus, Building2, Handshake, MapPin, ArrowUpRight,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { PushToggle } from "@/components/PushToggle";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ExportReports } from "@/components/ExportReports";

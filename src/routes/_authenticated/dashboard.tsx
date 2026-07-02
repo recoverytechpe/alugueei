@@ -323,7 +323,7 @@ function AttentionSection({ items }: { items: AttentionItem[] }) {
                 </div>
               </div>
               <Button asChild size="sm" variant="outline" className="w-full">
-                <Link to={it.to} params={it.params as never}>
+                <Link to={it.to} params={it.params as never} search={it.search as never}>
                   {it.cta} <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
                 </Link>
               </Button>

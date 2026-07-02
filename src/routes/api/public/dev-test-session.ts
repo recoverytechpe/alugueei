@@ -30,9 +30,11 @@ export const Route = createFileRoute("/api/public/dev-test-session")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const secret = request.headers.get("x-cron-secret");
-        if (!secret || secret !== process.env.CRON_SECRET) {
-          return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: HEADERS });
+        // Guard: só aceita chamadas locais (Playwright roda em localhost).
+        // Em produção o Host header é o domínio publicado → rejeita.
+        const host = request.headers.get("host") ?? "";
+        if (!/^localhost(:\d+)?$/i.test(host) && !/^127\.0\.0\.1(:\d+)?$/.test(host)) {
+          return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: HEADERS });
         }
         const parsed = BodySchema.safeParse(await request.json().catch(() => ({})));
         if (!parsed.success) {

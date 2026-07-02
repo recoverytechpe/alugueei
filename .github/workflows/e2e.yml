@@ -46,14 +46,24 @@ jobs:
         run: |
           bun run dev > /tmp/dev.log 2>&1 &
           echo $! > /tmp/dev.pid
-          # aguarda porta 8080 responder
-          for i in $(seq 1 60); do
-            if curl -sSf http://localhost:8080 >/dev/null; then
-              echo "dev server up"; exit 0
+
+      - name: Wait for dev server (readiness on :8080)
+        run: |
+          echo "Aguardando http://localhost:8080 responder..."
+          for i in $(seq 1 90); do
+            code=$(curl -o /dev/null -s -w "%{http_code}" --max-time 2 http://localhost:8080 || echo "000")
+            if [ "$code" != "000" ] && [ "$code" -lt "500" ]; then
+              echo "✅ dev server pronto (HTTP $code) após ${i}s"
+              exit 0
+            fi
+            # aborta cedo se o processo morreu
+            if ! kill -0 "$(cat /tmp/dev.pid)" 2>/dev/null; then
+              echo "❌ processo do dev server morreu"; tail -n 200 /tmp/dev.log; exit 1
             fi
             sleep 2
           done
-          echo "dev server não subiu"; tail -n 200 /tmp/dev.log; exit 1
+          echo "❌ timeout esperando dev server"; tail -n 200 /tmp/dev.log; exit 1
+
 
       - name: Run E2E suite
         run: python3 tests/e2e/run.py

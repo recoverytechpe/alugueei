@@ -47,12 +47,24 @@ def reset_password_and_get_email(user_id: str) -> str:
 
 
 async def do_login(page: Page, email: str) -> None:
+    # Vai para /auth só para hidratar a app com a mesma origem/config
     await page.goto(f"{BASE}/auth", wait_until="domcontentloaded")
-    await page.fill("#login-email", email)
-    await page.fill("#login-password", PASSWORD)
-    await page.click("button[type=submit]:has-text('Entrar')")
-    # Após login, a app deve redirecionar para a home autenticada.
-    await page.wait_for_url(lambda u: "/auth" not in u, timeout=15000)
+    # Espera o form aparecer (garante que o bundle carregou)
+    await page.wait_for_selector("#login-email", timeout=15000)
+    # Faz o login diretamente pela API do Supabase JS já disponível no bundle,
+    # evitando corridas de hidratação no submit do form.
+    result = await page.evaluate(
+        """async ({ email, password }) => {
+            const mod = await import('/src/integrations/supabase/client.ts');
+            const { error, data } = await mod.supabase.auth.signInWithPassword({ email, password });
+            return { error: error?.message ?? null, hasSession: !!data.session };
+        }""",
+        {"email": email, "password": PASSWORD},
+    )
+    if result.get("error") or not result.get("hasSession"):
+        raise RuntimeError(f"login falhou: {result}")
+    # Navega para dashboard para forçar o layout autenticado
+    await page.goto(f"{BASE}/dashboard", wait_until="domcontentloaded")
 
 
 async def snap(page: Page, folder: Path, name: str) -> None:

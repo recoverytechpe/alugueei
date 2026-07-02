@@ -96,6 +96,7 @@ function PublicProfile() {
                   <a href={`/agents/${id}`} target="_blank" rel="noreferrer">Ver perfil público</a>
                 </Button>
               )}
+              <BlockUserButton targetUserId={id} />
               <ReportDialog targetType="user" targetId={id} />
             </div>
           </CardHeader>

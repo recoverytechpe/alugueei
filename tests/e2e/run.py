@@ -103,7 +103,7 @@ async def run_persona(ctx: BrowserContext, key: str) -> dict:
         if persona["role"] == "agente":
             routes += [("leads", "/leads"), ("public_profile", f"/agents/{persona['user_id']}")]
         if persona["role"] == "proprietario":
-            routes += [("proposals", "/proposals"), ("affiliations", "/affiliations")]
+            routes += [("negotiations", "/negotiations"), ("affiliations", "/affiliations")]
 
         for i, (label, path) in enumerate(routes, start=2):
             try:

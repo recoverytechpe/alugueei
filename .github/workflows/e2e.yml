@@ -34,15 +34,16 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Cache bun dependencies
+      - name: Cache Bun global install cache
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.bun/install/cache
-            node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb', 'bun.lock', 'package.json') }}
+          # Diretório global de tarballs baixados pelo bun install.
+          # node_modules NÃO entra aqui — bun install resolve rápido do cache global.
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lockb', 'bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-
+
 
       - name: Install JS deps
         run: bun install --frozen-lockfile

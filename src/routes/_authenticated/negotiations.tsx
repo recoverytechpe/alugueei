@@ -56,6 +56,7 @@ type Counter = {
 function NegotiationsPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["negotiations"],

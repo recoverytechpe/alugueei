@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatBRL } from "@/lib/property-helpers";
-import { ArrowLeft, ShieldCheck, Info, FileCheck2, Upload } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Info, FileCheck2, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
+
 
 type GuaranteeType = "fiador" | "seguro_fianca" | "caucao" | "titulo_capitalizacao";
 const GUARANTEE_LABEL: Record<GuaranteeType, string> = {

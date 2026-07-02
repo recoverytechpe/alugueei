@@ -36,7 +36,9 @@ export const Route = createFileRoute("/api/public/dev-test-session")({
         if (!/^localhost(:\d+)?$/i.test(host) && !/^127\.0\.0\.1(:\d+)?$/.test(host)) {
           return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: HEADERS });
         }
-        const parsed = BodySchema.safeParse(await request.json().catch(() => ({})));
+        let raw: unknown = {};
+        try { raw = JSON.parse(await request.text()); } catch { /* keep {} */ }
+        const parsed = BodySchema.safeParse(raw);
         if (!parsed.success) {
           return new Response(JSON.stringify({ error: "invalid body" }), { status: 400, headers: HEADERS });
         }

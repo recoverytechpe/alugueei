@@ -19,8 +19,13 @@ import { toast } from "sonner";
 import { getOrCreateConversation } from "@/lib/chat-helpers";
 import { Handshake, Check, X, MessageCircle, Clock, Loader2 } from "lucide-react";
 
+type AffSearch = { tab?: "agent" | "owner" };
+
 export const Route = createFileRoute("/_authenticated/affiliations")({
   head: () => ({ meta: [{ title: "Afiliações | Plataforma de Aluguel" }] }),
+  validateSearch: (raw: Record<string, unknown>): AffSearch => ({
+    tab: raw.tab === "agent" || raw.tab === "owner" ? raw.tab : undefined,
+  }),
   component: AffiliationsPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,
   notFoundComponent: () => <div className="p-8">Página não encontrada</div>,
@@ -57,6 +62,7 @@ function statusBadge(status: AffiliationStatus) {
 }
 
 function AffiliationsPage() {
+  const search = Route.useSearch();
   const { data: ctx } = useQuery({
     queryKey: ["affiliations-ctx"],
     queryFn: async () => {
@@ -71,7 +77,7 @@ function AffiliationsPage() {
 
   if (!ctx) return <div className="p-6"><Skeleton className="h-64 w-full max-w-2xl" /></div>;
 
-  const defaultTab = ctx.isAgent ? "agent" : "owner";
+  const defaultTab = search.tab ?? (ctx.isAgent ? "agent" : "owner");
 
   return (
     <div className="mx-auto w-full max-w-3xl p-4 sm:p-6 space-y-4">

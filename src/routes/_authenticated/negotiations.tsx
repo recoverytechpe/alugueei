@@ -17,8 +17,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 
+type NegSearch = { focus?: "visits" | "proposals"; status?: string };
+
 export const Route = createFileRoute("/_authenticated/negotiations")({
   head: () => ({ meta: [{ title: "Negociações | Plataforma de Aluguel" }] }),
+  validateSearch: (raw: Record<string, unknown>): NegSearch => {
+    const focus = raw.focus === "visits" || raw.focus === "proposals" ? raw.focus : undefined;
+    const status = typeof raw.status === "string" ? raw.status : undefined;
+    return { focus, status };
+  },
   component: NegotiationsPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,
   notFoundComponent: () => <div className="p-8">Não encontrado</div>,
@@ -49,6 +56,7 @@ type Counter = {
 function NegotiationsPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ["negotiations"],
@@ -130,13 +138,21 @@ function NegotiationsPage() {
         <h1 className="text-xl md:text-2xl font-bold tracking-tight">Negociações</h1>
         <p className="text-xs text-muted-foreground">Visitas, propostas e contrapropostas</p>
       </div>
-      <VisitsSection visits={data.visits} userId={data.userId} setVisitStatus={setVisitStatus} />
+      {search.focus !== "proposals" && (
+        <VisitsSection
+          visits={data.visits}
+          userId={data.userId}
+          setVisitStatus={setVisitStatus}
+          initialStatus={search.focus === "visits" ? search.status : undefined}
+        />
+      )}
       <ProposalsSection
         proposals={data.proposals}
         counters={data.counters}
         userId={data.userId}
         setProposalStatus={setProposalStatus}
         acceptingId={acceptingId}
+        initialStatus={search.focus === "proposals" ? search.status : undefined}
       />
     </div>
   );
@@ -148,12 +164,17 @@ function VisitsSection({
   visits,
   userId,
   setVisitStatus,
+  initialStatus,
 }: {
   visits: Visit[];
   userId: string;
   setVisitStatus: (id: string, status: string) => Promise<void>;
+  initialStatus?: string;
 }) {
-  const [filter, setFilter] = useState<VisitFilter>("all");
+  const initial: VisitFilter =
+    initialStatus === "requested" || initialStatus === "confirmed" ||
+    initialStatus === "done" || initialStatus === "cancelled" ? initialStatus : "all";
+  const [filter, setFilter] = useState<VisitFilter>(initial);
   const counts = useMemo(() => ({
     all: visits.length,
     requested: visits.filter((v) => v.status === "requested").length,
@@ -228,12 +249,14 @@ function ProposalsSection({
   userId,
   setProposalStatus,
   acceptingId,
+  initialStatus,
 }: {
   proposals: Proposal[];
   counters: Counter[];
   userId: string;
   setProposalStatus: (id: string, status: "accepted" | "rejected" | "withdrawn") => Promise<void>;
   acceptingId: string | null;
+  initialStatus?: string;
 }) {
   const countersByProposal = useMemo(() => {
     const map = new Map<string, Counter[]>();
@@ -244,7 +267,10 @@ function ProposalsSection({
     }
     return map;
   }, [counters]);
-  const [filter, setFilter] = useState<ProposalFilter>("all");
+  const initial: ProposalFilter =
+    initialStatus === "pending" || initialStatus === "accepted" || initialStatus === "rejected"
+      ? initialStatus : "all";
+  const [filter, setFilter] = useState<ProposalFilter>(initial);
   const [sort, setSort] = useState<ProposalSort>("date_desc");
   const counts = useMemo(() => ({
     all: proposals.length,

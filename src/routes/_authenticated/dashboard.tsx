@@ -281,6 +281,7 @@ type AttentionItem = {
   tone: "urgent" | "info" | "success";
   to: string;
   params?: Record<string, string>;
+  search?: Record<string, string>;
   cta: string;
 };
 
@@ -322,7 +323,7 @@ function AttentionSection({ items }: { items: AttentionItem[] }) {
                 </div>
               </div>
               <Button asChild size="sm" variant="outline" className="w-full">
-                <Link to={it.to} params={it.params as never}>
+                <Link to={it.to} params={it.params as never} search={it.search as never}>
                   {it.cta} <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
                 </Link>
               </Button>
@@ -334,7 +335,7 @@ function AttentionSection({ items }: { items: AttentionItem[] }) {
   );
 }
 
-function QuickActions({ items }: { items: Array<{ icon: LucideIcon; label: string; to: string; params?: Record<string, string> }> }) {
+function QuickActions({ items }: { items: Array<{ icon: LucideIcon; label: string; to: string; params?: Record<string, string>; search?: Record<string, string> }> }) {
   return (
     <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
       {items.map((it) => {
@@ -346,7 +347,7 @@ function QuickActions({ items }: { items: Array<{ icon: LucideIcon; label: strin
             variant="outline"
             className="h-auto py-4 flex-col gap-2 hover:border-primary hover:bg-primary/5"
           >
-            <Link to={it.to} params={it.params as never}>
+            <Link to={it.to} params={it.params as never} search={it.search as never}>
               <Icon className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">{it.label}</span>
             </Link>
@@ -971,13 +972,13 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
     id: "leads", icon: AlertTriangle, tone: "urgent",
     title: `${pendingLeads.length} lead${pendingLeads.length === 1 ? "" : "s"} aguardando`,
     detail: "Acompanhe as negociações em andamento.",
-    to: "/negotiations", cta: "Acompanhar leads",
+    to: "/negotiations", search: { focus: "proposals", status: "pending" }, cta: "Acompanhar leads",
   });
   if (data.myProperties.length === 0) attention.push({
     id: "affil", icon: Handshake, tone: "info",
     title: "Amplie seu portfólio",
     detail: "Solicite afiliação para intermediar mais imóveis.",
-    to: "/affiliations", cta: "Solicitar afiliação",
+    to: "/affiliations", search: { tab: "agent" }, cta: "Solicitar afiliação",
   });
 
   return (
@@ -1093,13 +1094,13 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
       </Card>
 
       <QuickActions items={[
-        { icon: Handshake, label: "Afiliações", to: "/affiliations" },
+        { icon: Handshake, label: "Afiliações", to: "/affiliations", search: { tab: "agent" } },
         { icon: Search, label: "Buscar imóveis", to: "/properties" },
-        { icon: TrendingUp, label: "Negociações", to: "/negotiations" },
+        { icon: TrendingUp, label: "Propostas", to: "/negotiations", search: { focus: "proposals" } },
+        { icon: MapPin, label: "Visitas", to: "/negotiations", search: { focus: "visits" } },
         { icon: MessageSquare, label: "Conversas", to: "/chat" },
         { icon: FileText, label: "Contratos", to: "/contracts" },
         { icon: Wallet, label: "Financeiro", to: "/financials" },
-        { icon: ShieldCheck, label: "Pré-aprovações", to: "/preapprovals" },
         { icon: Users, label: "Meu perfil", to: "/profile" },
       ]} />
     </div>

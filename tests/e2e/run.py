@@ -127,7 +127,13 @@ async def run_persona(ctx: BrowserContext, key: str) -> dict:
                 print(f"  ❌ ASSERT {label}: {e}")
                 errors.append(f"assert: {e}")
             except Exception as e:
-                print(f"  ⚠️  {label} ({path}): {e}")
+                # Timeouts em asserts também contam como falha, não warning
+                is_assert_route = (key == "rafael" and label == "leads") or (key == "carlos" and label == "dashboard")
+                if is_assert_route:
+                    print(f"  ❌ ASSERT {label}: {e}")
+                    errors.append(f"assert: {e}")
+                else:
+                    print(f"  ⚠️  {label} ({path}): {e}")
         for a in asserts:
             print(f"  {a}")
 

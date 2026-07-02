@@ -105,12 +105,38 @@ async def run_persona(ctx: BrowserContext, key: str) -> dict:
         if persona["role"] == "proprietario":
             routes += [("negotiations", "/negotiations"), ("affiliations", "/affiliations")]
 
+        asserts: list[str] = []
         for i, (label, path) in enumerate(routes, start=2):
             try:
                 await page.goto(f"{BASE}{path}", wait_until="domcontentloaded", timeout=15000)
                 await snap(page, folder, f"{i:02d}_{label}")
+
+                # ---- ASSERTS por persona ----
+                if key == "rafael" and label == "leads":
+                    # Rafael deve ver ≥1 card de lead (botão "Manifestar interesse")
+                    await page.wait_for_selector("button:has-text('Manifestar interesse')", timeout=8000)
+                    cards = await page.locator("button:has-text('Manifestar interesse')").count()
+                    assert cards >= 1, f"Rafael esperava ≥1 lead, achou {cards}"
+                    asserts.append(f"✅ /leads: {cards} card(s)")
+
+                if key == "carlos" and label == "dashboard":
+                    # Carlos deve ver a proposta pendente (R$ 3.300) e o texto "aguardando"
+                    await page.wait_for_selector("text=aguardando", timeout=8000)
+                    await page.wait_for_selector("text=3.300", timeout=4000)
+                    asserts.append("✅ /dashboard: proposta pendente (R$ 3.300) visível")
+            except AssertionError as e:
+                print(f"  ❌ ASSERT {label}: {e}")
+                errors.append(f"assert: {e}")
             except Exception as e:
-                print(f"  ⚠️  {label} ({path}): {e}")
+                # Timeouts em asserts também contam como falha, não warning
+                is_assert_route = (key == "rafael" and label == "leads") or (key == "carlos" and label == "dashboard")
+                if is_assert_route:
+                    print(f"  ❌ ASSERT {label}: {e}")
+                    errors.append(f"assert: {e}")
+                else:
+                    print(f"  ⚠️  {label} ({path}): {e}")
+        for a in asserts:
+            print(f"  {a}")
 
         # Sempre um sanity check no body
         body_text = (await page.inner_text("body"))[:400]
@@ -140,8 +166,11 @@ async def main() -> None:
         print("\n\n===== RESUMO =====")
         for r in results:
             print(json.dumps(r, indent=2, ensure_ascii=False))
-        # Falhar o processo se qualquer persona não logou
-        if any("error" in r for r in results):
+        # Falhar se qualquer persona teve exceção ou assert falhou
+        failed = any("error" in r for r in results) or any(
+            any(e.startswith("assert:") for e in r.get("errors", [])) for r in results
+        )
+        if failed:
             sys.exit(1)
 
 

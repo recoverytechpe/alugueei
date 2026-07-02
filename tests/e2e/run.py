@@ -105,12 +105,31 @@ async def run_persona(ctx: BrowserContext, key: str) -> dict:
         if persona["role"] == "proprietario":
             routes += [("negotiations", "/negotiations"), ("affiliations", "/affiliations")]
 
+        asserts: list[str] = []
         for i, (label, path) in enumerate(routes, start=2):
             try:
                 await page.goto(f"{BASE}{path}", wait_until="domcontentloaded", timeout=15000)
                 await snap(page, folder, f"{i:02d}_{label}")
+
+                # ---- ASSERTS por persona ----
+                if key == "rafael" and label == "leads":
+                    # Rafael deve ver ≥1 card de lead (botão "Manifestar interesse")
+                    await page.wait_for_selector("button:has-text('Manifestar interesse')", timeout=8000)
+                    cards = await page.locator("button:has-text('Manifestar interesse')").count()
+                    assert cards >= 1, f"Rafael esperava ≥1 lead, achou {cards}"
+                    asserts.append(f"✅ /leads: {cards} card(s)")
+
+                if key == "carlos" and label == "dashboard":
+                    # Carlos deve ver o CTA de propostas pendentes (só aparece se >0)
+                    await page.wait_for_selector("text=Analisar propostas", timeout=8000)
+                    asserts.append("✅ /dashboard: CTA 'Analisar propostas' visível")
+            except AssertionError as e:
+                print(f"  ❌ ASSERT {label}: {e}")
+                errors.append(f"assert: {e}")
             except Exception as e:
                 print(f"  ⚠️  {label} ({path}): {e}")
+        for a in asserts:
+            print(f"  {a}")
 
         # Sempre um sanity check no body
         body_text = (await page.inner_text("body"))[:400]

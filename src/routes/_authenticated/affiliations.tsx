@@ -62,6 +62,7 @@ function statusBadge(status: AffiliationStatus) {
 }
 
 function AffiliationsPage() {
+  const search = Route.useSearch();
   const { data: ctx } = useQuery({
     queryKey: ["affiliations-ctx"],
     queryFn: async () => {

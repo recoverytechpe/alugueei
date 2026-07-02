@@ -1094,9 +1094,13 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
 
       <QuickActions items={[
         { icon: Handshake, label: "Afiliações", to: "/affiliations" },
+        { icon: Search, label: "Buscar imóveis", to: "/properties" },
+        { icon: TrendingUp, label: "Negociações", to: "/negotiations" },
         { icon: MessageSquare, label: "Conversas", to: "/chat" },
         { icon: FileText, label: "Contratos", to: "/contracts" },
         { icon: Wallet, label: "Financeiro", to: "/financials" },
+        { icon: ShieldCheck, label: "Pré-aprovações", to: "/preapprovals" },
+        { icon: Users, label: "Meu perfil", to: "/profile" },
       ]} />
     </div>
   );

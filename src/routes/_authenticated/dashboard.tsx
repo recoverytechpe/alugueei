@@ -281,6 +281,7 @@ type AttentionItem = {
   tone: "urgent" | "info" | "success";
   to: string;
   params?: Record<string, string>;
+  search?: Record<string, string>;
   cta: string;
 };
 

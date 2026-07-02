@@ -138,13 +138,21 @@ function NegotiationsPage() {
         <h1 className="text-xl md:text-2xl font-bold tracking-tight">Negociações</h1>
         <p className="text-xs text-muted-foreground">Visitas, propostas e contrapropostas</p>
       </div>
-      <VisitsSection visits={data.visits} userId={data.userId} setVisitStatus={setVisitStatus} />
+      {search.focus !== "proposals" && (
+        <VisitsSection
+          visits={data.visits}
+          userId={data.userId}
+          setVisitStatus={setVisitStatus}
+          initialStatus={search.focus === "visits" ? search.status : undefined}
+        />
+      )}
       <ProposalsSection
         proposals={data.proposals}
         counters={data.counters}
         userId={data.userId}
         setProposalStatus={setProposalStatus}
         acceptingId={acceptingId}
+        initialStatus={search.focus === "proposals" ? search.status : undefined}
       />
     </div>
   );

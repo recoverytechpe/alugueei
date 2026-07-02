@@ -972,13 +972,13 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
     id: "leads", icon: AlertTriangle, tone: "urgent",
     title: `${pendingLeads.length} lead${pendingLeads.length === 1 ? "" : "s"} aguardando`,
     detail: "Acompanhe as negociações em andamento.",
-    to: "/negotiations", cta: "Acompanhar leads",
+    to: "/negotiations", search: { focus: "proposals", status: "pending" }, cta: "Acompanhar leads",
   });
   if (data.myProperties.length === 0) attention.push({
     id: "affil", icon: Handshake, tone: "info",
     title: "Amplie seu portfólio",
     detail: "Solicite afiliação para intermediar mais imóveis.",
-    to: "/affiliations", cta: "Solicitar afiliação",
+    to: "/affiliations", search: { tab: "agent" }, cta: "Solicitar afiliação",
   });
 
   return (

@@ -334,7 +334,7 @@ function AttentionSection({ items }: { items: AttentionItem[] }) {
   );
 }
 
-function QuickActions({ items }: { items: Array<{ icon: LucideIcon; label: string; to: string; params?: Record<string, string> }> }) {
+function QuickActions({ items }: { items: Array<{ icon: LucideIcon; label: string; to: string; params?: Record<string, string>; search?: Record<string, string> }> }) {
   return (
     <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
       {items.map((it) => {
@@ -346,7 +346,7 @@ function QuickActions({ items }: { items: Array<{ icon: LucideIcon; label: strin
             variant="outline"
             className="h-auto py-4 flex-col gap-2 hover:border-primary hover:bg-primary/5"
           >
-            <Link to={it.to} params={it.params as never}>
+            <Link to={it.to} params={it.params as never} search={it.search as never}>
               <Icon className="h-5 w-5 text-primary" />
               <span className="text-xs font-medium">{it.label}</span>
             </Link>

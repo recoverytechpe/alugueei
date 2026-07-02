@@ -162,14 +162,14 @@ function Dashboard() {
               <AgentDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Agente"} avatarUrl={me.profile?.avatar_url ?? null} />
             </div>
             <div hidden={role !== "locatario"}>
-              <TenantDashboard userId={me.userId} />
+              <TenantDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Locatário"} avatarUrl={me.profile?.avatar_url ?? null} />
             </div>
           </>
         ) : (
           <>
             {role === "proprietario" && <OwnerDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Proprietário"} avatarUrl={me.profile?.avatar_url ?? null} />}
             {role === "agente" && <AgentDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Agente"} avatarUrl={me.profile?.avatar_url ?? null} />}
-            {role === "locatario" && <TenantDashboard userId={me.userId} />}
+            {role === "locatario" && <TenantDashboard userId={me.userId} fullName={me.profile?.full_name ?? me.email ?? "Locatário"} avatarUrl={me.profile?.avatar_url ?? null} />}
           </>
         )}
 

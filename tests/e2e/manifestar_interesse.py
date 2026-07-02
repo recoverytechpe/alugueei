@@ -142,6 +142,13 @@ async def main() -> None:
         # reload pra pegar contagem de não lidas atualizada
         await page_m.reload(wait_until="domcontentloaded")
         await page_m.wait_for_selector("button[aria-label='Notificações']", timeout=10000)
+        # Fecha qualquer overlay/modal (onboarding, etc.) que possa interceptar clique
+        for _ in range(3):
+            overlay = page_m.locator("div[data-state='open'][aria-hidden='true']")
+            if await overlay.count() == 0:
+                break
+            await page_m.keyboard.press("Escape")
+            await page_m.wait_for_timeout(300)
         await page_m.click("button[aria-label='Notificações']")
         await page_m.wait_for_selector("text=Um agente demonstrou interesse", timeout=8000)
         await snap(page_m, "03_marina_notif_open")

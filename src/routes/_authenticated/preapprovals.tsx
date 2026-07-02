@@ -203,9 +203,33 @@ function PreapprovalsPage() {
                     </span>
                   </div>
                 )}
+
+                <div className="rounded-lg border p-3 space-y-3 bg-muted/20">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <Label htmlFor="share-lead" className="flex items-center gap-2 text-sm font-medium">
+                        <Users className="size-4 text-primary" /> Ser encontrado por agentes
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Agentes veem apenas suas iniciais, cidade, faixa de renda e tipo de garantia.
+                        Seu nome e contato só aparecem se você responder ao interesse.
+                      </p>
+                    </div>
+                    <Switch id="share-lead" checked={shareAsLead} onCheckedChange={setShareAsLead} />
+                  </div>
+                  {shareAsLead && (
+                    <div>
+                      <Label htmlFor="pref-city" className="text-xs">Cidade de interesse</Label>
+                      <Input id="pref-city" placeholder="Ex: São Paulo"
+                        value={preferredCity} onChange={(e) => setPreferredCity(e.target.value)} />
+                    </div>
+                  )}
+                </div>
+
                 <Button type="submit" disabled={busy} className="w-full">
                   {busy ? "Salvando..." : data?.preapproval ? "Atualizar pré-aprovação" : "Gerar pré-aprovação"}
                 </Button>
+
               </form>
             </CardContent>
           </Card>

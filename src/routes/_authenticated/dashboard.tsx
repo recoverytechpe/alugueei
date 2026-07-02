@@ -1227,182 +1227,254 @@ function TenantDashboard({ userId, fullName, avatarUrl }: { userId: string; full
 
   if (isLoading || !data) return <Skeleton className="h-40 w-full" />;
 
-  const activeContracts = data.contracts.filter((c) => c.status === "active" || c.status === "closed").length;
+  const activeContracts = data.contracts.filter((c) => c.status === "active" || c.status === "closed");
+  const activeContract = activeContracts[0] ?? null;
+  const isRenting = activeContract != null;
+
+  const now = new Date();
+  const upcomingVisits = data.visits.filter((v) => {
+    if (!v.scheduled_at) return false;
+    const d = new Date(v.scheduled_at);
+    return d.getTime() >= now.getTime() && v.status !== "canceled";
+  });
+  const acceptedProposals = data.proposals.filter((p) => p.status === "accepted");
+  const pendingProposals = data.proposals.filter(
+    (p) => p.status === "pending" || p.status === "negotiating" || p.status === "countered",
+  );
+
+  const attention: AttentionItem[] = [];
+  if (isRenting) {
+    const nextDue = new Date(now.getFullYear(), now.getMonth() + 1, 5);
+    attention.push({
+      id: "rent", icon: Wallet, tone: "info",
+      title: `Próximo aluguel · ${brl(Number(activeContract!.rent_value))}`,
+      detail: `Vencimento em ${nextDue.toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}.`,
+      to: "/contracts/$id", params: { id: activeContract!.id }, cta: "Abrir contrato",
+    });
+  } else {
+    if (acceptedProposals.length > 0) attention.push({
+      id: "acc", icon: CheckCircle2, tone: "success",
+      title: "Proposta aceita!",
+      detail: "Aguardando geração do contrato para assinatura.",
+      to: "/negotiations", cta: "Ver detalhes",
+    });
+    if (upcomingVisits.length > 0) attention.push({
+      id: "vis", icon: Calendar, tone: "info",
+      title: `${upcomingVisits.length} visita${upcomingVisits.length === 1 ? "" : "s"} agendada${upcomingVisits.length === 1 ? "" : "s"}`,
+      detail: "Prepare suas perguntas antes de ir.",
+      to: "/negotiations", cta: "Ver agenda",
+    });
+    if (pendingProposals.length > 0) attention.push({
+      id: "prop", icon: Clock, tone: "info",
+      title: `${pendingProposals.length} proposta${pendingProposals.length === 1 ? "" : "s"} em negociação`,
+      detail: "Acompanhe as respostas dos proprietários.",
+      to: "/negotiations", cta: "Acompanhar",
+    });
+  }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Hero elegante */}
-      <section className="relative overflow-hidden rounded-2xl sm:rounded-3xl border bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white px-5 py-6 sm:px-6 sm:py-8 md:px-10 md:py-12">
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_top_right,theme(colors.amber.400),transparent_55%)]" />
-        <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-5 md:gap-6">
-          <div className="space-y-2 max-w-xl min-w-0">
-            <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-amber-300/90 font-medium">Sua próxima casa</p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif leading-tight break-words">
-              Boas-vindas. Vamos encontrar o lar perfeito para você.
-            </h2>
-            <p className="text-sm text-white/70">
-              Escolha uma região para priorizarmos imóveis verificados próximos de você.
-            </p>
-          </div>
+    <div className="space-y-6">
+      <PersonaHero
+        role={isRenting ? "Locatário · Contrato ativo" : "Locatário"}
+        name={fullName}
+        avatarUrl={avatarUrl}
+        subtitle={isRenting
+          ? `Aluguel mensal ${brl(Number(activeContract!.rent_value))}`
+          : "Vamos encontrar o lar perfeito para você"}
+        primaryCta={isRenting
+          ? { label: "Meu contrato", to: "/contracts/$id", params: { id: activeContract!.id } }
+          : { label: "Buscar imóveis", to: "/properties" }}
+      />
 
-          <div className="w-full md:w-72 space-y-1.5">
-            <label className="text-xs text-white/70 font-medium">Sua localidade preferida</label>
-            {loadingCities ? (
-              <Skeleton className="h-11 w-full rounded-md bg-white/15" />
-            ) : (cities ?? []).length === 0 ? (
-              <div className="h-11 flex items-center px-3 rounded-md bg-white/10 border border-white/20 text-xs text-white/70">
-                Nenhuma cidade disponível ainda
-              </div>
-            ) : (
-              <Select
-                value={selectedCity ?? ""}
-                onValueChange={(v) => setSelectedCity(v)}
-              >
-                <SelectTrigger className="h-11 bg-white/10 border-white/20 text-white hover:bg-white/15 [&>span]:text-white">
-                  <SelectValue placeholder="Selecione uma cidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {(cities ?? []).map((c) => (
-                    <SelectItem key={`${c.city}-${c.state ?? ""}`} value={c.city}>
-                      {c.city}{c.state ? ` · ${c.state}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-        </div>
+      <section className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Precisa da sua atenção</h3>
+        <AttentionSection items={attention} />
       </section>
 
-      {/* Acesso rápido */}
-      <div className="flex flex-wrap gap-2">
-        <Button asChild variant="outline" size="sm">
-          <Link to="/favorites">❤️ Meus favoritos</Link>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/preapprovals">🛡️ Minhas pré-aprovações</Link>
-        </Button>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/negotiations">Minhas propostas</Link>
-        </Button>
-      </div>
-
-
-      {/* Stats minimalistas — perspectiva do locatário (quem aluga o imóvel) */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-        <Stat label="Propostas que enviei" value={data.proposals.length} hint="Ofertas feitas a proprietários" />
-        <Stat label="Visitas marcadas" value={data.visits.length} hint="Imóveis para conhecer" />
-        <Stat label="Aluguéis em andamento" value={activeContracts} hint="Contratos como locatário" />
-        <Stat label="Aluguéis concluídos" value={data.contracts.filter((c) => c.status === "closed").length} hint="Histórico de locações" />
-      </div>
-
-
-      {/* Imóveis na região */}
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
-          <div>
-            <h3 className="text-xl md:text-2xl font-serif">
-              {selectedCity ? `Oportunidades em ${selectedCity}` : "Oportunidades para você"}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {selectedCity
-                ? "Selecionadas com base na sua localidade preferida."
-                : "Selecione uma cidade acima para ver imóveis priorizados na sua região."}
-            </p>
+      {isRenting ? (
+        <>
+          {/* KPIs do inquilino atual */}
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+            <KpiTile icon={Home} label="Aluguel mensal" value={brl(Number(activeContract!.rent_value))} tone="primary" />
+            <KpiTile icon={Calendar} label="Início do contrato" value={activeContract!.start_date ? new Date(activeContract!.start_date as unknown as string).toLocaleDateString("pt-BR", { month: "short", year: "numeric" }) : "—"} />
+            <KpiTile icon={CheckCircle2} label="Status" value={activeContract!.status === "closed" ? "Assinado" : "Ativo"} tone="success" />
+            <KpiTile icon={FileText} label="Contratos" value={data.contracts.length} hint={`${data.contracts.filter((c) => c.status === "closed").length} concluídos`} />
           </div>
-          <Link to="/properties" className="text-sm text-primary font-medium hover:underline inline-flex items-center gap-1 shrink-0">
-            Ver todos <ChevronRight className="h-4 w-4" />
-          </Link>
-        </div>
 
-        {!selectedCity ? (
-          <Card className="border-dashed">
-            <CardContent className="p-8 text-center text-sm text-muted-foreground">
-              Escolha uma cidade no seletor acima para começarmos.
-            </CardContent>
-          </Card>
-        ) : loadingRegional ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-live="polite">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-2xl overflow-hidden bg-card border">
-                <Skeleton className="aspect-[16/10] w-full rounded-none" />
-                <div className="p-4 space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                  <div className="flex gap-2 pt-1">
-                    <Skeleton className="h-3 w-12" />
-                    <Skeleton className="h-3 w-12" />
-                    <Skeleton className="h-3 w-12" />
-                  </div>
-                  <div className="flex items-center justify-between pt-2">
-                    <Skeleton className="h-5 w-20 rounded-full" />
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (regional ?? []).length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="p-8 text-center space-y-3">
-              <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center">
-                <Home className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-sm font-medium">Nenhum imóvel disponível em {selectedCity}</p>
-              <p className="text-xs text-muted-foreground">
-                Tente outra cidade no seletor acima ou veja todos os imóveis publicados.
-              </p>
-              <Button asChild size="sm" variant="outline">
-                <Link to="/properties">Ver todos os imóveis</Link>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" /> Meu contrato ativo
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Todas as informações e pagamentos do seu aluguel.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button asChild className="w-full">
+                <Link to="/contracts/$id" params={{ id: activeContract!.id }}>
+                  Abrir contrato completo <ChevronRight className="h-4 w-4 ml-1" />
+                </Link>
               </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/chat">
+                    <MessageSquare className="h-4 w-4 mr-1.5" /> Falar com proprietário
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/financials">
+                    <Wallet className="h-4 w-4 mr-1.5" /> Meus pagamentos
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {(regional ?? []).map((p) => (
-              <Link
-                key={p.id}
-                to="/properties/$id"
-                params={{ id: p.id }}
-                className="group rounded-2xl overflow-hidden bg-card border hover:shadow-lg hover:border-primary/40 transition"
-              >
-                <div className="aspect-[16/10] bg-muted relative overflow-hidden">
-                  {p.cover ? (
-                    <img src={p.cover} alt={p.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-[1.03] transition" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">Sem foto</div>
-                  )}
-                  <div className="absolute top-3 right-3 bg-background/95 backdrop-blur px-2.5 py-1 rounded-full text-xs font-semibold shadow">
-                    {brl(Number(p.rent_value))}
-                    <span className="text-muted-foreground font-normal"> /mês</span>
-                  </div>
-                </div>
-                <div className="p-4 space-y-2">
-                  <h4 className="font-semibold leading-tight line-clamp-1">{p.title}</h4>
-                  <p className="text-xs text-muted-foreground line-clamp-1">
-                    {[p.neighborhood, p.city, p.state].filter(Boolean).join(", ")}
-                  </p>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
-                    <span>{p.bedrooms ?? 0} quartos</span>
-                    <span>·</span>
-                    <span>{p.bathrooms ?? 0} banh.</span>
-                    <span>·</span>
-                    <span>{Number(p.area_m2 ?? 0)} m²</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 pt-1">
-                    <Badge variant="secondary" className="gap-1 bg-success/10 text-success hover:bg-success/10 border-success/30">
-                      <BadgeCheck className="h-3.5 w-3.5" /> Verificado
-                    </Badge>
-                    <span className="text-xs font-semibold text-primary inline-flex items-center gap-1 group-hover:underline">
-                      Quero alugar <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
+
+          <QuickActions items={[
+            { icon: FileText, label: "Contrato", to: "/contracts/$id", params: { id: activeContract!.id } },
+            { icon: Wallet, label: "Pagamentos", to: "/financials" },
+            { icon: MessageSquare, label: "Conversas", to: "/chat" },
+            { icon: Building2, label: "Contratos anteriores", to: "/contracts" },
+          ]} />
+        </>
+      ) : (
+        <>
+          {/* KPIs do buscador */}
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+            <KpiTile icon={Heart} label="Favoritos" value={pendingProposals.length > 0 ? "—" : "—"} hint="Salvos para depois" />
+            <KpiTile icon={MessageSquare} label="Minhas propostas" value={data.proposals.length} tone={pendingProposals.length > 0 ? "warning" : "primary"} hint={`${pendingProposals.length} em aberto`} />
+            <KpiTile icon={Calendar} label="Visitas agendadas" value={upcomingVisits.length} hint="Imóveis para conhecer" />
+            <KpiTile icon={ShieldCheck} label="Pré-aprovações" value={acceptedProposals.length} tone="success" hint="Você tem prioridade" />
           </div>
-        )}
-      </section>
+
+          {/* Localidade preferida */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" /> Sua localidade preferida
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Priorizamos imóveis verificados na cidade que você escolher.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingCities ? (
+                <Skeleton className="h-11 w-full" />
+              ) : (cities ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhuma cidade disponível ainda.</p>
+              ) : (
+                <Select value={selectedCity ?? ""} onValueChange={(v) => setSelectedCity(v)}>
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="Selecione uma cidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(cities ?? []).map((c) => (
+                      <SelectItem key={`${c.city}-${c.state ?? ""}`} value={c.city}>
+                        {c.city}{c.state ? ` · ${c.state}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Imóveis na região */}
+          <section className="space-y-3">
+            <SectionHeader
+              title={selectedCity ? `Oportunidades em ${selectedCity}` : "Oportunidades para você"}
+              hint={selectedCity ? "Verificados e prontos para negociação." : "Escolha uma cidade acima para começarmos."}
+              actionLabel="Ver todos"
+              actionTo="/properties"
+            />
+
+            {!selectedCity ? (
+              <Card className="border-dashed">
+                <CardContent className="p-8 text-center space-y-3">
+                  <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Search className="h-6 w-6 text-primary" />
+                  </div>
+                  <p className="text-sm font-medium">Escolha uma cidade acima para vermos imóveis próximos.</p>
+                </CardContent>
+              </Card>
+            ) : loadingRegional ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl overflow-hidden bg-card border">
+                    <Skeleton className="aspect-[16/10] w-full rounded-none" />
+                    <div className="p-4 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (regional ?? []).length === 0 ? (
+              <Card className="border-dashed">
+                <CardContent className="p-8 text-center space-y-3">
+                  <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                    <Home className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium">Nenhum imóvel disponível em {selectedCity}</p>
+                  <Button asChild size="sm" variant="outline">
+                    <Link to="/properties">Ver todos os imóveis</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {(regional ?? []).slice(0, 6).map((p) => (
+                  <Link
+                    key={p.id}
+                    to="/properties/$id"
+                    params={{ id: p.id }}
+                    className="group rounded-2xl overflow-hidden bg-card border hover:shadow-lg hover:border-primary/40 transition"
+                  >
+                    <div className="aspect-[16/10] bg-muted relative overflow-hidden">
+                      {p.cover ? (
+                        <img src={p.cover} alt={p.title} loading="lazy" className="w-full h-full object-cover group-hover:scale-[1.03] transition" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">Sem foto</div>
+                      )}
+                      <div className="absolute top-3 right-3 bg-background/95 backdrop-blur px-2.5 py-1 rounded-full text-xs font-semibold shadow">
+                        {brl(Number(p.rent_value))}
+                        <span className="text-muted-foreground font-normal"> /mês</span>
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      <h4 className="font-semibold leading-tight line-clamp-1">{p.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {[p.neighborhood, p.city, p.state].filter(Boolean).join(", ")}
+                      </p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1">
+                        <span>{p.bedrooms ?? 0} quartos</span>
+                        <span>·</span>
+                        <span>{p.bathrooms ?? 0} banh.</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <Badge variant="secondary" className="gap-1 bg-success/10 text-success hover:bg-success/10 border-success/30">
+                          <BadgeCheck className="h-3.5 w-3.5" /> Verificado
+                        </Badge>
+                        <span className="text-xs font-semibold text-primary inline-flex items-center gap-1 group-hover:underline">
+                          Quero alugar <ChevronRight className="h-3.5 w-3.5" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <QuickActions items={[
+            { icon: Search, label: "Buscar imóveis", to: "/properties" },
+            { icon: Heart, label: "Favoritos", to: "/favorites" },
+            { icon: ShieldCheck, label: "Pré-aprovação", to: "/preapprovals" },
+            { icon: MessageSquare, label: "Conversas", to: "/chat" },
+          ]} />
+        </>
+      )}
 
       <Dialog open={welcomeOpen} onOpenChange={(o) => { if (!o) closeWelcome(false); }}>
         <DialogContent className="sm:max-w-md">
@@ -1410,7 +1482,6 @@ function TenantDashboard({ userId, fullName, avatarUrl }: { userId: string; full
             <DialogTitle>Bem-vindo! Onde você procura imóveis?</DialogTitle>
             <DialogDescription>
               Escolha sua localidade preferida para vermos imóveis verificados próximos de você.
-              Você pode mudar depois no seletor do topo.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">
@@ -1437,6 +1508,7 @@ function TenantDashboard({ userId, fullName, avatarUrl }: { userId: string; full
     </div>
   );
 }
+
 
 
 function useTenantCity(storageKey: string, userId?: string) {

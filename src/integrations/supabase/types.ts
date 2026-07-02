@@ -991,7 +991,9 @@ export type Database = {
           income_proof_path: string | null
           max_rent: number
           monthly_income: number
+          preferred_city: string | null
           rg_doc_path: string | null
+          share_as_lead: boolean
           status: Database["public"]["Enums"]["preapproval_status"]
           updated_at: string
           user_id: string
@@ -1005,7 +1007,9 @@ export type Database = {
           income_proof_path?: string | null
           max_rent: number
           monthly_income: number
+          preferred_city?: string | null
           rg_doc_path?: string | null
+          share_as_lead?: boolean
           status?: Database["public"]["Enums"]["preapproval_status"]
           updated_at?: string
           user_id: string
@@ -1019,7 +1023,9 @@ export type Database = {
           income_proof_path?: string | null
           max_rent?: number
           monthly_income?: number
+          preferred_city?: string | null
           rg_doc_path?: string | null
+          share_as_lead?: boolean
           status?: Database["public"]["Enums"]["preapproval_status"]
           updated_at?: string
           user_id?: string
@@ -1272,6 +1278,7 @@ export type Database = {
       }
     }
     Functions: {
+      agent_signal_interest: { Args: { _lead_id: string }; Returns: undefined }
       dispatch_push: {
         Args: { _body: string; _title: string; _url: string; _user_id: string }
         Returns: undefined
@@ -1322,6 +1329,17 @@ export type Database = {
       is_property_owner: {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
+      }
+      list_preapproval_leads: {
+        Args: { _city?: string }
+        Returns: {
+          city: string
+          created_at: string
+          guarantee_type: string
+          id: string
+          income_bucket: string
+          initials: string
+        }[]
       }
       mark_agent_commission_paid: {
         Args: { _contract_id: string }

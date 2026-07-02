@@ -1078,7 +1078,24 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
           <CardTitle className="text-base flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-primary" /> Reputação
           </CardTitle>
-          <Link to="/profile" className="text-xs text-primary hover:underline">Ver perfil</Link>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="text-xs text-primary hover:underline"
+              onClick={async () => {
+                const url = `${window.location.origin}/agents/${userId}`;
+                try {
+                  await navigator.clipboard.writeText(url);
+                  toast.success("Link do seu perfil público copiado!");
+                } catch {
+                  window.open(url, "_blank");
+                }
+              }}
+            >
+              Compartilhar perfil
+            </button>
+            <Link to="/profile" className="text-xs text-primary hover:underline">Ver perfil</Link>
+          </div>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-3">
           <div className="flex items-center gap-3">
@@ -1095,14 +1112,15 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
 
       <QuickActions items={[
         { icon: Handshake, label: "Afiliações", to: "/affiliations", search: { tab: "agent" } },
+        { icon: Users, label: "Leads", to: "/leads" },
         { icon: Search, label: "Buscar imóveis", to: "/properties" },
         { icon: TrendingUp, label: "Propostas", to: "/negotiations", search: { focus: "proposals" } },
         { icon: MapPin, label: "Visitas", to: "/negotiations", search: { focus: "visits" } },
         { icon: MessageSquare, label: "Conversas", to: "/chat" },
         { icon: FileText, label: "Contratos", to: "/contracts" },
         { icon: Wallet, label: "Minhas comissões", to: "/financials", search: { tab: "agent" } },
-        { icon: Users, label: "Meu perfil", to: "/profile" },
       ]} />
+
     </div>
   );
 }

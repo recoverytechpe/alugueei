@@ -8,12 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatBRL } from "@/lib/property-helpers";
-import { ArrowLeft, ShieldCheck, Info, FileCheck2, Upload } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Info, FileCheck2, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
+
 
 type GuaranteeType = "fiador" | "seguro_fianca" | "caucao" | "titulo_capitalizacao";
 const GUARANTEE_LABEL: Record<GuaranteeType, string> = {
@@ -48,12 +50,17 @@ function PreapprovalsPage() {
 
   const [income, setIncome] = useState("");
   const [guarantee, setGuarantee] = useState<GuaranteeType | "">("");
+  const [shareAsLead, setShareAsLead] = useState(false);
+  const [preferredCity, setPreferredCity] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (data?.preapproval) {
-      setIncome(String(data.preapproval.monthly_income));
-      setGuarantee(data.preapproval.guarantee_type as GuaranteeType);
+      const p = data.preapproval as unknown as Record<string, unknown>;
+      setIncome(String(p.monthly_income));
+      setGuarantee(p.guarantee_type as GuaranteeType);
+      setShareAsLead(Boolean(p.share_as_lead));
+      setPreferredCity((p.preferred_city as string | null) ?? "");
     }
   }, [data?.preapproval]);
 
@@ -65,6 +72,9 @@ function PreapprovalsPage() {
     if (!data?.userId) return;
     if (!incomeNum || incomeNum <= 0) return toast.error("Informe sua renda");
     if (!guarantee) return toast.error("Selecione a garantia");
+    if (shareAsLead && !preferredCity.trim()) {
+      return toast.error("Informe a cidade de interesse para aparecer aos agentes");
+    }
     setBusy(true);
     const { error } = await supabase.from("tenant_preapprovals").upsert({
       user_id: data.userId,
@@ -72,6 +82,8 @@ function PreapprovalsPage() {
       guarantee_type: guarantee,
       max_rent: maxRent,
       status: "approved",
+      share_as_lead: shareAsLead,
+      preferred_city: preferredCity.trim() || null,
     }, { onConflict: "user_id" });
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -90,9 +102,12 @@ function PreapprovalsPage() {
     toast.success("Pré-aprovação revogada");
     setIncome("");
     setGuarantee("");
+    setShareAsLead(false);
+    setPreferredCity("");
     qc.invalidateQueries({ queryKey: ["my-preapproval"] });
     qc.invalidateQueries({ queryKey: ["preapproval"] });
   }
+
 
 
   return (
@@ -188,9 +203,33 @@ function PreapprovalsPage() {
                     </span>
                   </div>
                 )}
+
+                <div className="rounded-lg border p-3 space-y-3 bg-muted/20">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <Label htmlFor="share-lead" className="flex items-center gap-2 text-sm font-medium">
+                        <Users className="size-4 text-primary" /> Ser encontrado por agentes
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Agentes veem apenas suas iniciais, cidade, faixa de renda e tipo de garantia.
+                        Seu nome e contato só aparecem se você responder ao interesse.
+                      </p>
+                    </div>
+                    <Switch id="share-lead" checked={shareAsLead} onCheckedChange={setShareAsLead} />
+                  </div>
+                  {shareAsLead && (
+                    <div>
+                      <Label htmlFor="pref-city" className="text-xs">Cidade de interesse</Label>
+                      <Input id="pref-city" placeholder="Ex: São Paulo"
+                        value={preferredCity} onChange={(e) => setPreferredCity(e.target.value)} />
+                    </div>
+                  )}
+                </div>
+
                 <Button type="submit" disabled={busy} className="w-full">
                   {busy ? "Salvando..." : data?.preapproval ? "Atualizar pré-aprovação" : "Gerar pré-aprovação"}
                 </Button>
+
               </form>
             </CardContent>
           </Card>

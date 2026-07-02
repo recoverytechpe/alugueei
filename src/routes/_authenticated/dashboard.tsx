@@ -17,7 +17,6 @@ import {
   Plus, Building2, Handshake, MapPin, ArrowUpRight,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { PushToggle } from "@/components/PushToggle";
 import { NotificationBell } from "@/components/NotificationBell";
 import { ExportReports } from "@/components/ExportReports";
 import { UnreadChatBadge } from "@/components/UnreadChatBadge";
@@ -140,7 +139,6 @@ function Dashboard() {
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <NotificationBell />
-            <PushToggle />
             <Button variant="outline" size="sm" onClick={signOut}>Sair</Button>
           </div>
         </div>

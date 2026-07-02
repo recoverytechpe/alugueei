@@ -50,12 +50,17 @@ function PreapprovalsPage() {
 
   const [income, setIncome] = useState("");
   const [guarantee, setGuarantee] = useState<GuaranteeType | "">("");
+  const [shareAsLead, setShareAsLead] = useState(false);
+  const [preferredCity, setPreferredCity] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (data?.preapproval) {
-      setIncome(String(data.preapproval.monthly_income));
-      setGuarantee(data.preapproval.guarantee_type as GuaranteeType);
+      const p = data.preapproval as unknown as Record<string, unknown>;
+      setIncome(String(p.monthly_income));
+      setGuarantee(p.guarantee_type as GuaranteeType);
+      setShareAsLead(Boolean(p.share_as_lead));
+      setPreferredCity((p.preferred_city as string | null) ?? "");
     }
   }, [data?.preapproval]);
 
@@ -67,6 +72,9 @@ function PreapprovalsPage() {
     if (!data?.userId) return;
     if (!incomeNum || incomeNum <= 0) return toast.error("Informe sua renda");
     if (!guarantee) return toast.error("Selecione a garantia");
+    if (shareAsLead && !preferredCity.trim()) {
+      return toast.error("Informe a cidade de interesse para aparecer aos agentes");
+    }
     setBusy(true);
     const { error } = await supabase.from("tenant_preapprovals").upsert({
       user_id: data.userId,
@@ -74,6 +82,8 @@ function PreapprovalsPage() {
       guarantee_type: guarantee,
       max_rent: maxRent,
       status: "approved",
+      share_as_lead: shareAsLead,
+      preferred_city: preferredCity.trim() || null,
     }, { onConflict: "user_id" });
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -92,9 +102,12 @@ function PreapprovalsPage() {
     toast.success("Pré-aprovação revogada");
     setIncome("");
     setGuarantee("");
+    setShareAsLead(false);
+    setPreferredCity("");
     qc.invalidateQueries({ queryKey: ["my-preapproval"] });
     qc.invalidateQueries({ queryKey: ["preapproval"] });
   }
+
 
 
   return (

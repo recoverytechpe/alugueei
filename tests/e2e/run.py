@@ -17,6 +17,7 @@ import os
 import sys
 import urllib.request
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
 from playwright.async_api import async_playwright, Page, BrowserContext
 
 BASE = "http://localhost:8080"
@@ -163,6 +164,23 @@ async def main() -> None:
                 await ctx.close()
         await browser.close()
 
+        # ---- Cenário integrado: Manifestar interesse ----
+        scenario_error: str | None = None
+        if not only or only in {"scenario", "manifestar"}:
+            print("\n=== CENÁRIO: manifestar_interesse ===")
+            try:
+                from manifestar_interesse import main as manifestar_main  # type: ignore
+                await manifestar_main()
+                results.append({"scenario": "manifestar_interesse", "ok": True})
+            except SystemExit as e:
+                if e.code not in (0, None):
+                    scenario_error = f"exit={e.code}"
+            except Exception as e:
+                scenario_error = str(e)
+            if scenario_error:
+                print(f"❌ manifestar_interesse falhou: {scenario_error}")
+                results.append({"scenario": "manifestar_interesse", "error": scenario_error})
+
         print("\n\n===== RESUMO =====")
         for r in results:
             print(json.dumps(r, indent=2, ensure_ascii=False))
@@ -172,6 +190,7 @@ async def main() -> None:
         )
         if failed:
             sys.exit(1)
+
 
 
 if __name__ == "__main__":

@@ -1117,7 +1117,7 @@ function ReputationRow({ Icon, label, value }: { Icon: typeof Award; label: stri
   );
 }
 
-function TenantDashboard({ userId }: { userId: string }) {
+function TenantDashboard({ userId, fullName, avatarUrl }: { userId: string; fullName: string; avatarUrl: string | null }) {
   const [selectedCity, setSelectedCity] = useTenantCity("tenant_preferred_city", userId);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [welcomeChoice, setWelcomeChoice] = useState<string>("");

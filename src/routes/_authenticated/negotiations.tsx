@@ -17,8 +17,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 
+type NegSearch = { focus?: "visits" | "proposals"; status?: string };
+
 export const Route = createFileRoute("/_authenticated/negotiations")({
   head: () => ({ meta: [{ title: "Negociações | Plataforma de Aluguel" }] }),
+  validateSearch: (raw: Record<string, unknown>): NegSearch => {
+    const focus = raw.focus === "visits" || raw.focus === "proposals" ? raw.focus : undefined;
+    const status = typeof raw.status === "string" ? raw.status : undefined;
+    return { focus, status };
+  },
   component: NegotiationsPage,
   errorComponent: ({ error }) => <div className="p-8 text-destructive">{error.message}</div>,
   notFoundComponent: () => <div className="p-8">Não encontrado</div>,

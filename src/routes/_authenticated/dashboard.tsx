@@ -140,7 +140,6 @@ function Dashboard() {
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <NotificationBell />
-            <PushToggle />
             <Button variant="outline" size="sm" onClick={signOut}>Sair</Button>
           </div>
         </div>

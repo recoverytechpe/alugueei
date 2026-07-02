@@ -159,8 +159,11 @@ async def main() -> None:
         print("\n\n===== RESUMO =====")
         for r in results:
             print(json.dumps(r, indent=2, ensure_ascii=False))
-        # Falhar o processo se qualquer persona não logou
-        if any("error" in r for r in results):
+        # Falhar se qualquer persona teve exceção ou assert falhou
+        failed = any("error" in r for r in results) or any(
+            any(e.startswith("assert:") for e in r.get("errors", [])) for r in results
+        )
+        if failed:
             sys.exit(1)
 
 

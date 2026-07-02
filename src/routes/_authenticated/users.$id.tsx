@@ -89,7 +89,12 @@ function PublicProfile() {
                 </div>
               )}
             </div>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              {isAgent && (
+                <Button asChild variant="outline" size="sm">
+                  <a href={`/agents/${id}`} target="_blank" rel="noreferrer">Ver perfil público</a>
+                </Button>
+              )}
               <ReportDialog targetType="user" targetId={id} />
             </div>
           </CardHeader>

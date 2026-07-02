@@ -1,0 +1,4 @@
+{
+  "_comment": "Known/accepted security finding internal_ids. New IDs not in this list will fail CI. Update deliberately after review.",
+  "accepted": []
+}

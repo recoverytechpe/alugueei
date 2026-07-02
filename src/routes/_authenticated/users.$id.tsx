@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Star } from "lucide-react";
 import { getSignedAvatarUrl, ROLE_LABEL } from "@/lib/profile-helpers";
 import { ReportDialog } from "@/components/ReportDialog";
+import { BlockUserButton } from "@/components/BlockUserButton";
 
 export const Route = createFileRoute("/_authenticated/users/$id")({
   head: ({ params }) => ({ meta: [{ title: `Perfil ${params.id.slice(0, 8)} | Plataforma de Aluguel` }] }),

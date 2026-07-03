@@ -30,8 +30,23 @@ export const Route = createFileRoute("/api/public/dev-test-session")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        // Guard: só aceita chamadas locais (Playwright roda em localhost).
-        // Em produção o Host header é o domínio publicado → rejeita.
+        // Hard-disable in production. This is a test-only helper.
+        if (process.env.NODE_ENV === "production") {
+          return new Response(JSON.stringify({ error: "not found" }), { status: 404, headers: HEADERS });
+        }
+        // Require CRON_SECRET (timing-safe compare) — do not rely on Host header alone.
+        const cronSecret = process.env.CRON_SECRET;
+        if (!cronSecret) {
+          return new Response(JSON.stringify({ error: "server misconfigured" }), { status: 500, headers: HEADERS });
+        }
+        const provided = request.headers.get("x-cron-secret") ?? "";
+        const { timingSafeEqual } = await import("crypto");
+        const a = Buffer.from(provided);
+        const b = Buffer.from(cronSecret);
+        if (a.length !== b.length || !timingSafeEqual(a, b)) {
+          return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: HEADERS });
+        }
+        // Defense-in-depth: still require localhost host.
         const host = request.headers.get("host") ?? "";
         if (!/^localhost(:\d+)?$/i.test(host) && !/^127\.0\.0\.1(:\d+)?$/.test(host)) {
           return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: HEADERS });

@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Home, Building2, MessageCircle, Handshake, User } from "lucide-react";
+import { Home, Building2, MessageCircle, Handshake, User, Heart, Users, ClipboardCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { useViewAs } from "@/lib/view-as";
 import { cn } from "@/lib/utils";
+
 
 function useOnboardingGate() {
   const navigate = useNavigate();

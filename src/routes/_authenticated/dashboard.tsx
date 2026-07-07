@@ -197,8 +197,6 @@ function Dashboard() {
             </CardDescription>
           </CardHeader>
         </Card>
-
-        <ExportReports />
       </main>
     </div>
   );

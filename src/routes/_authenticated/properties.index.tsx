@@ -165,12 +165,23 @@ function PropertiesList() {
 
       const urls = await getSignedPhotoUrls(firstPhotos);
 
-      const ids = (rows ?? []).map((p) => p.id);
+      const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+      const ids = Array.from(
+        new Set(
+          (rows ?? [])
+            .map((p) => (typeof p.id === "string" ? p.id.trim().toLowerCase() : ""))
+            .filter((id) => UUID_RE.test(id)),
+        ),
+      ).slice(0, 500);
       const interestMap: Record<string, number> = {};
       if (ids.length > 0) {
-        const { getPropertyInterestCounts } = await import("@/lib/protected-rpcs.functions");
-        const counts = await getPropertyInterestCounts({ data: { propertyIds: ids } });
-        for (const c of counts) interestMap[c.property_id] = c.interested_count;
+        try {
+          const { getPropertyInterestCounts } = await import("@/lib/protected-rpcs.functions");
+          const counts = await getPropertyInterestCounts({ data: { propertyIds: ids } });
+          for (const c of counts) interestMap[c.property_id] = c.interested_count;
+        } catch (err) {
+          console.warn("[properties] interest counts failed", err);
+        }
       }
 
       return (rows ?? []).map((p) => {

@@ -138,6 +138,22 @@ function Dashboard() {
             <p className="text-xs sm:text-sm text-muted-foreground truncate">{me.profile?.full_name ?? me.email}</p>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {isAdmin && (
+              <Select
+                value={viewAs.override ?? "__real__"}
+                onValueChange={(v) => viewAs.setViewAs(v === "__real__" ? null : (v as Role))}
+              >
+                <SelectTrigger className="h-8 w-[150px] text-xs bg-amber-50 dark:bg-amber-950/40 border-amber-300">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__real__">Admin (real)</SelectItem>
+                  <SelectItem value="proprietario">Ver como Proprietário</SelectItem>
+                  <SelectItem value="locatario">Ver como Locatário</SelectItem>
+                  <SelectItem value="agente">Ver como Agente</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
             <NotificationBell />
             <Button variant="outline" size="sm" onClick={signOut}>Sair</Button>
           </div>

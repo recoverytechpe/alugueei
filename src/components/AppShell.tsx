@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Home, Building2, MessageCircle, Handshake, User } from "lucide-react";
+import { Home, Building2, MessageCircle, Handshake, User, Heart, Users, ClipboardCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { useViewAs } from "@/lib/view-as";
 import { cn } from "@/lib/utils";
+
 
 function useOnboardingGate() {
   const navigate = useNavigate();
@@ -33,20 +35,24 @@ function useOnboardingGate() {
 }
 
 type NavItem = {
-  to: "/dashboard" | "/properties" | "/chat" | "/negotiations" | "/profile";
+  to: "/dashboard" | "/properties" | "/chat" | "/negotiations" | "/profile" | "/favorites" | "/leads" | "/preapprovals" | "/affiliations";
   label: string;
   icon: typeof Home;
   matchPrefix: string;
   badgeKey?: "chat";
 };
 
-const NAV: NavItem[] = [
-  { to: "/dashboard", label: "Início", icon: Home, matchPrefix: "/dashboard" },
-  { to: "/properties", label: "Imóveis", icon: Building2, matchPrefix: "/properties" },
-  { to: "/chat", label: "Chat", icon: MessageCircle, matchPrefix: "/chat", badgeKey: "chat" },
-  { to: "/negotiations", label: "Negócios", icon: Handshake, matchPrefix: "/negotiations" },
-  { to: "/profile", label: "Perfil", icon: User, matchPrefix: "/profile" },
-];
+const HOME: NavItem = { to: "/dashboard", label: "Início", icon: Home, matchPrefix: "/dashboard" };
+const PROPERTIES: NavItem = { to: "/properties", label: "Imóveis", icon: Building2, matchPrefix: "/properties" };
+const CHAT: NavItem = { to: "/chat", label: "Chat", icon: MessageCircle, matchPrefix: "/chat", badgeKey: "chat" };
+const PROFILE: NavItem = { to: "/profile", label: "Perfil", icon: User, matchPrefix: "/profile" };
+
+const NAV_BY_ROLE: Record<"proprietario" | "locatario" | "agente", NavItem[]> = {
+  proprietario: [HOME, PROPERTIES, CHAT, { to: "/negotiations", label: "Negócios", icon: Handshake, matchPrefix: "/negotiations" }, PROFILE],
+  locatario:    [HOME, PROPERTIES, CHAT, { to: "/favorites", label: "Favoritos", icon: Heart, matchPrefix: "/favorites" }, PROFILE],
+  agente:       [HOME, PROPERTIES, CHAT, { to: "/leads", label: "Leads", icon: Users, matchPrefix: "/leads" }, PROFILE],
+};
+
 
 function useUnreadChatCount() {
   return useQuery({
@@ -67,7 +73,10 @@ function useUnreadChatCount() {
 export function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: unread = 0 } = useUnreadChatCount();
+  const { effectiveRole } = useViewAs();
   useOnboardingGate();
+
+  const nav = NAV_BY_ROLE[effectiveRole] ?? NAV_BY_ROLE.locatario;
 
   return (
     <div className="min-h-[100dvh] bg-surface-muted flex justify-center">
@@ -84,7 +93,7 @@ export function AppShell() {
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <ul className="grid grid-cols-5">
-            {NAV.map((item) => {
+            {nav.map((item) => {
               const active = pathname.startsWith(item.matchPrefix);
               const Icon = item.icon;
               const showBadge = item.badgeKey === "chat" && unread > 0;

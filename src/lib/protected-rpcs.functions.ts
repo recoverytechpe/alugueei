@@ -31,7 +31,7 @@ export const getPropertyInterestCounts = createServerFn({ method: "POST" })
     }));
   });
 
-const markPaidInput = z.object({ contractId: z.string().uuid() });
+const markPaidInput = z.object({ contractId: uuidLoose });
 
 export type MarkCommissionPaidResult =
   | { ok: true }

@@ -73,7 +73,10 @@ function useUnreadChatCount() {
 export function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: unread = 0 } = useUnreadChatCount();
+  const { effectiveRole } = useViewAs();
   useOnboardingGate();
+
+  const nav = NAV_BY_ROLE[effectiveRole] ?? NAV_BY_ROLE.locatario;
 
   return (
     <div className="min-h-[100dvh] bg-surface-muted flex justify-center">
@@ -90,7 +93,7 @@ export function AppShell() {
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <ul className="grid grid-cols-5">
-            {NAV.map((item) => {
+            {nav.map((item) => {
               const active = pathname.startsWith(item.matchPrefix);
               const Icon = item.icon;
               const showBadge = item.badgeKey === "chat" && unread > 0;

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
-import { ExportReports } from "@/components/ExportReports";
+
 import { UnreadChatBadge } from "@/components/UnreadChatBadge";
 import { useViewAs } from "@/lib/view-as";
 import { CITY_PROMPTED_KEY, markPrompted, shouldOpenWelcome } from "@/lib/tenant-city-prefs";
@@ -197,8 +197,6 @@ function Dashboard() {
             </CardDescription>
           </CardHeader>
         </Card>
-
-        <ExportReports />
       </main>
     </div>
   );

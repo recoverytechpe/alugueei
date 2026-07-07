@@ -225,6 +225,8 @@ function ProfilePage() {
             )}
           </CardContent>
         </Card>
+
+        <ExportReports />
       </main>
     </div>
   );

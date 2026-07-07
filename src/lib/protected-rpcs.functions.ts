@@ -8,8 +8,11 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * and the privileged call is made via the service-role admin client.
  */
 
+// Loose UUID shape (any variant/version). Zod v4 `.uuid()` rejects non-RFC
+// variant bits, which breaks fixture IDs like 1111...-1111 used in seeds/tests.
+const uuidLoose = z.string().regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/);
 const interestInput = z.object({
-  propertyIds: z.array(z.string().uuid()).max(500),
+  propertyIds: z.array(uuidLoose).max(500),
 });
 
 export const getPropertyInterestCounts = createServerFn({ method: "POST" })
@@ -28,7 +31,7 @@ export const getPropertyInterestCounts = createServerFn({ method: "POST" })
     }));
   });
 
-const markPaidInput = z.object({ contractId: z.string().uuid() });
+const markPaidInput = z.object({ contractId: uuidLoose });
 
 export type MarkCommissionPaidResult =
   | { ok: true }

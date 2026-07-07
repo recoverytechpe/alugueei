@@ -18,11 +18,21 @@ const LABEL: Record<Role, string> = {
 
 const REAL_VALUE = "__real__";
 
+const APP_SHELL_PREFIXES = [
+  "/dashboard", "/properties", "/chat", "/negotiations", "/profile",
+  "/leads", "/favorites", "/preapprovals", "/contracts", "/financials",
+  "/affiliations", "/notifications", "/onboarding", "/admin", "/users",
+];
+
 export function ViewAsBar() {
   const { isAdmin, effectiveRole, realRole, override, setViewAs } = useViewAs();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (!isAdmin) return null;
+  // Hide inside the authenticated app shell so admin sees the real user experience.
+  // The compact selector inside the Dashboard header keeps the mode switch accessible.
+  if (APP_SHELL_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"))) return null;
+
 
   const value = override ?? REAL_VALUE;
 

@@ -35,20 +35,24 @@ function useOnboardingGate() {
 }
 
 type NavItem = {
-  to: "/dashboard" | "/properties" | "/chat" | "/negotiations" | "/profile";
+  to: "/dashboard" | "/properties" | "/chat" | "/negotiations" | "/profile" | "/favorites" | "/leads" | "/preapprovals" | "/affiliations";
   label: string;
   icon: typeof Home;
   matchPrefix: string;
   badgeKey?: "chat";
 };
 
-const NAV: NavItem[] = [
-  { to: "/dashboard", label: "Início", icon: Home, matchPrefix: "/dashboard" },
-  { to: "/properties", label: "Imóveis", icon: Building2, matchPrefix: "/properties" },
-  { to: "/chat", label: "Chat", icon: MessageCircle, matchPrefix: "/chat", badgeKey: "chat" },
-  { to: "/negotiations", label: "Negócios", icon: Handshake, matchPrefix: "/negotiations" },
-  { to: "/profile", label: "Perfil", icon: User, matchPrefix: "/profile" },
-];
+const HOME: NavItem = { to: "/dashboard", label: "Início", icon: Home, matchPrefix: "/dashboard" };
+const PROPERTIES: NavItem = { to: "/properties", label: "Imóveis", icon: Building2, matchPrefix: "/properties" };
+const CHAT: NavItem = { to: "/chat", label: "Chat", icon: MessageCircle, matchPrefix: "/chat", badgeKey: "chat" };
+const PROFILE: NavItem = { to: "/profile", label: "Perfil", icon: User, matchPrefix: "/profile" };
+
+const NAV_BY_ROLE: Record<"proprietario" | "locatario" | "agente", NavItem[]> = {
+  proprietario: [HOME, PROPERTIES, CHAT, { to: "/negotiations", label: "Negócios", icon: Handshake, matchPrefix: "/negotiations" }, PROFILE],
+  locatario:    [HOME, PROPERTIES, CHAT, { to: "/favorites", label: "Favoritos", icon: Heart, matchPrefix: "/favorites" }, PROFILE],
+  agente:       [HOME, PROPERTIES, CHAT, { to: "/leads", label: "Leads", icon: Users, matchPrefix: "/leads" }, PROFILE],
+};
+
 
 function useUnreadChatCount() {
   return useQuery({

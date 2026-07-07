@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getSignedAvatarUrl, ROLE_LABEL } from "@/lib/profile-helpers";
+import { ExportReports } from "@/components/ExportReports";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Meu perfil | Plataforma de Aluguel" }] }),

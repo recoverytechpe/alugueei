@@ -463,6 +463,7 @@ export type Database = {
           description: string
           id: string
           iptu_value: number
+          listed_by_agent_id: string | null
           neighborhood: string | null
           number: string
           owner_id: string
@@ -488,6 +489,7 @@ export type Database = {
           description?: string
           id?: string
           iptu_value?: number
+          listed_by_agent_id?: string | null
           neighborhood?: string | null
           number: string
           owner_id: string
@@ -513,6 +515,7 @@ export type Database = {
           description?: string
           id?: string
           iptu_value?: number
+          listed_by_agent_id?: string | null
           neighborhood?: string | null
           number?: string
           owner_id?: string

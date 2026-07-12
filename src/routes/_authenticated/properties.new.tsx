@@ -99,6 +99,7 @@ const STEPS = [
 function NewProperty() {
   const navigate = useNavigate();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [isAgent, setIsAgent] = useState(false);
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initial);
   const [photos, setPhotos] = useState<File[]>([]);
@@ -155,7 +156,9 @@ function NewProperty() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
-      setAuthorized(!!roles?.some((r) => r.role === "proprietario" || r.role === "agente"));
+      const rs = roles?.map((r) => r.role) ?? [];
+      setAuthorized(rs.includes("proprietario") || rs.includes("agente"));
+      setIsAgent(rs.includes("agente"));
     })();
   }, []);
 
@@ -214,7 +217,11 @@ function NewProperty() {
 
       const { data: inserted, error: insErr } = await supabase
         .from("properties")
-        .insert({ ...parsed.data, owner_id: u.user.id })
+        .insert({
+          ...parsed.data,
+          owner_id: u.user.id,
+          listed_by_agent_id: isAgent ? u.user.id : null,
+        })
         .select("id")
         .single();
       if (insErr || !inserted) throw insErr ?? new Error("Falha ao criar imóvel");

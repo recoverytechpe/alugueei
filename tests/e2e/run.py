@@ -102,7 +102,7 @@ async def run_persona(ctx: BrowserContext, key: str) -> dict:
         if persona["role"] == "locatario":
             routes += [("favorites", "/favorites"), ("preapprovals", "/preapprovals")]
         if persona["role"] == "agente":
-            routes += [("leads", "/leads"), ("public_profile", f"/agents/{persona['user_id']}")]
+            routes += [("affiliations", "/affiliations"), ("public_profile", f"/agents/{persona['user_id']}")]
         if persona["role"] == "proprietario":
             routes += [("negotiations", "/negotiations"), ("affiliations", "/affiliations")]
 

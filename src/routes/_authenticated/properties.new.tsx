@@ -217,7 +217,11 @@ function NewProperty() {
 
       const { data: inserted, error: insErr } = await supabase
         .from("properties")
-        .insert({ ...parsed.data, owner_id: u.user.id })
+        .insert({
+          ...parsed.data,
+          owner_id: u.user.id,
+          listed_by_agent_id: isAgent ? u.user.id : null,
+        })
         .select("id")
         .single();
       if (insErr || !inserted) throw insErr ?? new Error("Falha ao criar imóvel");

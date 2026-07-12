@@ -23,7 +23,6 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPreapprovalsRouteImport } from './routes/_authenticated/preapprovals'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedNegotiationsRouteImport } from './routes/_authenticated/negotiations'
-import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedFinancialsRouteImport } from './routes/_authenticated/financials'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -116,11 +115,6 @@ const AuthenticatedNegotiationsRoute =
     path: '/negotiations',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedLeadsRoute = AuthenticatedLeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedFinancialsRoute = AuthenticatedFinancialsRouteImport.update({
   id: '/financials',
   path: '/financials',
@@ -244,7 +238,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/financials': typeof AuthenticatedFinancialsRoute
-  '/leads': typeof AuthenticatedLeadsRoute
   '/negotiations': typeof AuthenticatedNegotiationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
@@ -280,7 +273,6 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/financials': typeof AuthenticatedFinancialsRoute
-  '/leads': typeof AuthenticatedLeadsRoute
   '/negotiations': typeof AuthenticatedNegotiationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preapprovals': typeof AuthenticatedPreapprovalsRoute
@@ -318,7 +310,6 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
   '/_authenticated/financials': typeof AuthenticatedFinancialsRoute
-  '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/negotiations': typeof AuthenticatedNegotiationsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/preapprovals': typeof AuthenticatedPreapprovalsRoute
@@ -356,7 +347,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/favorites'
     | '/financials'
-    | '/leads'
     | '/negotiations'
     | '/onboarding'
     | '/preapprovals'
@@ -392,7 +382,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/favorites'
     | '/financials'
-    | '/leads'
     | '/negotiations'
     | '/onboarding'
     | '/preapprovals'
@@ -429,7 +418,6 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/favorites'
     | '/_authenticated/financials'
-    | '/_authenticated/leads'
     | '/_authenticated/negotiations'
     | '/_authenticated/onboarding'
     | '/_authenticated/preapprovals'
@@ -569,13 +557,6 @@ declare module '@tanstack/react-router' {
       path: '/negotiations'
       fullPath: '/negotiations'
       preLoaderRoute: typeof AuthenticatedNegotiationsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/leads': {
-      id: '/_authenticated/leads'
-      path: '/leads'
-      fullPath: '/leads'
-      preLoaderRoute: typeof AuthenticatedLeadsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/financials': {
@@ -741,7 +722,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
   AuthenticatedFinancialsRoute: typeof AuthenticatedFinancialsRoute
-  AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedNegotiationsRoute: typeof AuthenticatedNegotiationsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPreapprovalsRoute: typeof AuthenticatedPreapprovalsRoute
@@ -763,7 +743,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
   AuthenticatedFinancialsRoute: AuthenticatedFinancialsRoute,
-  AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedNegotiationsRoute: AuthenticatedNegotiationsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPreapprovalsRoute: AuthenticatedPreapprovalsRoute,

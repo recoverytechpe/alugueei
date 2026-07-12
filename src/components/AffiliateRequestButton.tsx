@@ -16,13 +16,14 @@ type Props = {
   propertyId: string;
   agentId: string;
   ownerId: string;
+  rentValue?: number;
 };
 
 /**
  * CTA for agents to request affiliation with a published property.
  * Only renders for users with the "agente" role who are not the owner.
  */
-export function AffiliateRequestButton({ propertyId, agentId, ownerId }: Props) {
+export function AffiliateRequestButton({ propertyId, agentId, ownerId, rentValue = 0 }: Props) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [ownerPct, setOwnerPct] = useState("30");

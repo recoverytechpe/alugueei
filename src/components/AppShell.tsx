@@ -35,7 +35,7 @@ function useOnboardingGate() {
 }
 
 type NavItem = {
-  to: "/dashboard" | "/properties" | "/chat" | "/negotiations" | "/profile" | "/favorites" | "/leads" | "/preapprovals" | "/affiliations";
+  to: "/dashboard" | "/properties" | "/chat" | "/negotiations" | "/profile" | "/favorites" | "/preapprovals" | "/affiliations";
   label: string;
   icon: typeof Home;
   matchPrefix: string;

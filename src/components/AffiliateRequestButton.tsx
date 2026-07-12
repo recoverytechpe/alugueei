@@ -113,6 +113,27 @@ export function AffiliateRequestButton({ propertyId, agentId, ownerId, rentValue
               />
             </div>
           </div>
+          {rentValue > 0 && (
+            <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1">
+              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Projeção de comissão (mensal)
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Do proprietário ({ownerPct || 0}% de {formatBRL(rentValue)}):</span>
+                <span className="font-semibold">{formatBRL(rentValue * (Number(ownerPct) || 0) / 100)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Do inquilino ({tenantPct || 0}% de {formatBRL(rentValue)}):</span>
+                <span className="font-semibold">{formatBRL(rentValue * (Number(tenantPct) || 0) / 100)}</span>
+              </div>
+              <div className="flex justify-between border-t pt-1 mt-1">
+                <span className="font-medium">Total estimado:</span>
+                <span className="font-bold text-primary">
+                  {formatBRL(rentValue * ((Number(ownerPct) || 0) + (Number(tenantPct) || 0)) / 100)}
+                </span>
+              </div>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="aff-msg">Mensagem (opcional)</Label>
             <Textarea

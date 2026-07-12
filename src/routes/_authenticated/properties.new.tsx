@@ -156,7 +156,9 @@ function NewProperty() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
-      setAuthorized(!!roles?.some((r) => r.role === "proprietario" || r.role === "agente"));
+      const rs = roles?.map((r) => r.role) ?? [];
+      setAuthorized(rs.includes("proprietario") || rs.includes("agente"));
+      setIsAgent(rs.includes("agente"));
     })();
   }, []);
 

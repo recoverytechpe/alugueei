@@ -99,6 +99,7 @@ const STEPS = [
 function NewProperty() {
   const navigate = useNavigate();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [isAgent, setIsAgent] = useState(false);
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initial);
   const [photos, setPhotos] = useState<File[]>([]);

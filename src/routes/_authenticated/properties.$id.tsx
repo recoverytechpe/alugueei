@@ -444,7 +444,13 @@ function PropertyDetail() {
                 : <Button size="sm" onClick={requireUnlock}>🔒 Enviar proposta</Button>
             )}
             {!data.isOwner && data.userRole === "agente" && userId && (
-              <AffiliateRequestButton propertyId={data.id} agentId={userId} ownerId={data.owner_id} />
+              <div className="w-full rounded-xl border-2 border-primary/30 bg-primary/5 p-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <div className="flex-1 text-sm">
+                  <div className="font-semibold text-primary">Ganhe comissão divulgando este imóvel</div>
+                  <div className="text-xs text-muted-foreground">Solicite afiliação e receba uma % do aluguel ao fechar negócio.</div>
+                </div>
+                <AffiliateRequestButton propertyId={data.id} agentId={userId} ownerId={data.owner_id} rentValue={rent} />
+              </div>
             )}
             {data.isOwner && (
               <>

@@ -50,7 +50,7 @@ const PROFILE: NavItem = { to: "/profile", label: "Perfil", icon: User, matchPre
 const NAV_BY_ROLE: Record<"proprietario" | "locatario" | "agente", NavItem[]> = {
   proprietario: [HOME, PROPERTIES, CHAT, { to: "/negotiations", label: "Negócios", icon: Handshake, matchPrefix: "/negotiations" }, PROFILE],
   locatario:    [HOME, PROPERTIES, CHAT, { to: "/favorites", label: "Favoritos", icon: Heart, matchPrefix: "/favorites" }, PROFILE],
-  agente:       [HOME, PROPERTIES, CHAT, { to: "/leads", label: "Leads", icon: Users, matchPrefix: "/leads" }, PROFILE],
+  agente:       [HOME, PROPERTIES, CHAT, { to: "/affiliations", label: "Afiliações", icon: Handshake, matchPrefix: "/affiliations" }, PROFILE],
 };
 
 

@@ -1124,7 +1124,6 @@ function AgentDashboard({ userId, fullName, avatarUrl }: { userId: string; fullN
 
       <QuickActions items={[
         { icon: Handshake, label: "Afiliações", to: "/affiliations", search: { tab: "agent" } },
-        { icon: Users, label: "Leads", to: "/leads" },
         { icon: Search, label: "Buscar imóveis", to: "/properties" },
         { icon: TrendingUp, label: "Propostas", to: "/negotiations", search: { focus: "proposals" } },
         { icon: MapPin, label: "Visitas", to: "/negotiations", search: { focus: "visits" } },

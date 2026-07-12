@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Handshake } from "lucide-react";
+import { formatBRL } from "@/lib/property-helpers";
 
 type Props = {
   propertyId: string;
